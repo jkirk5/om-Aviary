@@ -114,8 +114,8 @@ class TurbopropModel(EngineModel):
         # ensure uncorrected shaft horsepower is avaliable
         # TODO also make sure corrected is avaliable
         # TODO see if this can be done for non-EngineDecks
-        if type(shp_model_mission) is EngineDeck:
-            if EngineModelVariables.SHAFT_POWER not in shp_model_mission.engine_variables:
+        if type(shp_model) is EngineDeck:
+            if EngineModelVariables.SHAFT_POWER not in shp_model.engine_variables:
                 turboprop_group.add_subsystem('uncorrect_shaft_power',
                                               subsys=UncorrectData(num_nodes=num_nodes,
                                                                    aviary_options=self.options),
