@@ -815,11 +815,11 @@ class EngineDeck(EngineModel):
                                   shaft_power_data,
                                   units=shaft_power_units,
                                   desc=desc)
-        if self.use_t4:
-            engine.add_output(Dynamic.Mission.TEMPERATURE_ENGINE_T4,
-                              self.data[TEMPERATURE],
-                              units=units[TEMPERATURE],
-                              desc='Current turbine exit temperature')
+        # if self.use_t4:
+        engine.add_output(Dynamic.Mission.TEMPERATURE_ENGINE_T4,
+                          self.data[TEMPERATURE],
+                          units=units[TEMPERATURE],
+                          desc='Current turbine exit temperature')
         # if self.use_exit_area:
         # engine.add_output('exit_area_unscaled',
         #                   self.data[EXIT_AREA],
@@ -959,7 +959,8 @@ class EngineDeck(EngineModel):
         # add created subsystems to engine_group
         engine_group.add_subsystem('interpolation',
                                    engine,
-                                   promotes_inputs=['*'])
+                                   promotes_inputs=['*'],
+                                   promotes_outputs=[Dynamic.Mission.TEMPERATURE_ENGINE_T4])
 
         if self.use_thrust:
             if self.global_throttle or (self.global_hybrid_throttle

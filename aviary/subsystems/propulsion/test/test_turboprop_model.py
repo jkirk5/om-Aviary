@@ -72,6 +72,16 @@ class TurbopropTest(unittest.TestCase):
                 ('temp', Dynamic.Mission.TEMPERATURE), ('pres', Dynamic.Mission.STATIC_PRESSURE)],
         )
 
+        self.prob.model.add_subsystem('flight_conditions',
+                                      FlightConditions(num_nodes=num_nodes,
+                                                       input_speed_type=SpeedType.MACH),
+                                      promotes_inputs=['rho',
+                                                       Dynamic.Mission.SPEED_OF_SOUND,
+                                                       Dynamic.Mission.MACH],
+                                      promotes_outputs=[Dynamic.Mission.DYNAMIC_PRESSURE,
+                                                        'EAS',
+                                                        ('TAS', 'velocity')])
+
         self.prob.model.add_subsystem(
             engine.name,
             subsys=engine.build_mission(
@@ -205,13 +215,13 @@ class ExamplePropModel(SubsystemBuilderBase):
     def build_mission(self, num_nodes, aviary_inputs, **kwargs):
         prop_group = om.Group()
 
-        prop_group.add_subsystem(
-            "fc",
-            FlightConditions(num_nodes=num_nodes, input_speed_type=SpeedType.MACH),
-            promotes_inputs=["rho", Dynamic.Mission.SPEED_OF_SOUND, 'mach'],
-            promotes_outputs=[Dynamic.Mission.DYNAMIC_PRESSURE,
-                              'EAS', ('TAS', 'velocity')],
-        )
+        # prop_group.add_subsystem(
+        #     "fc",
+        #     FlightConditions(num_nodes=num_nodes, input_speed_type=SpeedType.MACH),
+        #     promotes_inputs=["rho", Dynamic.Mission.SPEED_OF_SOUND, 'mach'],
+        #     promotes_outputs=[Dynamic.Mission.DYNAMIC_PRESSURE,
+        #                       'EAS', ('TAS', 'velocity')],
+        # )
 
         pp = prop_group.add_subsystem(
             'pp',
@@ -232,7 +242,7 @@ class ExamplePropModel(SubsystemBuilderBase):
 
 
 if __name__ == "__main__":
-    # unittest.main()
-    test = TurbopropTest()
-    test.setUp()
-    test.test_case_1()
+    unittest.main()
+    # test = TurbopropTest()
+    # test.setUp()
+    # test.test_case_1()

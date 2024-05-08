@@ -49,7 +49,7 @@ class TurbopropModel(EngineModel):
     def __init__(self, name='turboprop_model', options: AviaryValues = None,
                  data: NamedValues = None, shaft_power_model=None, propeller_model=None):
 
-        # also calls _preprocess_inputs() as part of EngineModel __init__
+        # also calls _preprocess_inputs() as part of EngineModel.__init__()
         super().__init__(name, options)
 
         self.shaft_power_model = shaft_power_model
@@ -81,7 +81,7 @@ class TurbopropModel(EngineModel):
         prop_model = self.propeller_model
         turboprop_group = om.Group()
         # TODO engine scaling for turboshafts requires EngineSizing to be refactored to
-        # accept target scaling variable as an option, skipping for now
+        #      accept scaling variable as input, skipping for now
         if type(shp_model) is not EngineDeck:
             shp_model_pre_mission = shp_model.build_pre_mission(aviary_inputs, **kwargs)
             if shp_model_pre_mission is not None:
@@ -97,6 +97,7 @@ class TurbopropModel(EngineModel):
                                               subsys=prop_model_pre_mission,
                                               promotes=['*'])
 
+        # TODO should return None if turboprop_group is empty
         return turboprop_group
 
     def build_mission(self, num_nodes, aviary_inputs, **kwargs):
@@ -109,21 +110,26 @@ class TurbopropModel(EngineModel):
             turboprop_group.add_subsystem(shp_model.name,
                                           subsys=shp_model_mission,
                                           promotes_inputs=['*'],
-                                          promotes_outputs=['*', (Dynamic.Mission.THRUST, 'turboshaft_thrust')])
+                                          promotes_outputs=['*', (Dynamic.Mission.THRUST, 'turboshaft_thrust'),
+                                                            # TODO this is only here until engines properly report outputs
+                                                            (Dynamic.Mission.SHAFT_POWER, 'dummy_shaft_power')])
 
         # ensure uncorrected shaft horsepower is avaliable
-        # TODO also make sure corrected is avaliable
+        # TODO also make sure corrected is avaliable?
         # TODO see if this can be done for non-EngineDecks
         if type(shp_model) is EngineDeck:
             if EngineModelVariables.SHAFT_POWER not in shp_model.engine_variables:
                 turboprop_group.add_subsystem('uncorrect_shaft_power',
                                               subsys=UncorrectData(num_nodes=num_nodes,
                                                                    aviary_options=self.options),
+                                              #   promotes=['*'])
                                               promotes_inputs=[('corrected_data', Dynamic.Mission.SHAFT_POWER_CORRECTED),
                                                                Dynamic.Mission.TEMPERATURE,
                                                                Dynamic.Mission.STATIC_PRESSURE,
                                                                Dynamic.Mission.MACH],
-                                              promotes_outputs=[('uncorrected_data', Dynamic.Mission.SHAFT_POWER)]),
+                                              promotes_outputs=[('uncorrected_data', Dynamic.Mission.SHAFT_POWER)])
+                #   promotes_outputs=[('uncorrected_data', 'prop_shp')]),
+                # turboprop_group.connect(Dynamic.Mission.SHAFT_POWER_CORRECTED, 'corrected_data')
 
         if prop_model is not None:  # must assume user-provide propeller group has everything it needs
             prop_model_mission = prop_model.build_mission(
@@ -135,23 +141,13 @@ class TurbopropModel(EngineModel):
                                               promotes_outputs=['*'])
 
         else:  # use the Hamilton Standard model
-            # calculate atmospheric properties
-            # TODO these properties should always just be avaliable across Aviary
-            turboprop_group.add_subsystem('flight_conditions',
-                                          FlightConditions(num_nodes=num_nodes,
-                                                           input_speed_type=SpeedType.MACH),
-                                          promotes_inputs=['rho',
-                                                           Dynamic.Mission.SPEED_OF_SOUND,
-                                                           Dynamic.Mission.MACH],
-                                          promotes_outputs=[Dynamic.Mission.DYNAMIC_PRESSURE,
-                                                            'EAS',
-                                                            ('TAS', 'velocity')])
-            # Hamilton Standard method
             turboprop_group.add_subsystem('propeller_model',
                                           PropellerPerformance(aviary_options=self.options,
                                                                num_nodes=num_nodes),
-                                          promotes_inputs=['*'],
+                                          promotes_inputs=[
+                                              '*', (Dynamic.Mission.SHAFT_POWER, 'prop_shp')],
                                           promotes_outputs=['*'])
+            turboprop_group.connect(Dynamic.Mission.SHAFT_POWER, 'prop_shp')
 
         thrust_adder = om.ExecComp('turboprop_thrust=turboshaft_thrust+propeller_thrust',
                                    turboprop_thrust={'val': np.zeros(
@@ -165,6 +161,8 @@ class TurbopropModel(EngineModel):
                                       promotes_inputs=['*'],
                                       promotes_outputs=[('turboprop_thrust',
                                                          Dynamic.Mission.THRUST)])
+
+        # turboprop_group.connect(Dynamic.Mission.SHAFT_POWER, 'prop_shp')
 
         return turboprop_group
 
@@ -187,4 +185,5 @@ class TurbopropModel(EngineModel):
                                               subsys=prop_model_post_mission,
                                               aviary_options=aviary_inputs,)
 
+        # TODO should return None if turboprop_group is empty
         return turboprop_group

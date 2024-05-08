@@ -153,10 +153,10 @@ class UncorrectData(om.Group):
             'uncorrection',
             om.ExecComp(
                 'uncorrected_data = corrected_data * (delta_T + theta_T**.5)',
-                uncorrected_data={'units': "hp", 'shape': num_nodes},
-                delta_T={'units': "unitless", 'shape': num_nodes},
-                theta_T={'units': "unitless", 'shape': num_nodes},
-                corrected_data={'units': "hp", 'shape': num_nodes},
+                uncorrected_data={'units': "hp", 'val': np.zeros(num_nodes)},
+                delta_T={'units': "unitless", 'val': np.zeros(num_nodes)},
+                theta_T={'units': "unitless", 'val': np.zeros(num_nodes)},
+                corrected_data={'units': "hp", 'val': np.zeros(num_nodes)},
                 has_diag_partials=True,
             ),
             promotes=['*']
