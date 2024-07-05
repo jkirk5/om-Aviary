@@ -396,17 +396,6 @@ class LargeTurbopropFreighterBenchmark(unittest.TestCase):
         # prob.aviary_inputs.set_val(Mission.Constraints.MAX_MACH, 0.5)
         # prob.aviary_inputs.set_val(Aircraft.Fuselage.AVG_DIAMETER, 4.125, 'm')
 
-        # Prop stuff
-        prob.aviary_inputs.set_val(Aircraft.Engine.PROPELLER_DIAMETER, 13.5, 'ft')
-        prob.aviary_inputs.set_val(Aircraft.Engine.NUM_PROPELLER_BLADES, 4, 'unitless')
-        prob.aviary_inputs.set_val(
-            Aircraft.Engine.PROPELLER_ACTIVITY_FACTOR, 167, 'unitless'
-        )
-        prob.aviary_inputs.set_val(
-            Aircraft.Engine.PROPELLER_INTEGRATED_LIFT_COEFFICIENT, 0.5, 'unitless'
-        )
-        prob.aviary_inputs.set_val(Aircraft.Engine.PROPELLER_TIP_SPEED_MAX, 720, 'ft/s')
-
         prob.check_and_preprocess_inputs()
         prob.add_pre_mission_systems()
         prob.add_phases()
