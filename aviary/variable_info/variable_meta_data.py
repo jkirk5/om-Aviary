@@ -3797,14 +3797,13 @@ add_meta_data(
     meta_data=_MetaData,
     historical_name={"GASP": 'INGASP.IGEAR',
                      "FLOPS": None,
-                     "LEAPS1": None
-                     },
+                     "LEAPS1": None, },
     option=True,
     default_value=True,
     types=bool,
     units="unitless",
-    desc='Type of landing gear. In GASP, 0 is retractable and 1 is deployed (fixed). Here, '
-          'false is retractable and true is deployed (fixed).',
+    desc='Type of landing gear. In GASP, 0 is retractable and 1 is fixed. Here, '
+    'false is retractable and true is fixed.',
 )
 
 add_meta_data(
