@@ -23,7 +23,7 @@ class FlightConstraintTestCase(unittest.TestCase):
         )
         self.prob.model.set_input_defaults(Aircraft.Wing.AREA, 1370.3, units="ft**2")
         self.prob.model.set_input_defaults(
-            "rho", 0.0023081 * np.ones(2), units="slug/ft**3"
+            Dynamic.Mission.DENSITY, 0.0023081 * np.ones(2), units="slug/ft**3"
         )
         self.prob.model.set_input_defaults(
             "CL_max", 1.2596 * np.ones(2), units="unitless")

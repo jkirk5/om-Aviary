@@ -3,10 +3,9 @@ Define the ODE for takeoff.
 '''
 import numpy as np
 import openmdao.api as om
-from dymos.models.atmosphere.atmos_1976 import USatm1976Comp
+from aviary.subsystems.atmosphere.atmosphere import Atmosphere
 
 from aviary.mission.flops_based.ode.takeoff_eom import StallSpeed, TakeoffEOM
-from aviary.mission.gasp_based.flight_conditions import FlightConditions
 from aviary.mission.gasp_based.ode.time_integration_base_classes import add_SGM_required_inputs
 from aviary.utils.aviary_values import AviaryValues
 from aviary.utils.functions import set_aviary_initial_values, promote_aircraft_and_mission_vars
@@ -89,19 +88,28 @@ class TakeoffODE(om.Group):
 
         self.add_subsystem(
             "USatm",
-            USatm1976Comp(num_nodes=nn),
-            promotes_inputs=[("h", Dynamic.Mission.ALTITUDE)],
+            Atmosphere(num_nodes=nn),
+            promotes_inputs=[
+                ("h", Dynamic.Mission.ALTITUDE),
+                Dynamic.Mission.VELOCITY,
+            ],
             promotes_outputs=[
-                "rho", ("sos", Dynamic.Mission.SPEED_OF_SOUND), ("temp",
-                                                                 Dynamic.Mission.TEMPERATURE),
-                ("pres", Dynamic.Mission.STATIC_PRESSURE), "viscosity"])
+                Dynamic.Mission.DENSITY,
+                ("sos", Dynamic.Mission.SPEED_OF_SOUND),
+                ("temp", Dynamic.Mission.TEMPERATURE),
+                ("pres", Dynamic.Mission.STATIC_PRESSURE),
+                "viscosity",
+                Dynamic.Mission.EQUIVALENT_AIRSPEED,
+                Dynamic.Mission.MACH,
+            ],
+        )
 
-        self.add_subsystem(
-            "fc",
-            FlightConditions(num_nodes=nn),
-            promotes_inputs=["rho", Dynamic.Mission.SPEED_OF_SOUND,
-                             ("TAS", Dynamic.Mission.VELOCITY)],
-            promotes_outputs=[Dynamic.Mission.DYNAMIC_PRESSURE, Dynamic.Mission.MACH, "EAS"])
+        # self.add_subsystem(
+        #     "fc",
+        #     FlightConditions(num_nodes=nn),
+        #     promotes_inputs=[Dynamic.Mission.DENSITY, Dynamic.Mission.SPEED_OF_SOUND,
+        #                      Dynamic.Mission.VELOCITY],
+        #     promotes_outputs=[Dynamic.Mission.DYNAMIC_PRESSURE, Dynamic.Mission.MACH, Dynamic.Mission.EQUIVALENT_AIRSPEED])
 
         # NOTE: the following are potentially signficant differences in implementation
         # between FLOPS and Aviary:
@@ -114,7 +122,7 @@ class TakeoffODE(om.Group):
             "stall_speed", StallSpeed(num_nodes=nn),
             promotes_inputs=[
                 "mass",
-                ("density", "rho"),
+                ("density", Dynamic.Mission.DENSITY),
                 ('area', Aircraft.Wing.AREA),
                 ("lift_coefficient_max", self.stall_speed_lift_coefficient_name),
             ],

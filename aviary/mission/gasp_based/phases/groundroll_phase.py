@@ -76,7 +76,7 @@ class GroundrollPhase(PhaseBuilderBase):
 
         phase.add_timeseries_output("normal_force")
         phase.add_timeseries_output(Dynamic.Mission.MACH)
-        phase.add_timeseries_output("EAS", units="kn")
+        phase.add_timeseries_output(Dynamic.Mission.EQUIVALENT_AIRSPEED, units="kn")
 
         phase.add_timeseries_output(Dynamic.Mission.LIFT)
         phase.add_timeseries_output("CL")

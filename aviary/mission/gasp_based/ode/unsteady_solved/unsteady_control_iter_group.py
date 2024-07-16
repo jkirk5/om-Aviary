@@ -97,7 +97,7 @@ class UnsteadyControlIterGroup(om.Group):
         # Set common default values for promoted inputs
         onn = np.ones(nn)
         self.set_input_defaults(
-            name="rho", val=RHO_SEA_LEVEL_ENGLISH * onn, units="slug/ft**3")
+            name=Dynamic.Mission.DENSITY, val=RHO_SEA_LEVEL_ENGLISH * onn, units="slug/ft**3")
         self.set_input_defaults(
             name=Dynamic.Mission.SPEED_OF_SOUND,
             val=1116.4 * onn,

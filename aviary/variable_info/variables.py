@@ -654,6 +654,7 @@ class Dynamic:
         THRUST_TOTAL = 'thrust_net_total'
         TORQUE = 'torque'
         VELOCITY = 'velocity'
+        EQUIVALENT_AIRSPEED = 'equivalent_airspeed'
         VELOCITY_RATE = 'velocity_rate'
 
 

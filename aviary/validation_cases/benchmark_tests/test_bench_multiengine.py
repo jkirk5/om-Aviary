@@ -5,7 +5,7 @@ from openmdao.core.problem import _clear_problem_names
 from openmdao.utils.assert_utils import assert_near_equal
 from openmdao.utils.testing_utils import require_pyoptsparse, use_tempdirs
 
-from aviary.interface.default_phase_info.height_energy import phase_info
+from aviary.mission.default_phase_info.height_energy import phase_info
 from aviary.interface.methods_for_level2 import AviaryProblem
 from aviary.models.multi_engine_single_aisle.multi_engine_single_aisle_data import inputs, engine_1_inputs, engine_2_inputs
 from aviary.variable_info.enums import ThrottleAllocation

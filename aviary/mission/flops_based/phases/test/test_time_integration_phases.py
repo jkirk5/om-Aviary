@@ -11,7 +11,7 @@ from aviary.variable_info.enums import EquationsOfMotion
 from aviary.variable_info.variables import Aircraft, Dynamic, Mission, Settings
 from aviary.variable_info.variables_in import VariablesIn
 
-from aviary.interface.default_phase_info.height_energy_fiti import add_default_sgm_args
+from aviary.mission.default_phase_info.height_energy_fiti import add_default_sgm_args
 from aviary.utils.test_utils.default_subsystems import get_default_premission_subsystems
 from aviary.subsystems.propulsion.utils import build_engine_deck
 from aviary.utils.process_input_decks import create_vehicle

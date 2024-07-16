@@ -1,5 +1,5 @@
 import openmdao.api as om
-from dymos.models.atmosphere.atmos_1976 import USatm1976Comp
+from aviary.subsystems.atmosphere.atmosphere import Atmosphere
 
 from aviary.constants import GRAV_ENGLISH_LBM, RHO_SEA_LEVEL_METRIC
 from aviary.variable_info.functions import add_aviary_input, add_aviary_output
@@ -19,7 +19,8 @@ class StallSpeed(om.ExplicitComponent):
             desc="mass of the aircraft",
         )
 
-        self.add_input("rho", val=1.225, units="kg/m**3", desc="atmospheric density")
+        self.add_input(Dynamic.Mission.DENSITY, val=1.225,
+                       units="kg/m**3", desc="atmospheric density")
 
         self.add_input("planform_area", val=7, units="m**2", desc="area of the wings")
 
@@ -46,7 +47,7 @@ class StallSpeed(om.ExplicitComponent):
         # This is only necessary because the equation expects newtons,
         # but the mission expects pounds mass instead of pounds force.
         weight = weight*4.44822
-        rho = inputs["rho"]
+        rho = inputs[Dynamic.Mission.DENSITY]
         S = inputs["planform_area"]
         Cl_max = inputs["Cl_max"]
 
@@ -57,7 +58,7 @@ class StallSpeed(om.ExplicitComponent):
     def compute_partials(self, inputs, J):
 
         weight = inputs["mass"] * GRAV_ENGLISH_LBM
-        rho = inputs["rho"]
+        rho = inputs[Dynamic.Mission.DENSITY]
         S = inputs["planform_area"]
         Cl_max = inputs["Cl_max"]
 
@@ -65,7 +66,7 @@ class StallSpeed(om.ExplicitComponent):
 
         J["v_stall", "mass"] = 0.5 * 4.44822**.5 * \
             rad ** (-0.5) * 2 * GRAV_ENGLISH_LBM / (rho * S * Cl_max)
-        J["v_stall", "rho"] = (
+        J["v_stall", Dynamic.Mission.DENSITY] = (
             0.5 * 4.44822**.5 * rad ** (-0.5) * (-2 * weight) / (rho ** 2 * S * Cl_max)
         )
         J["v_stall", "planform_area"] = (
@@ -93,7 +94,8 @@ class FinalTakeoffConditions(om.ExplicitComponent):
 
         add_aviary_input(self, Mission.Takeoff.FUEL_SIMPLE, val=10.e3)
 
-        self.add_input("rho", val=1.225, units="kg/m**3", desc="atmospheric density")
+        self.add_input(Dynamic.Mission.DENSITY, val=1.225,
+                       units="kg/m**3", desc="atmospheric density")
 
         add_aviary_input(self, Aircraft.Wing.AREA, val=7)
 
@@ -123,7 +125,7 @@ class FinalTakeoffConditions(om.ExplicitComponent):
             Mission.Takeoff.GROUND_DISTANCE,
             [
                 Mission.Design.GROSS_MASS,
-                "rho",
+                Dynamic.Mission.DENSITY,
                 Aircraft.Wing.AREA,
                 Mission.Takeoff.LIFT_COEFFICIENT_MAX,
                 Mission.Design.THRUST_TAKEOFF_PER_ENG,
@@ -148,7 +150,7 @@ class FinalTakeoffConditions(om.ExplicitComponent):
         v_stall = inputs["v_stall"]
         gross_mass = inputs[Mission.Design.GROSS_MASS]
         ramp_weight = gross_mass * GRAV_ENGLISH_LBM
-        rho = inputs["rho"]
+        rho = inputs[Dynamic.Mission.DENSITY]
         S = inputs[Aircraft.Wing.AREA]
         Cl_max = inputs[Mission.Takeoff.LIFT_COEFFICIENT_MAX]
         thrust = inputs[Mission.Design.THRUST_TAKEOFF_PER_ENG]
@@ -200,7 +202,7 @@ class FinalTakeoffConditions(om.ExplicitComponent):
         rho_SL = RHO_SEA_LEVEL_METRIC
 
         ramp_weight = inputs[Mission.Design.GROSS_MASS] * GRAV_ENGLISH_LBM
-        rho = inputs["rho"]
+        rho = inputs[Dynamic.Mission.DENSITY]
         S = inputs[Aircraft.Wing.AREA]
         Cl_max = inputs[Mission.Takeoff.LIFT_COEFFICIENT_MAX]
         thrust = inputs[Mission.Design.THRUST_TAKEOFF_PER_ENG]
@@ -342,7 +344,7 @@ class FinalTakeoffConditions(om.ExplicitComponent):
 
         J[Mission.Takeoff.GROUND_DISTANCE,
             Mission.Design.GROSS_MASS] = dRD_dM + dRot_dM + dCout_dM
-        J[Mission.Takeoff.GROUND_DISTANCE, "rho"] = \
+        J[Mission.Takeoff.GROUND_DISTANCE, Dynamic.Mission.DENSITY] = \
             dRD_dRho + dRot_dRho + dCout_dRho
         J[Mission.Takeoff.GROUND_DISTANCE,
             Aircraft.Wing.AREA] = dRD_dS + dRot_dS + dCout_dS
@@ -365,10 +367,9 @@ class TakeoffGroup(om.Group):
     def setup(self):
 
         self.add_subsystem(
-            "USatm",
-            USatm1976Comp(num_nodes=1),
-            promotes_inputs=[("h", Dynamic.Mission.ALTITUDE)],
-            promotes_outputs=["rho", ("sos", "speed_of_sound")],
+            "atmosphere",
+            Atmosphere(num_nodes=1),
+            promotes=['*'],
         )
 
         self.add_subsystem(
@@ -379,7 +380,7 @@ class TakeoffGroup(om.Group):
             ],
             promotes_inputs=[
                 ("mass", Mission.Design.GROSS_MASS),
-                "rho",
+                Dynamic.Mission.DENSITY,
                 ('planform_area', Aircraft.Wing.AREA),
                 ("Cl_max", Mission.Takeoff.LIFT_COEFFICIENT_MAX),
             ],
@@ -391,7 +392,7 @@ class TakeoffGroup(om.Group):
             promotes_inputs=[
                 "v_stall",
                 Mission.Design.GROSS_MASS,
-                "rho",
+                Dynamic.Mission.DENSITY,
                 Aircraft.Wing.AREA,
                 Mission.Takeoff.FUEL_SIMPLE,
                 Mission.Takeoff.LIFT_COEFFICIENT_MAX,

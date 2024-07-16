@@ -1,4 +1,4 @@
-from dymos.models.atmosphere.atmos_1976 import USatm1976Comp
+from aviary.subsystems.atmosphere.atmosphere import Atmosphere
 from aviary.utils.aviary_values import AviaryValues
 from aviary.utils.functions import add_opts2vals, create_opts2vals
 
@@ -14,13 +14,7 @@ class TaxiSegment(BaseODE):
         options: AviaryValues = self.options['aviary_options']
         core_subsystems = self.options['core_subsystems']
         self.add_subsystem("params", ParamPort(), promotes=["*"])
-        self.add_subsystem(
-            "USatm",
-            USatm1976Comp(num_nodes=1),
-            promotes_inputs=[("h", Mission.Takeoff.AIRPORT_ALTITUDE)],
-            promotes_outputs=[("temp", Dynamic.Mission.TEMPERATURE),
-                              ("pres", Dynamic.Mission.STATIC_PRESSURE)],
-        )
+        self.add_subsystem("atmosphere", Atmosphere(num_nodes=1), promotes=['*'])
 
         add_opts2vals(self, create_opts2vals(
             [Mission.Taxi.MACH]), options)

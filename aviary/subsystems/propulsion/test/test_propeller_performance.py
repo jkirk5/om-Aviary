@@ -4,7 +4,7 @@ import numpy as np
 import openmdao.api as om
 
 from openmdao.utils.assert_utils import assert_check_partials, assert_near_equal
-from dymos.models.atmosphere import USatm1976Comp
+from aviary.subsystems.atmosphere.atmosphere import Atmosphere
 
 from aviary.constants import TSLS_DEGR
 from aviary.variable_info.variables import Aircraft
@@ -181,15 +181,7 @@ class PropellerPerformanceTest(unittest.TestCase):
 
         num_nodes = 3
         prob.model.add_subsystem(
-            name='atmosphere',
-            subsys=USatm1976Comp(num_nodes=num_nodes),
-            promotes_inputs=[('h', Dynamic.Mission.ALTITUDE)],
-            promotes_outputs=[
-                ('sos', Dynamic.Mission.SPEED_OF_SOUND),
-                ('rho', Dynamic.Mission.DENSITY),
-                ('temp', Dynamic.Mission.TEMPERATURE),
-                ('pres', Dynamic.Mission.STATIC_PRESSURE),
-            ],
+            name='atmosphere', subsys=Atmosphere(num_nodes=num_nodes), promotes=['*']
         )
 
         prob.model.add_subsystem(

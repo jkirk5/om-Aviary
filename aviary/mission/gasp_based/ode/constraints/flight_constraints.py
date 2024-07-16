@@ -34,7 +34,7 @@ class FlightConstraints(om.ExplicitComponent):
         add_aviary_input(self, Aircraft.Wing.AREA, val=2)
 
         self.add_input(
-            "rho",
+            Dynamic.Mission.DENSITY,
             val=np.ones(nn),
             units="slug/ft**3",
             desc="density of air",
@@ -92,7 +92,7 @@ class FlightConstraints(om.ExplicitComponent):
         )
         self.declare_partials(
             "TAS_violation",
-            [Dynamic.Mission.MASS, "rho", "CL_max", "TAS"],
+            [Dynamic.Mission.MASS, Dynamic.Mission.DENSITY, "CL_max", "TAS"],
             rows=arange,
             cols=arange,
         )
@@ -103,7 +103,7 @@ class FlightConstraints(om.ExplicitComponent):
             ],
         )
         self.declare_partials(
-            "TAS_min", [Dynamic.Mission.MASS, "rho", "CL_max"], rows=arange, cols=arange
+            "TAS_min", [Dynamic.Mission.MASS, Dynamic.Mission.DENSITY, "CL_max"], rows=arange, cols=arange
         )
         self.declare_partials(
             "TAS_min",
@@ -116,7 +116,7 @@ class FlightConstraints(om.ExplicitComponent):
 
         weight = inputs[Dynamic.Mission.MASS] * GRAV_ENGLISH_LBM
         wing_area = inputs[Aircraft.Wing.AREA]
-        rho = inputs["rho"]
+        rho = inputs[Dynamic.Mission.DENSITY]
         CL_max = inputs["CL_max"]
         gamma = inputs[Dynamic.Mission.FLIGHT_PATH_ANGLE]
         i_wing = inputs[Aircraft.Wing.INCIDENCE]
@@ -136,7 +136,7 @@ class FlightConstraints(om.ExplicitComponent):
 
         weight = inputs[Dynamic.Mission.MASS] * GRAV_ENGLISH_LBM
         wing_area = inputs[Aircraft.Wing.AREA]
-        rho = inputs["rho"]
+        rho = inputs[Dynamic.Mission.DENSITY]
         CL_max = inputs["CL_max"]
         gamma = inputs[Dynamic.Mission.FLIGHT_PATH_ANGLE]
         i_wing = inputs[Aircraft.Wing.INCIDENCE]
@@ -151,7 +151,7 @@ class FlightConstraints(om.ExplicitComponent):
             1.1 * 0.5 * (2 / (wing_area * rho * CL_max)) ** 0.5 *
             weight ** (-0.5) * GRAV_ENGLISH_LBM
         )
-        J["TAS_violation", "rho"] = (
+        J["TAS_violation", Dynamic.Mission.DENSITY] = (
             1.1 * (2 * weight / (wing_area * CL_max)) ** 0.5 * (-0.5) * rho ** (-1.5)
         )
         J["TAS_violation", "CL_max"] = (
@@ -166,7 +166,7 @@ class FlightConstraints(om.ExplicitComponent):
             0.5 * (2 / (wing_area * rho * CL_max)) ** 0.5 *
             weight ** (-0.5) * GRAV_ENGLISH_LBM
         )
-        J["TAS_min", "rho"] = 1.1 * (
+        J["TAS_min", Dynamic.Mission.DENSITY] = 1.1 * (
             (2 * weight / (wing_area * CL_max)) ** 0.5 * (-0.5) * rho ** (-1.5)
         )
         J["TAS_min", "CL_max"] = 1.1 * (

@@ -189,7 +189,7 @@ phase_name = 'GH'
 output_data[point_name] = {}
 output_data[point_name]['thrust_fraction'] = case.get_val(f'traj.{phase_name}.rhs_all.thrust_net', units='N')[
     -1][0] / case.get_val(f'traj.{phase_name}.rhs_all.thrust_net_max', units='N')[-1][0]
-output_data[point_name]['true_airspeed'] = case.get_val(
+output_data[point_name]['velocity'] = case.get_val(
     f'traj.{phase_name}.timeseries.velocity', units='kn')[-1][0]
 output_data[point_name]['angle_of_attack'] = case.get_val(
     f'traj.{phase_name}.timeseries.alpha', units='deg')[-1][0]

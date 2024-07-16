@@ -3,7 +3,9 @@ import warnings
 import importlib
 
 import openmdao.api as om
-from aviary.interface.default_phase_info.two_dof_fiti_deprecated import create_2dof_based_descent_phases
+from aviary.mission.default_phase_info.two_dof_fiti_deprecated import (
+    create_2dof_based_descent_phases,
+)
 from aviary.interface.default_phase_info.two_dof_fiti import descent_phases, add_default_sgm_args
 
 from openmdao.utils.assert_utils import assert_near_equal

@@ -4,7 +4,7 @@ OpenMDAO System to compute drag based on the methods in FLOPS AERO.
 import numpy as np
 import openmdao.api as om
 
-from aviary.subsystems.aerodynamics.aero_common import DynamicPressure
+# from aviary.subsystems.aerodynamics.aero_common import DynamicPressure
 from aviary.subsystems.aerodynamics.flops_based.buffet_lift import BuffetLift
 from aviary.subsystems.aerodynamics.flops_based.compressibility_drag import \
     CompressibilityDrag
@@ -47,10 +47,10 @@ class ComputedAeroGroup(om.Group):
                 'wetted_areas', 'fineness_ratios', 'characteristic_lengths',
                 'laminar_fractions_upper', 'laminar_fractions_lower'])
 
-        self.add_subsystem(
-            'DynamicPressure', DynamicPressure(num_nodes=num_nodes, gamma=gamma),
-            promotes_inputs=[Dynamic.Mission.MACH, Dynamic.Mission.STATIC_PRESSURE],
-            promotes_outputs=[Dynamic.Mission.DYNAMIC_PRESSURE])
+        # self.add_subsystem(
+        #     'DynamicPressure', DynamicPressure(num_nodes=num_nodes, gamma=gamma),
+        #     promotes_inputs=[Dynamic.Mission.MACH, Dynamic.Mission.STATIC_PRESSURE],
+        #     promotes_outputs=[Dynamic.Mission.DYNAMIC_PRESSURE])
 
         comp = LiftEqualsWeight(num_nodes=num_nodes)
         self.add_subsystem(

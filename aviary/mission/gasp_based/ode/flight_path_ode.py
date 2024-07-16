@@ -1,10 +1,10 @@
 import numpy as np
 import openmdao.api as om
-from dymos.models.atmosphere.atmos_1976 import USatm1976Comp
+from aviary.subsystems.atmosphere.atmosphere import Atmosphere
 from aviary.subsystems.mass.mass_to_weight import MassToWeight
 
 from aviary.variable_info.enums import AlphaModes, AnalysisScheme, SpeedType
-from aviary.mission.gasp_based.flight_conditions import FlightConditions
+from aviary.subsystems.atmosphere.flight_conditions import FlightConditions
 from aviary.mission.gasp_based.ode.base_ode import BaseODE
 from aviary.mission.gasp_based.ode.flight_path_eom import FlightPathEOM
 from aviary.mission.gasp_based.ode.params import ParamPort
@@ -52,15 +52,15 @@ class FlightPathODE(BaseODE):
             kwargs['method'] = 'cruise'
             kwargs['output_alpha'] = False
 
-        if input_speed_type is SpeedType.EAS:
-            speed_inputs = ["EAS"]
-            speed_outputs = ["mach", ("TAS", Dynamic.Mission.VELOCITY)]
-        elif input_speed_type is SpeedType.TAS:
-            speed_inputs = [("TAS", Dynamic.Mission.VELOCITY)]
-            speed_outputs = ["mach", "EAS"]
-        elif input_speed_type is SpeedType.MACH:
-            speed_inputs = ["mach"]
-            speed_outputs = ["EAS", ("TAS", Dynamic.Mission.VELOCITY)]
+        # if input_speed_type is SpeedType.EAS:
+        #     speed_inputs = [Dynamic.Mission.EQUIVALENT_AIRSPEED]
+        #     speed_outputs = ["mach", Dynamic.Mission.VELOCITY]
+        # elif input_speed_type is SpeedType.TAS:
+        #     speed_inputs = [Dynamic.Mission.VELOCITY]
+        #     speed_outputs = ["mach", Dynamic.Mission.EQUIVALENT_AIRSPEED]
+        # elif input_speed_type is SpeedType.MACH:
+        #     speed_inputs = ["mach"]
+        #     speed_outputs = [Dynamic.Mission.EQUIVALENT_AIRSPEED, Dynamic.Mission.VELOCITY]
 
         EOM_inputs = [
             Dynamic.Mission.MASS,
@@ -100,19 +100,17 @@ class FlightPathODE(BaseODE):
         self.add_subsystem("params", flight_path_params, promotes=["*"])
 
         self.add_subsystem(
-            "USatm",
-            USatm1976Comp(num_nodes=nn),
-            promotes_inputs=[("h", Dynamic.Mission.ALTITUDE)],
-            promotes_outputs=["rho", ("sos", Dynamic.Mission.SPEED_OF_SOUND),
-                              ("temp", Dynamic.Mission.TEMPERATURE), ("pres", Dynamic.Mission.STATIC_PRESSURE), "viscosity", "drhos_dh"],
+            "atmosphere",
+            Atmosphere(num_nodes=nn, input_speed_type=input_speed_type),
+            promotes=['*'],
         )
 
-        self.add_subsystem(
-            "fc",
-            FlightConditions(num_nodes=nn, input_speed_type=input_speed_type),
-            promotes_inputs=["rho", Dynamic.Mission.SPEED_OF_SOUND] + speed_inputs,
-            promotes_outputs=[Dynamic.Mission.DYNAMIC_PRESSURE,] + speed_outputs,
-        )
+        # self.add_subsystem(
+        #     "fc",
+        #     FlightConditions(num_nodes=nn, input_speed_type=input_speed_type),
+        #     promotes_inputs=[Dynamic.Mission.DENSITY, Dynamic.Mission.SPEED_OF_SOUND] + speed_inputs,
+        #     promotes_outputs=[Dynamic.Mission.DYNAMIC_PRESSURE,] + speed_outputs,
+        # )
 
         if alpha_mode is AlphaModes.DEFAULT:
             # alpha as input

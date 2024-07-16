@@ -5,7 +5,7 @@ import csv
 from openmdao.utils.testing_utils import use_tempdirs, set_env_vars
 import openmdao.api as om
 
-from aviary.interface.default_phase_info.height_energy import phase_info
+from aviary.mission.default_phase_info.height_energy import phase_info
 from aviary.interface.methods_for_level1 import run_aviary
 
 

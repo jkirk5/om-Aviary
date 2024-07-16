@@ -56,13 +56,14 @@ class AccelPhase(PhaseBuilderBase):
 
         # Boundary Constraints
         phase.add_boundary_constraint(
-            "EAS", loc="final", equals=EAS_constraint_eq, units="kn", ref=EAS_constraint_eq
+            Dynamic.Mission.EQUIVALENT_AIRSPEED, loc="final", equals=EAS_constraint_eq, units="kn", ref=EAS_constraint_eq
         )
 
         phase.add_parameter(Dynamic.Mission.ALTITUDE, opt=False, units="ft", val=alt)
 
         # Timeseries Outputs
-        phase.add_timeseries_output("EAS", output_name="EAS", units="kn")
+        phase.add_timeseries_output(Dynamic.Mission.EQUIVALENT_AIRSPEED,
+                                    output_name=Dynamic.Mission.EQUIVALENT_AIRSPEED, units="kn")
         phase.add_timeseries_output(
             Dynamic.Mission.MACH, output_name=Dynamic.Mission.MACH, units="unitless")
         phase.add_timeseries_output("alpha", output_name="alpha", units="deg")

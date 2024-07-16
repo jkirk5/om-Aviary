@@ -21,7 +21,8 @@ class SpeedConstraintTestCase1(unittest.TestCase):
             promotes=["*"],
         )
 
-        self.prob.model.set_input_defaults("EAS", np.array([229, 229, 229]), units="kn")
+        self.prob.model.set_input_defaults(
+            Dynamic.Mission.EQUIVALENT_AIRSPEED, np.array([229, 229, 229]), units="kn")
         self.prob.model.set_input_defaults(
             Dynamic.Mission.MACH, np.array([0.6, 0.6, 0.6]), units="unitless"
         )
@@ -53,7 +54,8 @@ class SpeedConstraintTestCase2(unittest.TestCase):
             promotes=["*"],
         )
 
-        self.prob.model.set_input_defaults("EAS", np.array([229, 229, 229]), units="kn")
+        self.prob.model.set_input_defaults(
+            Dynamic.Mission.EQUIVALENT_AIRSPEED, np.array([229, 229, 229]), units="kn")
         self.prob.model.set_input_defaults(
             Dynamic.Mission.MACH, np.array([0.9, 0.9, 0.9]), units="unitless"
         )

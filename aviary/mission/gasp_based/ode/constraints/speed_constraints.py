@@ -22,7 +22,7 @@ class SpeedConstraints(om.ExplicitComponent):
         arange = np.arange(nn)
 
         self.add_input(
-            "EAS",
+            Dynamic.Mission.EQUIVALENT_AIRSPEED,
             val=np.ones(nn),
             units="kn",
             desc="equivalent airspeed",
@@ -42,7 +42,7 @@ class SpeedConstraints(om.ExplicitComponent):
         )
 
         self.declare_partials(
-            "speed_constraint", "EAS", rows=arange * 2, cols=arange, val=1.0
+            "speed_constraint", Dynamic.Mission.EQUIVALENT_AIRSPEED, rows=arange * 2, cols=arange, val=1.0
         )
         self.declare_partials(
             "speed_constraint",
@@ -54,7 +54,7 @@ class SpeedConstraints(om.ExplicitComponent):
 
     def compute(self, inputs, outputs):
 
-        EAS = inputs["EAS"]
+        EAS = inputs[Dynamic.Mission.EQUIVALENT_AIRSPEED]
         EAS_target = self.options["EAS_target"]
         mach = inputs[Dynamic.Mission.MACH]
         mach_cruise = self.options["mach_cruise"]

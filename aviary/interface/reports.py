@@ -100,7 +100,7 @@ def run_status(prob):
 def subsystem_report(prob, **kwargs):
     """
     Loops through all subsystem builders in the AviaryProblem calls their write_report
-    method. All generated report files are placed in the "reports/subsystem_reports" folder
+    method. All generated report files are placed in the "reports/subsystems" folder
 
     Parameters
     ----------

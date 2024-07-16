@@ -786,6 +786,7 @@ class AeroSetup(om.Group):
         self.options.declare(
             'aviary_options', types=AviaryValues,
             desc='collection of Aircraft/Mission specific options')
+        # TODO this code should go in the test and not the component itself
         self.options.declare(
             "input_atmos",
             default=False,
@@ -832,7 +833,7 @@ class AeroSetup(om.Group):
             #     "atmos",
             #     USatm1976Comp(num_nodes=nn),
             #     promotes_inputs=[("h", Dynamic.Mission.ALTITUDE)],
-            #     promotes_outputs=["rho", Dynamic.Mission.SPEED_OF_SOUND, "viscosity"],
+            #     promotes_outputs=[Dynamic.Mission.DENSITY, Dynamic.Mission.SPEED_OF_SOUND, "viscosity"],
             # )
             self.add_subsystem(
                 "kin_visc",

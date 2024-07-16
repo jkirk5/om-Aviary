@@ -39,7 +39,8 @@ class SGMGroundroll(SimuPyProblem):
             ],
             # state_units=['lbm','nmi','ft','ft/s'],
             alternate_state_rate_names={
-                Dynamic.Mission.MASS: Dynamic.Mission.FUEL_FLOW_RATE_NEGATIVE_TOTAL},
+                Dynamic.Mission.MASS: Dynamic.Mission.FUEL_FLOW_RATE_NEGATIVE_TOTAL
+            },
             **simupy_args,
         )
 
@@ -73,7 +74,8 @@ class SGMRotation(SimuPyProblem):
             ],
             # state_units=['lbm','nmi','ft'],
             alternate_state_rate_names={
-                Dynamic.Mission.MASS: Dynamic.Mission.FUEL_FLOW_RATE_NEGATIVE_TOTAL},
+                Dynamic.Mission.MASS: Dynamic.Mission.FUEL_FLOW_RATE_NEGATIVE_TOTAL
+            },
             **simupy_args,
         )
 
@@ -108,8 +110,11 @@ class SGMAscent(SimuPyProblem):
     ):
         controls = None
         super().__init__(
-            AscentODE(analysis_scheme=AnalysisScheme.SHOOTING,
-                      alpha_mode=alpha_mode, **ode_args),
+            AscentODE(
+                analysis_scheme=AnalysisScheme.SHOOTING,
+                alpha_mode=alpha_mode,
+                **ode_args,
+            ),
             problem_name=phase_name,
             outputs=[
                 "load_factor",
@@ -127,7 +132,8 @@ class SGMAscent(SimuPyProblem):
             ],
             # state_units=['lbm','nmi','ft'],
             alternate_state_rate_names={
-                Dynamic.Mission.MASS: Dynamic.Mission.FUEL_FLOW_RATE_NEGATIVE_TOTAL},
+                Dynamic.Mission.MASS: Dynamic.Mission.FUEL_FLOW_RATE_NEGATIVE_TOTAL
+            },
             controls=controls,
             **simupy_args,
         )
@@ -266,7 +272,7 @@ class SGMAscentCombined(SGMAscent):
                 alpha = self.compute_alpha(ode, t, x)
                 load_factor_val = ode.get_val("load_factor")
                 fuselage_pitch_val = ode.get_val("fuselage_pitch", units="deg")
-                velocity_rate_val = ode.get_val("velocity_rate")
+                velocity_rate_val = ode.get_val("VELOCITY_rate")
                 if (
                     (load_factor_val > load_factor_max) and not
                     np.isclose(load_factor_val, load_factor_max)
@@ -304,7 +310,7 @@ class SGMAscentCombined(SGMAscent):
             else:
                 print("time :", t)
                 print("ode :", self.ode_name[ode])
-                for key in ["load_factor", "fuselage_pitch", "velocity_rate"]:
+                for key in ["load_factor", "fuselage_pitch", "VELOCITY_rate"]:
                     print(key, ":", ode.get_val(key))
                 raise ValueError("Ascent could not satisfy all constraints")
 
@@ -363,7 +369,7 @@ class SGMAccel(SimuPyProblem):
         super().__init__(
             ode,
             problem_name=phase_name,
-            outputs=["EAS", "mach", "alpha"],
+            outputs=[Dynamic.Mission.EQUIVALENT_AIRSPEED, "mach", "alpha"],
             states=[
                 Dynamic.Mission.MASS,
                 Dynamic.Mission.DISTANCE,
@@ -372,12 +378,13 @@ class SGMAccel(SimuPyProblem):
             ],
             # state_units=['lbm','nmi','ft'],
             alternate_state_rate_names={
-                Dynamic.Mission.MASS: Dynamic.Mission.FUEL_FLOW_RATE_NEGATIVE_TOTAL},
+                Dynamic.Mission.MASS: Dynamic.Mission.FUEL_FLOW_RATE_NEGATIVE_TOTAL
+            },
             **simupy_args,
         )
 
         self.phase_name = phase_name
-        self.add_trigger("EAS", VC_value, units=VC_units)
+        self.add_trigger(Dynamic.Mission.EQUIVALENT_AIRSPEED, VC_value, units=VC_units)
 
 
 class SGMClimb(SimuPyProblem):
@@ -422,7 +429,7 @@ class SGMClimb(SimuPyProblem):
                 "required_lift",
                 "lift",
                 "mach",
-                "EAS",
+                Dynamic.Mission.EQUIVALENT_AIRSPEED,
                 Dynamic.Mission.VELOCITY,
                 Dynamic.Mission.THRUST_TOTAL,
                 "drag",
@@ -435,7 +442,8 @@ class SGMClimb(SimuPyProblem):
             ],
             # state_units=['lbm','nmi','ft'],
             alternate_state_rate_names={
-                Dynamic.Mission.MASS: Dynamic.Mission.FUEL_FLOW_RATE_NEGATIVE_TOTAL},
+                Dynamic.Mission.MASS: Dynamic.Mission.FUEL_FLOW_RATE_NEGATIVE_TOTAL
+            },
             **simupy_args,
         )
 
@@ -479,7 +487,7 @@ class SGMCruise(SimuPyProblem):
             outputs=[
                 "alpha",  # ?
                 "lift",
-                "EAS",
+                Dynamic.Mission.EQUIVALENT_AIRSPEED,
                 Dynamic.Mission.VELOCITY,
                 Dynamic.Mission.THRUST_TOTAL,
                 "drag",
@@ -493,7 +501,8 @@ class SGMCruise(SimuPyProblem):
             ],
             # state_units=['lbm','nmi','ft'],
             alternate_state_rate_names={
-                Dynamic.Mission.MASS: Dynamic.Mission.FUEL_FLOW_RATE_NEGATIVE_TOTAL},
+                Dynamic.Mission.MASS: Dynamic.Mission.FUEL_FLOW_RATE_NEGATIVE_TOTAL
+            },
             **simupy_args,
         )
 
@@ -528,7 +537,7 @@ class SGMDescent(SimuPyProblem):
         self.input_speed_type = input_speed_type
         self.input_speed_units = input_speed_units
         if input_speed_type is SpeedType.MACH:
-            self.speed_trigger_name = "EAS"
+            self.speed_trigger_name = Dynamic.Mission.EQUIVALENT_AIRSPEED
         elif input_speed_type is SpeedType.EAS:
             self.speed_trigger_name = "TAS_violation"
         else:
@@ -542,7 +551,7 @@ class SGMDescent(SimuPyProblem):
                 "alpha",
                 "required_lift",
                 "lift",
-                "EAS",
+                Dynamic.Mission.EQUIVALENT_AIRSPEED,
                 Dynamic.Mission.VELOCITY,
                 Dynamic.Mission.THRUST_TOTAL,
                 "drag",
@@ -555,7 +564,8 @@ class SGMDescent(SimuPyProblem):
             ],
             # state_units=['lbm','nmi','ft'],
             alternate_state_rate_names={
-                Dynamic.Mission.MASS: Dynamic.Mission.FUEL_FLOW_RATE_NEGATIVE_TOTAL},
+                Dynamic.Mission.MASS: Dynamic.Mission.FUEL_FLOW_RATE_NEGATIVE_TOTAL
+            },
             **simupy_args,
         )
 

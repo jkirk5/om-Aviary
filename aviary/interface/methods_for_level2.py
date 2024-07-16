@@ -313,7 +313,9 @@ class AviaryProblem(om.Problem):
                             phase_info, None, self.aviary_inputs)
 
                 elif self.mission_method is HEIGHT_ENERGY:
-                    from aviary.interface.default_phase_info.height_energy import phase_info
+                    from aviary.mission.default_phase_info.height_energy import (
+                        phase_info,
+                    )
 
                 print('Loaded default phase_info for '
                       f'{self.mission_method.value.lower()} equations of motion')
@@ -2136,7 +2138,7 @@ class AviaryProblem(om.Problem):
             control_keys = ["mach", "altitude"]
             state_keys = ["mass", Dynamic.Mission.DISTANCE]
         else:
-            control_keys = ["velocity_rate", "throttle"]
+            control_keys = ["VELOCITY_rate", "throttle"]
             state_keys = ["altitude", "mass",
                           Dynamic.Mission.DISTANCE, Dynamic.Mission.VELOCITY, "flight_path_angle", "alpha"]
             if self.mission_method is TWO_DEGREES_OF_FREEDOM and phase_name == 'ascent':

@@ -1,6 +1,6 @@
-from dymos.models.atmosphere.atmos_1976 import USatm1976Comp
+from aviary.subsystems.atmosphere.atmosphere import Atmosphere
 
-from aviary.mission.gasp_based.flight_conditions import FlightConditions
+from aviary.subsystems.atmosphere.flight_conditions import FlightConditions
 from aviary.mission.gasp_based.ode.base_ode import BaseODE
 from aviary.mission.gasp_based.ode.params import ParamPort
 from aviary.mission.gasp_based.phases.landing_components import (
@@ -31,28 +31,27 @@ class LandingSegment(BaseODE):
         )
 
         self.add_subsystem(
-            "USatm_app",
-            USatm1976Comp(num_nodes=1),
-            promotes_inputs=[("h", Mission.Landing.INITIAL_ALTITUDE)],
-            promotes_outputs=[
-                ("rho", "rho_app"),
-                ("sos", "sos_app"),
-                ("temp", "T_app"),
-                ("pres", "P_app"),
-                ("viscosity", "viscosity_app"),
-            ],
-        )
-
-        self.add_subsystem(
-            "fc_app",
-            FlightConditions(num_nodes=1, input_speed_type=SpeedType.MACH),
+            "atmosphere",
+            Atmosphere(num_nodes=1, input_speed_type=SpeedType.MACH),
             promotes_inputs=[
-                ("rho", "rho_app"),
+                '*',
+                (Dynamic.Mission.DENSITY, "rho_app"),
                 (Dynamic.Mission.SPEED_OF_SOUND, "sos_app"),
                 (Dynamic.Mission.MACH, Mission.Landing.INITIAL_MACH),
             ],
-            promotes_outputs=[(Dynamic.Mission.DYNAMIC_PRESSURE, "q_app")],
+            promotes_outputs=['*', (Dynamic.Mission.DYNAMIC_PRESSURE, "q_app")],
         )
+
+        # self.add_subsystem(
+        #     "fc_app",
+        #     FlightConditions(num_nodes=1, input_speed_type=SpeedType.MACH),
+        #     promotes_inputs=[
+        #         (Dynamic.Mission.DENSITY, "rho_app"),
+        #         (Dynamic.Mission.SPEED_OF_SOUND, "sos_app"),
+        #         (Dynamic.Mission.MACH, Mission.Landing.INITIAL_MACH),
+        #     ],
+        #     promotes_outputs=[(Dynamic.Mission.DYNAMIC_PRESSURE, "q_app")],
+        # )
 
         # collect the propulsion group names for later use with
         for subsystem in core_subsystems:
@@ -68,7 +67,7 @@ class LandingSegment(BaseODE):
                                        "*",
                                        (Dynamic.Mission.ALTITUDE,
                                         Mission.Landing.INITIAL_ALTITUDE),
-                                       ("rho", "rho_app"),
+                                       (Dynamic.Mission.DENSITY, "rho_app"),
                                        (Dynamic.Mission.SPEED_OF_SOUND, "sos_app"),
                                        ("viscosity", "viscosity_app"),
                                        ("airport_alt", Mission.Landing.AIRPORT_ALTITUDE),
@@ -130,27 +129,33 @@ class LandingSegment(BaseODE):
         )
 
         self.add_subsystem(
-            "USatm_td",
-            USatm1976Comp(num_nodes=1),
-            promotes_inputs=[("h", Mission.Landing.AIRPORT_ALTITUDE)],
+            "atmosphere",
+            Atmosphere(num_nodes=1),
+            promotes_inputs=[
+                (Dynamic.Mission.ALTITUDE, Mission.Landing.AIRPORT_ALTITUDE),
+                ("TAS", "TAS_touchdown"),
+            ],
             promotes_outputs=[
-                ("rho", "rho_td"),
-                ("sos", "sos_td"),
+                '*',
+                (Dynamic.Mission.DENSITY, "rho_td"),
+                (Dynamic.Mission.SPEED_OF_SOUND, "sos_td"),
                 ("viscosity", "viscosity_td"),
+                (Dynamic.Mission.DYNAMIC_PRESSURE, "q_td"),
+                (Dynamic.Mission.MACH, "mach_td"),
             ],
         )
 
-        self.add_subsystem(
-            "fc_td",
-            FlightConditions(num_nodes=1),
-            promotes_inputs=[
-                ("rho", "rho_td"),
-                (Dynamic.Mission.SPEED_OF_SOUND, "sos_td"),
-                ("TAS", "TAS_touchdown"),
-            ],
-            promotes_outputs=[(Dynamic.Mission.DYNAMIC_PRESSURE, "q_td"),
-                              (Dynamic.Mission.MACH, "mach_td")],
-        )
+        # self.add_subsystem(
+        #     "fc_td",
+        #     FlightConditions(num_nodes=1),
+        #     promotes_inputs=[
+        #         (Dynamic.Mission.DENSITY, "rho_td"),
+        #         (Dynamic.Mission.SPEED_OF_SOUND, "sos_td"),
+        #         ("TAS", "TAS_touchdown"),
+        #     ],
+        #     promotes_outputs=[(Dynamic.Mission.DYNAMIC_PRESSURE, "q_td"),
+        #                       (Dynamic.Mission.MACH, "mach_td")],
+        # )
 
         kwargs = {'method': 'low_speed',
                   'retract_flaps': True,
@@ -163,7 +168,7 @@ class LandingSegment(BaseODE):
             promotes_inputs=[
                 "*",
                 (Dynamic.Mission.ALTITUDE, Mission.Landing.AIRPORT_ALTITUDE),
-                ("rho", "rho_td"),
+                (Dynamic.Mission.DENSITY, "rho_td"),
                 (Dynamic.Mission.SPEED_OF_SOUND, "sos_td"),
                 ("viscosity", "viscosity_td"),
                 ("airport_alt", Mission.Landing.AIRPORT_ALTITUDE),

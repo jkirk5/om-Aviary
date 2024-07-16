@@ -6328,6 +6328,17 @@ add_meta_data(
     desc='Current total electric power consumption of the vehicle'
 )
 
+add_meta_data(
+    Dynamic.Mission.EQUIVALENT_AIRSPEED,
+    meta_data=_MetaData,
+    historical_name={"GASP": None,
+                     "FLOPS": None,
+                     "LEAPS1": None
+                     },
+    units='ft/s',
+    desc='Current velocity of the vehicle along its body axis (equivalent airspeed)'
+)
+
 # add_meta_data(
 #     Dynamic.Mission.EXIT_AREA,
 #     meta_data=_MetaData,
@@ -6729,7 +6740,7 @@ add_meta_data(
                      "LEAPS1": None
                      },
     units='ft/s',
-    desc='Current velocity of the vehicle along its body axis'
+    desc='Current velocity of the vehicle along its body axis (true airspeed)'
 )
 
 add_meta_data(
@@ -6740,7 +6751,7 @@ add_meta_data(
                      "LEAPS1": None
                      },
     units='ft/s**2',
-    desc='Current rate of change in velocity (acceleration) of the vehicle along its '
+    desc='Current rate of change in (true airspeed) velocity (acceleration) of the vehicle along its '
          'body axis'
 )
 

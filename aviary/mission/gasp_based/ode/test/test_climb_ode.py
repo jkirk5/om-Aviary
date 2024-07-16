@@ -40,7 +40,7 @@ class ClimbODETestCase(unittest.TestCase):
             Dynamic.Mission.THROTTLE, throttle_climb, units='unitless')
         self.prob.set_val(Dynamic.Mission.ALTITUDE, 1000, units="ft")
         self.prob.set_val(Dynamic.Mission.MASS, 174845, units="lbm")
-        self.prob.set_val("EAS", 250, units="kn")
+        self.prob.set_val(Dynamic.Mission.EQUIVALENT_AIRSPEED, 250, units="kn")
         # slightly greater than zero to help check partials
         self.prob.set_val(Aircraft.Wing.INCIDENCE, 0.0000001, units="deg")
 
@@ -78,7 +78,8 @@ class ClimbODETestCase(unittest.TestCase):
                 throttle_climb, throttle_climb]), units='unitless')
         self.prob.set_val(Dynamic.Mission.ALTITUDE, np.array([11000, 37000]), units="ft")
         self.prob.set_val(Dynamic.Mission.MASS, np.array([174149, 171592]), units="lbm")
-        self.prob.set_val("EAS", np.array([270, 270]), units="kn")
+        self.prob.set_val(Dynamic.Mission.EQUIVALENT_AIRSPEED,
+                          np.array([270, 270]), units="kn")
 
         self.prob.run_model()
 

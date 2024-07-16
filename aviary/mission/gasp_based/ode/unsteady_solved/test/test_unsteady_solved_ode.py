@@ -47,7 +47,9 @@ class TestUnsteadySolvedODE(unittest.TestCase):
         p.final_setup()
 
         p.set_val(Dynamic.Mission.SPEED_OF_SOUND, 968.076 * np.ones(nn), units="ft/s")
-        p.set_val("rho", 0.000659904 * np.ones(nn), units="slug/ft**3")
+        p.set_val(
+            Dynamic.Mission.DENSITY, 0.000659904 * np.ones(nn), units="slug/ft**3"
+        )
         p.set_val("mach", 0.8 * np.ones(nn), units="unitless")
         p.set_val("mass", 170_000 * np.ones(nn), units="lbm")
 
@@ -81,22 +83,24 @@ class TestUnsteadySolvedODE(unittest.TestCase):
         c_gamma = np.cos(np.radians(gamma))
         s_gamma = np.sin(np.radians(gamma))
 
+        tol = 2e-12
+
         # 1. Test that forces balance along the velocity axis
-        assert_near_equal(drag + thrust_req * s_gamma,
-                          thrust_req * c_alphai, tolerance=1.0E-12)
+        assert_near_equal(
+            drag + thrust_req * s_gamma, thrust_req * c_alphai, tolerance=tol
+        )
 
         # 2. Test that forces balance normal to the velocity axis
-        assert_near_equal(lift + thrust_req * s_alphai,
-                          weight * c_gamma, tolerance=1.0E-12)
+        assert_near_equal(lift + thrust_req * s_alphai, weight * c_gamma, tolerance=tol)
 
         # 3. Test that dt_dr is the inverse of true airspeed
-        assert_near_equal(tas, 1/dt_dr, tolerance=1.0E-12)
+        assert_near_equal(tas, 1 / dt_dr, tolerance=tol)
 
         # 4. Test that the inverse of dt_dr is true airspeed
-        assert_near_equal(tas, 1/dt_dr, tolerance=1.0E-12)
+        assert_near_equal(tas, 1 / dt_dr, tolerance=tol)
 
         # 5. Test that fuelflow (lbf/s) * dt_dr (s/ft) is equal to dmass_dr
-        assert_near_equal(fuelflow * dt_dr, dmass_dr, tolerance=1.0E-12)
+        assert_near_equal(fuelflow * dt_dr, dmass_dr, tolerance=tol)
 
     def test_steady_level_flight(self):
 

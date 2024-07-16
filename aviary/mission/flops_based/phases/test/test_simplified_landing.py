@@ -24,7 +24,7 @@ class LandingCalcTest(unittest.TestCase):
             Mission.Landing.TOUCHDOWN_MASS, val=152800.0, units="lbm"
         )  # check (this is the design landing mass)
         self.prob.model.set_input_defaults(
-            "rho", val=constants.RHO_SEA_LEVEL_METRIC, units="kg/m**3"
+            Dynamic.Mission.DENSITY, val=constants.RHO_SEA_LEVEL_METRIC, units="kg/m**3"
         )  # not exact value but should be close enough
         self.prob.model.set_input_defaults(
             Aircraft.Wing.AREA, val=1370.0, units="ft**2"

@@ -85,10 +85,10 @@ class TabularAeroGroup(om.Group):
                                              connect_training_data=connect_training_data)
 
         # add subsystems
-        self.add_subsystem(
-            Dynamic.Mission.DYNAMIC_PRESSURE, _DynamicPressure(num_nodes=nn),
-            promotes_inputs=[Dynamic.Mission.VELOCITY, Dynamic.Mission.DENSITY],
-            promotes_outputs=[Dynamic.Mission.DYNAMIC_PRESSURE])
+        # self.add_subsystem(
+        #     Dynamic.Mission.DYNAMIC_PRESSURE, _DynamicPressure(num_nodes=nn),
+        #     promotes_inputs=[Dynamic.Mission.VELOCITY, Dynamic.Mission.DENSITY],
+        #     promotes_outputs=[Dynamic.Mission.DYNAMIC_PRESSURE])
 
         self.add_subsystem(
             'lift_coefficient', CL(num_nodes=nn),
@@ -116,44 +116,44 @@ class TabularAeroGroup(om.Group):
             promotes_outputs=['CD', Dynamic.Mission.DRAG])
 
 
-class _DynamicPressure(om.ExplicitComponent):
-    '''
-    Calculate dynamic pressure as a function of velocity and density.
-    '''
+# class _DynamicPressure(om.ExplicitComponent):
+#     '''
+#     Calculate dynamic pressure as a function of velocity and density.
+#     '''
 
-    def initialize(self):
-        self.options.declare('num_nodes', types=int)
+#     def initialize(self):
+#         self.options.declare('num_nodes', types=int)
 
-    def setup(self):
-        nn = self.options['num_nodes']
+#     def setup(self):
+#         nn = self.options['num_nodes']
 
-        self.add_input(Dynamic.Mission.VELOCITY, val=np.ones(nn), units='m/s')
-        self.add_input(Dynamic.Mission.DENSITY, val=np.ones(nn), units='kg/m**3')
+#         self.add_input(Dynamic.Mission.VELOCITY, val=np.ones(nn), units='m/s')
+#         self.add_input(Dynamic.Mission.DENSITY, val=np.ones(nn), units='kg/m**3')
 
-        self.add_output(
-            Dynamic.Mission.DYNAMIC_PRESSURE, val=np.ones(nn), units='N/m**2',
-            desc='pressure caused by fluid motion')
+#         self.add_output(
+#             Dynamic.Mission.DYNAMIC_PRESSURE, val=np.ones(nn), units='N/m**2',
+#             desc='pressure caused by fluid motion')
 
-    def setup_partials(self):
-        nn = self.options['num_nodes']
+#     def setup_partials(self):
+#         nn = self.options['num_nodes']
 
-        rows_cols = np.arange(nn)
+#         rows_cols = np.arange(nn)
 
-        self.declare_partials(
-            Dynamic.Mission.DYNAMIC_PRESSURE, [
-                Dynamic.Mission.VELOCITY, Dynamic.Mission.DENSITY],
-            rows=rows_cols, cols=rows_cols)
+#         self.declare_partials(
+#             Dynamic.Mission.DYNAMIC_PRESSURE, [
+#                 Dynamic.Mission.VELOCITY, Dynamic.Mission.DENSITY],
+#             rows=rows_cols, cols=rows_cols)
 
-    def compute(self, inputs, outputs):
-        TAS = inputs[Dynamic.Mission.VELOCITY]
-        rho = inputs[Dynamic.Mission.DENSITY]
+#     def compute(self, inputs, outputs):
+#         TAS = inputs[Dynamic.Mission.VELOCITY]
+#         rho = inputs[Dynamic.Mission.DENSITY]
 
-        outputs[Dynamic.Mission.DYNAMIC_PRESSURE] = 0.5 * rho * TAS**2
+#         outputs[Dynamic.Mission.DYNAMIC_PRESSURE] = 0.5 * rho * TAS**2
 
-    def compute_partials(self, inputs, partials):
-        TAS = inputs[Dynamic.Mission.VELOCITY]
-        rho = inputs[Dynamic.Mission.DENSITY]
+#     def compute_partials(self, inputs, partials):
+#         TAS = inputs[Dynamic.Mission.VELOCITY]
+#         rho = inputs[Dynamic.Mission.DENSITY]
 
-        partials[Dynamic.Mission.DYNAMIC_PRESSURE, Dynamic.Mission.VELOCITY] = rho * TAS
-        partials[Dynamic.Mission.DYNAMIC_PRESSURE,
-                 Dynamic.Mission.DENSITY] = 0.5 * TAS**2
+#         partials[Dynamic.Mission.DYNAMIC_PRESSURE, Dynamic.Mission.VELOCITY] = rho * TAS
+#         partials[Dynamic.Mission.DYNAMIC_PRESSURE,
+#                  Dynamic.Mission.DENSITY] = 0.5 * TAS**2

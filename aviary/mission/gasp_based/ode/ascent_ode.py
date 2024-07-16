@@ -1,5 +1,5 @@
 import numpy as np
-from dymos.models.atmosphere.atmos_1976 import USatm1976Comp
+from aviary.subsystems.atmosphere.atmosphere import Atmosphere
 
 from aviary.variable_info.enums import AlphaModes, AnalysisScheme
 from aviary.variable_info.variables import Aircraft, Mission, Dynamic
@@ -44,25 +44,9 @@ class AscentODE(BaseODE):
             })
         self.add_subsystem("params", ascent_params, promotes=["*"])
 
-        self.add_subsystem(
-            "USatm",
-            USatm1976Comp(
-                num_nodes=nn),
-            promotes_inputs=[
-                ("h",
-                 Dynamic.Mission.ALTITUDE)],
-            promotes_outputs=[
-                "rho",
-                ("sos",
-                 Dynamic.Mission.SPEED_OF_SOUND),
-                ("temp",
-                 Dynamic.Mission.TEMPERATURE),
-                ("pres",
-                 Dynamic.Mission.STATIC_PRESSURE),
-                "viscosity"],
-        )
+        self.add_subsystem("atmosphere", Atmosphere(num_nodes=nn), promotes=['*'])
 
-        self.add_flight_conditions(nn)
+        # self.add_flight_conditions(nn)
 
         kwargs = {'num_nodes': nn, 'aviary_inputs': aviary_options,
                   'method': 'low_speed', 'retract_gear': True, 'retract_flaps': True}

@@ -9,8 +9,12 @@ from openmdao.utils.assert_utils import assert_near_equal
 
 from aviary.interface.default_phase_info.two_dof import phase_info as ph_in_two_dof
 from aviary.interface.default_phase_info.two_dof import phase_info_parameterization as phase_info_parameterization_two_dof
-from aviary.interface.default_phase_info.height_energy import phase_info as ph_in_height_energy
-from aviary.interface.default_phase_info.height_energy import phase_info_parameterization as phase_info_parameterization_height_energy
+from aviary.mission.default_phase_info.height_energy import (
+    phase_info as ph_in_height_energy,
+)
+from aviary.mission.default_phase_info.height_energy import (
+    phase_info_parameterization as phase_info_parameterization_height_energy,
+)
 from aviary.interface.methods_for_level2 import AviaryProblem
 
 from aviary.mission.phase_builder_base import \
@@ -75,7 +79,8 @@ class TestPhaseInfo(unittest.TestCase):
 
     def test_default_phase_height_energy(self):
         """Tests the roundtrip conversion for default_phase_info.height_energy"""
-        from aviary.interface.default_phase_info.height_energy import phase_info
+        from aviary.mission.default_phase_info.height_energy import phase_info
+
         local_phase_info = deepcopy(phase_info)
         self._test_phase_info_dict(local_phase_info, 'cruise')
 

@@ -4,7 +4,7 @@ import openmdao.api as om
 from pathlib import Path
 
 import aviary.constants as constants
-from aviary.subsystems.aerodynamics.aero_common import DynamicPressure
+# from aviary.subsystems.aerodynamics.aero_common import DynamicPressure
 from aviary.subsystems.aerodynamics.gasp_based.table_based import TabularCruiseAero
 from aviary.utils.named_values import NamedValues
 from aviary.variable_info.variables import Aircraft, Dynamic
@@ -51,10 +51,10 @@ class SolvedAlphaGroup(om.Group):
         structured = options['structured']
         extrapolate = options['extrapolate']
 
-        self.add_subsystem(
-            'DynamicPressure', DynamicPressure(num_nodes=nn),
-            promotes_inputs=[Dynamic.Mission.MACH, Dynamic.Mission.STATIC_PRESSURE],
-            promotes_outputs=[Dynamic.Mission.DYNAMIC_PRESSURE])
+        # self.add_subsystem(
+        #     'DynamicPressure', DynamicPressure(num_nodes=nn),
+        #     promotes_inputs=[Dynamic.Mission.MACH, Dynamic.Mission.STATIC_PRESSURE],
+        #     promotes_outputs=[Dynamic.Mission.DYNAMIC_PRESSURE])
 
         aero = TabularCruiseAero(num_nodes=nn,
                                  aero_data=aero_data,

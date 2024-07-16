@@ -33,12 +33,14 @@ class DescentPhase(PhaseBuilderBase):
 
         # Add parameter if necessary
         if input_speed_type == SpeedType.EAS:
-            phase.add_parameter("EAS", opt=False, units="kn", val=EAS_limit)
+            phase.add_parameter(Dynamic.Mission.EQUIVALENT_AIRSPEED,
+                                opt=False, units="kn", val=EAS_limit)
 
         # Add timeseries outputs
         phase.add_timeseries_output(
             Dynamic.Mission.MACH, output_name=Dynamic.Mission.MACH, units="unitless")
-        phase.add_timeseries_output("EAS", output_name="EAS", units="kn")
+        phase.add_timeseries_output(Dynamic.Mission.EQUIVALENT_AIRSPEED,
+                                    output_name=Dynamic.Mission.EQUIVALENT_AIRSPEED, units="kn")
         phase.add_timeseries_output("TAS", output_name="TAS", units="kn")
         phase.add_timeseries_output(Dynamic.Mission.FLIGHT_PATH_ANGLE,
                                     output_name=Dynamic.Mission.FLIGHT_PATH_ANGLE, units="deg")

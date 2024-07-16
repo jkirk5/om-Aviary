@@ -58,7 +58,8 @@ class DescentODETestCase(unittest.TestCase):
             ],
             # lbm/h
             Dynamic.Mission.FUEL_FLOW_RATE_NEGATIVE_TOTAL: np.array([-452, -996]),
-            "EAS": np.array([249, 350]) * 1.68781,  # kts -> ft/s
+            # kts -> ft/s
+            Dynamic.Mission.EQUIVALENT_AIRSPEED: np.array([249, 350]) * 1.68781,
             Dynamic.Mission.MACH: np.array([0.8, 0.696]),
             Dynamic.Mission.FLIGHT_PATH_ANGLE: np.deg2rad([-2.94, -3.98]),
         }
@@ -79,7 +80,7 @@ class DescentODETestCase(unittest.TestCase):
         self.prob.set_val(Dynamic.Mission.THROTTLE, 0, units='unitless')
         self.prob.set_val(Dynamic.Mission.ALTITUDE, 1500, units="ft")
         self.prob.set_val(Dynamic.Mission.MASS, 147410, units="lbm")
-        self.prob.set_val("EAS", 250, units="kn")
+        self.prob.set_val(Dynamic.Mission.EQUIVALENT_AIRSPEED, 250, units="kn")
 
         self.prob.run_model()
 

@@ -87,7 +87,8 @@ class ClimbPhase(PhaseBuilderBase):
         # Timeseries Outputs
         phase.add_timeseries_output(
             Dynamic.Mission.MACH, output_name=Dynamic.Mission.MACH, units="unitless")
-        phase.add_timeseries_output("EAS", output_name="EAS", units="kn")
+        phase.add_timeseries_output(Dynamic.Mission.EQUIVALENT_AIRSPEED,
+                                    output_name=Dynamic.Mission.EQUIVALENT_AIRSPEED, units="kn")
         phase.add_timeseries_output(
             Dynamic.Mission.FUEL_FLOW_RATE_NEGATIVE_TOTAL, units="lbm/s")
         phase.add_timeseries_output("theta", output_name="theta", units="deg")
