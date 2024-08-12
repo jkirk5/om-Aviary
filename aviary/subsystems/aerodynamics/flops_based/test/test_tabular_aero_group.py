@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 import openmdao.api as om
-from dymos.models.atmosphere import USatm1976Comp
+from aviary.subsystems.atmosphere.atmosphere import Atmosphere
 from openmdao.utils.assert_utils import assert_check_partials, assert_near_equal
 from parameterized import parameterized
 
@@ -266,6 +266,12 @@ class ComputedVsTabularTest(unittest.TestCase):
 
         assert_near_equal(tabular_drag, computed_drag, 0.005)
 
+        partial_data = prob.check_partials(
+            out_stream=None, method="cs", step=1.1e-40)
+        assert_check_partials(
+            partial_data, atol=1e-9, rtol=1e-12
+        )
+
 
 # region - hardcoded data from large_single_aisle_1 (fixed alt cruise variant) FLOPS model
 def _default_CD0_data():
@@ -524,11 +530,8 @@ def _get_computed_aero_data_at_altitude(altitude, units):
     prob = om.Problem()
 
     prob.model.add_subsystem(
-        'atm', USatm1976Comp(num_nodes=1),
-        promotes_inputs=[('h', Dynamic.Mission.ALTITUDE)],
-        promotes_outputs=[
-            ('sos', Dynamic.Mission.SPEED_OF_SOUND), ('rho', Dynamic.Mission.DENSITY),
-            ('temp', Dynamic.Mission.TEMPERATURE), ('pres', Dynamic.Mission.STATIC_PRESSURE)])
+        name='atmosphere', subsys=Atmosphere(num_nodes=1), promotes=['*']
+    )
 
     prob.setup()
 

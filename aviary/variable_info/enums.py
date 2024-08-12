@@ -1,4 +1,4 @@
-from enum import Enum, auto, unique
+from enum import Enum, IntEnum, auto, unique
 
 
 class AlphaModes(Enum):
@@ -185,7 +185,7 @@ class ThrottleAllocation(Enum):
     DYNAMIC = 3
 
 
-class Verbosity(Enum):
+class Verbosity(IntEnum):
     """
     Sets how much information Aviary outputs when run
 
@@ -203,3 +203,17 @@ class Verbosity(Enum):
     @classmethod
     def values(cls):
         return {c.value for c in cls}
+
+
+class OutMachType(Enum):
+    '''
+    OutMachType is an indicator which mach number to output.
+    helical_mach = sqrt(mach*mach + tip_mach*tip_mach)
+    '''
+    MACH = 'mach'
+    TIP_MACH = 'tip_mach'
+    HELICAL_MACH = 'helical_mach'
+
+    @classmethod
+    def get_element_by_value(cls, val: str):
+        return next((c for c in cls if c.value == val), None)

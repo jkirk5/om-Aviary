@@ -2076,6 +2076,20 @@ add_meta_data(
 )
 
 add_meta_data(
+    Aircraft.Engine.PROPELLER_DATA_FILE,
+    meta_data=_MetaData,
+    historical_name={"GASP": None,
+                     "FLOPS": None,
+                     "LEAPS1": None
+                     },
+    units='unitless',
+    types=(str, Path),
+    default_value=None,
+    option=True,
+    desc='filepath to data file containing propeller data map',
+)
+
+add_meta_data(
     Aircraft.Engine.PROPELLER_DIAMETER,
     meta_data=_MetaData,
     historical_name={"GASP": 'INPROP.DPROP',
@@ -2316,6 +2330,20 @@ add_meta_data(
     types=GASPEngineType,
     units="unitless",
     desc='specifies engine type used for engine mass calculation',
+)
+
+add_meta_data(
+    Aircraft.Engine.USE_PROPELLER_MAP,
+    meta_data=_MetaData,
+    historical_name={"GASP": None,
+                     "FLOPS": None,
+                     "LEAPS1": None
+                     },
+    option=True,
+    default_value=False,
+    types=bool,
+    units="unitless",
+    desc='flag whether to use propeller map or Hamilton-Standard model.'
 )
 
 add_meta_data(
@@ -4234,7 +4262,7 @@ add_meta_data(
     desc='Total propulsion group mass'
 )
 
-# TODO clash with per-engine scaling, need to resolve w/ multi-engine
+# TODO clash with per-engine scaling, need to resolve w/ heterogeneous engine
 add_meta_data(
     Aircraft.Propulsion.MISC_MASS_SCALER,
     meta_data=_MetaData,
@@ -6573,28 +6601,6 @@ add_meta_data(
                      },
     units='hp',
     desc='The maximum possible shaft power currently producible, per engine'
-)
-
-add_meta_data(
-    Dynamic.Mission.SHAFT_POWER_CORRECTED,
-    meta_data=_MetaData,
-    historical_name={"GASP": 'SHPCOR',
-                     "FLOPS": None,
-                     "LEAPS1": None
-                     },
-    units='hp',
-    desc='current corrected shaft power avaliable, per engine'
-)
-
-add_meta_data(
-    Dynamic.Mission.SHAFT_POWER_CORRECTED_MAX,
-    meta_data=_MetaData,
-    historical_name={"GASP": None,
-                     "FLOPS": None,
-                     "LEAPS1": None
-                     },
-    units='hp',
-    desc='maximum possible corrected shaft power currently producible, per engine'
 )
 
 add_meta_data(

@@ -233,6 +233,7 @@ class Aircraft:
         POD_MASS_SCALER = 'aircraft:engine:pod_mass_scaler'
         POSITION_FACTOR = 'aircraft:engine:position_factor'
         PROPELLER_ACTIVITY_FACTOR = 'aircraft:engine:propeller_activity_factor'
+        PROPELLER_DATA_FILE = 'aircraft:engine:propeller_data_file'
         PROPELLER_DIAMETER = 'aircraft:engine:propeller_diameter'
         PROPELLER_INTEGRATED_LIFT_COEFFICIENT = \
             'aircraft:engine:propeller_integrated_lift_coefficient'
@@ -252,6 +253,7 @@ class Aircraft:
         THRUST_REVERSERS_MASS = 'aircraft:engine:thrust_reversers_mass'
         THRUST_REVERSERS_MASS_SCALER = 'aircraft:engine:thrust_reversers_mass_scaler'
         TYPE = 'aircraft:engine:type'
+        USE_PROPELLER_MAP = 'aircraft:engine:use_propeller_map'
         WING_LOCATIONS = 'aircraft:engine:wing_locations'
 
         class Gearbox:
@@ -637,8 +639,6 @@ class Dynamic:
         PROPELLER_TIP_SPEED = 'propeller_tip_speed'
         RPM = 'rotations_per_minute'
         SHAFT_POWER = 'shaft_power'
-        SHAFT_POWER_CORRECTED = 'shaft_power_corrected'
-        SHAFT_POWER_CORRECTED_MAX = 'shaft_power_corrected_max'
         SHAFT_POWER_MAX = 'shaft_power_max'
         SPECIFIC_ENERGY = 'specific_energy'
         SPECIFIC_ENERGY_RATE = 'specific_energy_rate'
