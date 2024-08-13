@@ -1655,7 +1655,7 @@ class PreHamiltonStandard(om.ExplicitComponent):
 
         # arbitrarily small number to keep advance ratio nonzero, which allows for static thrust prediction
         # NOTE need for a separate static thrust calc method?
-        vktas[np.where(vktas <= 1e-6)] = 1e-6
+        vtas[np.where(vtas <= 1e-6)] = 1e-6
         density_ratio = inputs[Dynamic.Mission.DENSITY] / RHO_SEA_LEVEL_ENGLISH
 
         if diam_prop <= 0.0:
