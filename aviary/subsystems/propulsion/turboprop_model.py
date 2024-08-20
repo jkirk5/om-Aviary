@@ -129,10 +129,6 @@ class TurbopropModel(EngineModel):
                     aviary_options=aviary_inputs,
                 )
 
-        # turboprop_group.set_input_default(
-        #     Aircraft.Engine.PROPELLER_TIP_SPEED_MAX, val=0.0, units='ft/s'
-        # )
-
         return turboprop_group
 
 
