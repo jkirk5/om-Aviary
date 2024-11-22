@@ -107,14 +107,13 @@ class MotorMap(om.Group):
                 has_diag_partials=True,
             ),
             promotes=[
-                "torque_unscaled",
                 ("throttle", Dynamic.Vehicle.Propulsion.THROTTLE)],
         )
 
         self.add_subsystem(
             name="motor_efficiency",
             subsys=motor,
-            promotes_inputs=[Dynamic.Vehicle.Propulsion.RPM, "torque_unscaled"],
+            promotes_inputs=[Dynamic.Vehicle.Propulsion.RPM],
             promotes_outputs=["motor_efficiency"],
         )
 
@@ -132,7 +131,6 @@ class MotorMap(om.Group):
             ),
             promotes=[
                 ("torque", Dynamic.Vehicle.Propulsion.TORQUE),
-                "torque_unscaled",
                 ("scale_factor", Aircraft.Engine.SCALE_FACTOR),
             ],
         )

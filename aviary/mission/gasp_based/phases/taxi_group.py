@@ -52,7 +52,7 @@ class TaxiSegment(BaseODE):
             ],
             promotes_outputs=[
                 ('alt', Dynamic.Mission.ALTITUDE),
-                ('mach', Dynamic.Mission.MACH),
+                ('mach', Dynamic.Atmosphere.MACH),
             ],
         )
 
@@ -85,5 +85,5 @@ class TaxiSegment(BaseODE):
         # Throttle Idle
         num_engine_types = len(options.get_val(Aircraft.Engine.NUM_ENGINES))
         self.set_input_defaults(
-            Dynamic.Mission.THROTTLE, np.zeros((1, num_engine_types))
+            Dynamic.Vehicle.Propulsion.THROTTLE, np.zeros((1, num_engine_types))
         )

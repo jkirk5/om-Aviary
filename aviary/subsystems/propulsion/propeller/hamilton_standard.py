@@ -495,7 +495,7 @@ class PreHamiltonStandard(om.ExplicitComponent):
         )
         add_aviary_input(self, Dynamic.Mission.VELOCITY, val=np.zeros(nn), units='ft/s')
         add_aviary_input(
-            self, Dynamic.Atmosphere.SPEED_OF_SOUND, val=np.zeros(nn), units='knot'
+            self, Dynamic.Atmosphere.SPEED_OF_SOUND, val=np.zeros(nn), units='ft/s'
         )
 
         self.add_output('power_coefficient', val=np.zeros(nn), units='unitless')
@@ -509,7 +509,7 @@ class PreHamiltonStandard(om.ExplicitComponent):
         arange = np.arange(self.options['num_nodes'])
 
         # self.declare_partials(
-        #     'density_ratio', Dynamic.Mission.DENSITY, rows=arange, cols=arange)
+        #     'density_ratio', Dynamic.Atmosphere.DENSITY, rows=arange, cols=arange)
         self.declare_partials(
             'tip_mach',
             [
@@ -593,7 +593,7 @@ class PreHamiltonStandard(om.ExplicitComponent):
 
         unit_conversion_const = 10.E10 / (2 * 6966.)
 
-        # partials["density_ratio", Dynamic.Mission.DENSITY] = 1 / RHO_SEA_LEVEL_ENGLISH
+        # partials["density_ratio", Dynamic.Atmosphere.DENSITY] = 1 / RHO_SEA_LEVEL_ENGLISH
         partials["tip_mach", Dynamic.Vehicle.Propulsion.PROPELLER_TIP_SPEED] = 1 / sos
         partials["tip_mach", Dynamic.Atmosphere.SPEED_OF_SOUND] = -tipspd / sos**2
         partials["advance_ratio", Dynamic.Mission.VELOCITY] = math.pi / tipspd
@@ -981,8 +981,17 @@ class PostHamiltonStandard(om.ExplicitComponent):
         diam_prop = inputs[Aircraft.Engine.Propeller.DIAMETER]
         tipspd = inputs[Dynamic.Vehicle.Propulsion.PROPELLER_TIP_SPEED]
         install_loss_factor = inputs['install_loss_factor']
-        outputs[Dynamic.Vehicle.Propulsion.THRUST] = ctx*tipspd**2*diam_prop**2 * \
-            inputs['density_ratio']/(1.515E06)*364.76*(1. - install_loss_factor)
+        density_ratio = inputs[Dynamic.Atmosphere.DENSITY] / RHO_SEA_LEVEL_ENGLISH
+
+        outputs[Dynamic.Vehicle.Propulsion.THRUST] = (
+            ctx
+            * tipspd**2
+            * diam_prop**2
+            * density_ratio
+            / (1.515e06)
+            * 364.76
+            * (1.0 - install_loss_factor)
+        )
 
         # avoid divide by zero when shaft power is zero
         calc_idx = np.where(inputs['power_coefficient'] > 1e-6)  # index where CP > 1e-5

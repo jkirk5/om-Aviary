@@ -126,8 +126,7 @@ class TipSpeed(om.ExplicitComponent):
         self.declare_partials(
             Dynamic.Vehicle.Propulsion.PROPELLER_TIP_SPEED,
             [
-                Dynamic.Mission.VELOCITY,
-                Dynamic.Atmosphere.SPEED_OF_SOUND,
+                Dynamic.Vehicle.Propulsion.RPM,
             ],
             rows=r,
             cols=r,
@@ -416,13 +415,13 @@ class AdvanceRatio(om.ExplicitComponent):
     def setup(self):
         nn = self.options['num_nodes']
         range = np.arange(nn)
-        self.add_input("vktas", val=np.zeros(nn), units='knot')
+        self.add_input("vtas", val=np.zeros(nn), units='ft/s')
         self.add_input("tipspd", val=np.zeros(nn), units='ft/s')
         self.add_input("sqa_array", val=np.zeros(nn), units='unitless')
         self.add_output("equiv_adv_ratio", val=np.zeros(nn), units='unitless')
 
         self.declare_partials("equiv_adv_ratio",
-                              ["vktas", "tipspd"],
+                              ["vtas", "tipspd"],
                               rows=range, cols=range)
 
         self.declare_partials("equiv_adv_ratio",
@@ -431,10 +430,10 @@ class AdvanceRatio(om.ExplicitComponent):
 
     def compute(self, inputs, outputs):
         nn = self.options['num_nodes']
-        vktas = inputs["vktas"]
+        vtas = inputs["vtas"]
         tipspd = inputs["tipspd"]
         sqa_array = inputs["sqa_array"]
-        equiv_adv_ratio = (1.0 - 0.254 * sqa_array) * 5.309 * vktas / tipspd
+        equiv_adv_ratio = (1.0 - 0.254 * sqa_array) * math.pi * vtas / tipspd
 
         smooth = self.options["smooth_zje"]
         if smooth:
@@ -446,27 +445,27 @@ class AdvanceRatio(om.ExplicitComponent):
 
     def compute_partials(self, inputs, partials):
         nn = self.options['num_nodes']
-        vktas = inputs["vktas"]
+        vtas = inputs["vtas"]
         tipspd = inputs["tipspd"]
         sqa_array = inputs["sqa_array"]
-        jze = (1.0 - 0.254 * sqa_array) * 5.309 * vktas / tipspd
+        jze = (1.0 - 0.254 * sqa_array) * math.pi * vtas / tipspd
 
-        djze_dsqa = -0.254 * 5.309 * vktas / tipspd
-        djze_dvktas = (1.0 - 0.254 * sqa_array) * 5.309 / tipspd
-        djze_dtipspd = -(1.0 - 0.254 * sqa_array) * 5.309 * vktas / tipspd**2
+        djze_dsqa = -0.254 * math.pi * vtas / tipspd
+        djze_dvtas = (1.0 - 0.254 * sqa_array) * math.pi / tipspd
+        djze_dtipspd = -(1.0 - 0.254 * sqa_array) * math.pi * vtas / tipspd**2
 
         smooth = self.options["smooth_zje"]
         if smooth:
             alpha = self.options["alpha"]
             djze_dsqa = d_smooth_min(jze, np.ones(nn) * 5.0, alpha) * djze_dsqa
-            djze_dvktas = d_smooth_min(jze, np.ones(nn) * 5.0, alpha) * djze_dvktas
+            djze_dvtas = d_smooth_min(jze, np.ones(nn) * 5.0, alpha) * djze_dvtas
             djze_dtipspd = d_smooth_min(jze, np.ones(nn) * 5.0, alpha) * djze_dtipspd
         else:
             djze_dsqa = np.piecewise(jze, [jze < 5, jze >= 5], [1, 0]) * djze_dsqa
-            djze_dvktas = np.piecewise(jze, [jze < 5, jze >= 5], [1, 0]) * djze_dvktas
+            djze_dvtas = np.piecewise(jze, [jze < 5, jze >= 5], [1, 0]) * djze_dvtas
             djze_dtipspd = np.piecewise(jze, [jze < 5, jze >= 5], [1, 0]) * djze_dtipspd
         partials["equiv_adv_ratio", "sqa_array"] = djze_dsqa
-        partials["equiv_adv_ratio", "vktas"] = djze_dvktas
+        partials["equiv_adv_ratio", "vtas"] = djze_dvtas
         partials["equiv_adv_ratio", "tipspd"] = djze_dtipspd
 
 
@@ -503,7 +502,7 @@ class InstallLoss(om.Group):
         self.add_subsystem(
             name='zje_comp',
             subsys=AdvanceRatio(num_nodes=nn, smooth_zje=True),
-            promotes_inputs=["sqa_array", ("vktas", Dynamic.Mission.VELOCITY),
+            promotes_inputs=["sqa_array", ("vtas", Dynamic.Mission.VELOCITY),
                              ("tipspd", Dynamic.Vehicle.Propulsion.PROPELLER_TIP_SPEED)],
             promotes_outputs=["equiv_adv_ratio"],
         )
@@ -657,7 +656,7 @@ class PropellerPerformance(om.Group):
 
         if prop_file_path is not None:
             prop_model = PropellerMap('prop', aviary_options)
-            prop_file_path = aviary_options.get_val(Aircraft.Engine.PROPELLER_DATA_FILE)
+            prop_file_path = aviary_options.get_val(Aircraft.Engine.Propeller.DATA_FILE)
             mach_type = prop_model.read_and_set_mach_type(prop_file_path)
             if mach_type == OutMachType.HELICAL_MACH:
                 self.add_subsystem(

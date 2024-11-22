@@ -170,7 +170,7 @@ class PostHamiltonStandardTest(unittest.TestCase):
             np.array([1.0001, 1.0001, 0.4482]) * RHO_SEA_LEVEL_ENGLISH,
             units="slug/ft**3",
         )
-        prob.set_val(Aircraft.Engine.PROPELLER_DIAMETER, 10.0, units="ft")
+        prob.set_val(Aircraft.Engine.Propeller.DIAMETER, 10.0, units="ft")
         prob.set_val("thrust_coefficient", [0.2765, 0.2052, 0.1158], units="unitless")
         prob.set_val("install_loss_factor", [0.0133, 0.0200, 0.0325], units="unitless")
         prob.set_val("comp_tip_loss_factor", [1.0, 1.0, 0.9819], units="unitless")
@@ -204,7 +204,7 @@ class PostHamiltonStandardTest(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    # unittest.main()
-    test = HamiltonStandardTest()
-    test.setUp()
-    test.test_HS()
+    unittest.main()
+    # test = HamiltonStandardTest()
+    # test.setUp()
+    # test.test_HS()

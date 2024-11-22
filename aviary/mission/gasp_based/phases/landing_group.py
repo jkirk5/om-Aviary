@@ -105,13 +105,14 @@ class LandingSegment(BaseODE):
                     promotes_outputs=[
                         (Dynamic.Vehicle.Propulsion.THRUST_TOTAL, "thrust_idle")],
                 )
-                propulsion_mission.set_input_defaults(Dynamic.Mission.THROTTLE, 0.0)
+                propulsion_mission.set_input_defaults(
+                    Dynamic.Vehicle.Propulsion.THROTTLE, 0.0)
 
         self.add_subsystem(
             "glide",
             GlideConditionComponent(),
             promotes_inputs=[
-                Dynamic.Mission.DENSITY,
+                Dynamic.Atmosphere.DENSITY,
                 Mission.Landing.MAXIMUM_SINK_RATE,
                 Dynamic.Vehicle.MASS,
                 Aircraft.Wing.AREA,
@@ -231,5 +232,5 @@ class LandingSegment(BaseODE):
         # Throttle Idle
         num_engine_types = len(aviary_options.get_val(Aircraft.Engine.NUM_ENGINES))
         self.set_input_defaults(
-            Dynamic.Mission.THROTTLE, np.zeros((1, num_engine_types))
+            Dynamic.Vehicle.Propulsion.THROTTLE, np.zeros((1, num_engine_types))
         )

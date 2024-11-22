@@ -21,6 +21,7 @@ from aviary.models.large_turboprop_freighter.phase_info import (
 @use_tempdirs
 # TODO need to add asserts with "truth" values
 class LargeElectrifiedTurbopropFreighterBenchmark(unittest.TestCase):
+    """NOTE this benchmark is a WIP and currently fails"""
 
     def build_and_run_problem(self):
 
