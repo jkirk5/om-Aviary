@@ -94,7 +94,6 @@ def EngineDeckConverter(input_file, output_file, data_format: EngineDeckType):
     timestamp = datetime.now().strftime('%m/%d/%y at %H:%M')
     user = getpass.getuser()
     comments = []
-    header = {}
     data = {}
 
     data_file = get_path(input_file)
@@ -109,7 +108,6 @@ def EngineDeckConverter(input_file, output_file, data_format: EngineDeckType):
     comments.append(f'# {legacy_code}-derived {engine_type} deck converted from {data_file.name}')
 
     if data_format == EngineDeckType.FLOPS:
-        header = {key: default_units[key] for key in _flops_keys}
         data = {key: np.array([]) for key in _flops_keys}
 
         with open(data_file, newline='', encoding='utf-8-sig') as file:
@@ -204,9 +202,6 @@ def EngineDeckConverter(input_file, output_file, data_format: EngineDeckType):
             gasp_keys.pop(-1)
         else:
             compute_T4 = True
-
-        # define header now that we know what is in the engine deck
-        header = {key: default_units[key] for key in gasp_keys}
 
         if compute_T4:
             # compute T4 using atmospheric model
@@ -442,8 +437,8 @@ def _read_table(f, is_turbo_prop=False):
     """
     tab_data = None
 
-    # table title
-    title = f.readline().strip()
+    # strip out table title, unused
+    f.readline().strip()
     # number of maps in the table
     (nmaps,) = _parse(f, [(int, 5)])
     # blank line
