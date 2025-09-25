@@ -12,7 +12,7 @@ from aviary.variable_info.variables import Aircraft, Dynamic, Settings
 
 def _unint(xa, ya, x):
     """
-    Univariate table routine with seperate arrays for x and y
+    Univariate table routine with separate arrays for x and y
     This routine interpolates over a 4 point interval using a
     variation of 3nd degree interpolation to produce a continuity
     of slope between adjacent intervals.
@@ -58,7 +58,7 @@ def _unint(xa, ya, x):
                 ra = (xa[idx] - x) / (xa[idx] - xa[idx - 1])
             rb = 1.0 - ra
 
-            # get coefficeints and results
+            # get coefficients and results
             p1 = xa[jx1 + 1] - xa[jx1]
             p2 = xa[jx1 + 2] - xa[jx1 + 1]
             p3 = xa[jx1 + 3] - xa[jx1 + 2]
@@ -227,7 +227,7 @@ def _biquad(T, i, xi, yi):
                 yc[j] = T[jy1]
                 jy1 = jy1 + 1
             # get coeff. in y sense
-            # coeffient routine - input y, y1, y2, y3, y4, ra_y, rb_y
+            # coefficient routine - input y, y1, y2, y3, y4, ra_y, rb_y
             p1 = yc[1] - yc[0]
             p2 = yc[2] - yc[1]
             p3 = yc[3] - yc[2]
@@ -636,7 +636,7 @@ class HamiltonStandard(om.ExplicitComponent):
         # propeller tip compressibility loss factor
         self.add_output('comp_tip_loss_factor', val=np.zeros(nn), units='unitless')
 
-        self.declare_partials('*', '*', method='fd', form='forward')
+        self.declare_partials('*', '*', method='cs')
 
     def compute(self, inputs, outputs):
         verbosity = self.options[Settings.VERBOSITY]
@@ -655,22 +655,35 @@ class HamiltonStandard(om.ExplicitComponent):
         else:
             num_blades = int(num_blades[0])
 
+        AF_adj_CP = np.zeros(7, dtype=cli.dtype)  # AFCP: an AF adjustment of CP to be assigned
+        AF_adj_CT = np.zeros(7, dtype=cli.dtype)  # AFCT: an AF adjustment of CT to be assigned
+
+        CTT = np.zeros(7, dtype=cli.dtype)
+        BLL = np.zeros(7, dtype=cli.dtype)
+        BLLL = np.zeros(7, dtype=cli.dtype)
+        PXCLI = np.zeros(7, dtype=cli.dtype)
+        XFFT = np.zeros(6, dtype=cli.dtype)
+        CTG = np.zeros(11, dtype=cli.dtype)
+        CTG1 = np.zeros(11, dtype=cli.dtype)
+        TXCLI = np.zeros(6, dtype=cli.dtype)
+        CTTT = np.zeros(4, dtype=cli.dtype)
+        XXXFT = np.zeros(4, dtype=cli.dtype)
+
         for i_node in range(self.options['num_nodes']):
             ichck = 0
             run_flag = 0
             xft = 1.0
-            AF_adj_CP = np.zeros(7)  # AFCP: an AF adjustment of CP to be assigned
-            AF_adj_CT = np.zeros(7)  # AFCT: an AF adjustment of CT to be assigned
-            CTT = np.zeros(7)
-            BLL = np.zeros(7)
-            BLLL = np.zeros(7)
-            PXCLI = np.zeros(7)
-            XFFT = np.zeros(6)
-            CTG = np.zeros(11)
-            CTG1 = np.zeros(11)
-            TXCLI = np.zeros(6)
-            CTTT = np.zeros(4)
-            XXXFT = np.zeros(4)
+
+            CTT[:] = 0.0
+            BLL[:] = 0.0
+            BLLL[:] = 0.0
+            PXCLI[:] = 0.0
+            XFFT[:] = 0.0
+            CTG[:] = 0.0
+            CTG1[:] = 0.0
+            TXCLI[:] = 0.0
+            CTTT[:] = 0.0
+            XXXFT[:] = 0.0
 
             for k in range(2):
                 AF_adj_CP[k], run_flag = _unint(Act_Factor_arr, AFCPC[k], act_factor)

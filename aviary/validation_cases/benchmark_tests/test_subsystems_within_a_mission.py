@@ -29,30 +29,29 @@ class TestSubsystemsMission(unittest.TestCase):
                 'optimize_mass': True,
             },
             'cruise': {
-                'subsystem_options': {'core_aerodynamics': {'method': 'computed'}},
+                'subsystem_options': {
+                    'core_aerodynamics': {'method': 'cruise', 'solve_alpha': True}
+                },
                 'external_subsystems': [
                     ArrayGuessSubsystemBuilder(),
                     AdditionalArrayGuessSubsystemBuilder(),
                 ],
                 'user_options': {
-                    'optimize_mach': False,
-                    'optimize_altitude': False,
-                    'polynomial_control_order': 1,
                     'num_segments': 2,
                     'order': 3,
-                    'solve_for_distance': False,
-                    'initial_mach': (0.72, 'unitless'),
-                    'final_mach': (0.72, 'unitless'),
+                    'mach_optimize': False,
+                    'mach_polynomial_order': 1,
+                    'mach_initial': (0.72, 'unitless'),
+                    'mach_final': (0.72, 'unitless'),
                     'mach_bounds': ((0.7, 0.74), 'unitless'),
-                    'initial_altitude': (35000.0, 'ft'),
-                    'final_altitude': (35000.0, 'ft'),
+                    'altitude_optimize': False,
+                    'altitude_polynomial_order': 1,
+                    'altitude_initial': (35000.0, 'ft'),
+                    'altitude_final': (35000.0, 'ft'),
                     'altitude_bounds': ((23000.0, 38000.0), 'ft'),
                     'throttle_enforcement': 'boundary_constraint',
-                    'fix_initial': True,
-                    'constrain_final': False,
-                    'fix_duration': False,
-                    'initial_bounds': ((0.0, 0.0), 'min'),
-                    'duration_bounds': ((10.0, 30.0), 'min'),
+                    'time_initial': (0.0, 'min'),
+                    'time_duration_bounds': ((10.0, 30.0), 'min'),
                 },
                 'initial_guesses': {'time': ([0, 30], 'min')},
             },
@@ -67,19 +66,16 @@ class TestSubsystemsMission(unittest.TestCase):
 
         prob = AviaryProblem(verbosity=0)
 
-        prob.load_inputs('models/test_aircraft/aircraft_for_bench_GwFm.csv', phase_info)
+        prob.load_inputs('models/aircraft/test_aircraft/aircraft_for_bench_GwFm.csv', phase_info)
 
-        # Preprocess inputs
         prob.check_and_preprocess_inputs()
 
-        prob.add_pre_mission_systems()
+        prob.build_model()
 
-        prob.add_phases()
-
-        prob.add_post_mission_systems()
-
-        # Link phases and variables
-        prob.link_phases()
+        prob.phase_info['cruise']['initial_guesses'][f'states:{Mission.Dummy.VARIABLE}'] = (
+            [10.0, 100.0],
+            'm',
+        )
 
         prob.add_driver('SLSQP', max_iter=0, verbosity=0)
 
@@ -88,12 +84,6 @@ class TestSubsystemsMission(unittest.TestCase):
         prob.add_objective('fuel_burned')
 
         prob.setup()
-
-        prob.phase_info['cruise']['initial_guesses'][f'states:{Mission.Dummy.VARIABLE}'] = (
-            [10.0, 100.0],
-            'm',
-        )
-        prob.set_initial_guesses()
 
         # add an assert to see if the initial guesses are correct for Mission.Dummy.VARIABLE
         assert_almost_equal(
@@ -115,9 +105,8 @@ class TestSubsystemsMission(unittest.TestCase):
 
         prob = AviaryProblem(reports=False, verbosity=0)
 
-        prob.load_inputs('models/test_aircraft/aircraft_for_bench_GwFm.csv', phase_info)
+        prob.load_inputs('models/aircraft/test_aircraft/aircraft_for_bench_GwFm.csv', phase_info)
 
-        # Preprocess inputs
         prob.check_and_preprocess_inputs()
 
         prob.add_pre_mission_systems()

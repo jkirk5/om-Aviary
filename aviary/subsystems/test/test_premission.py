@@ -3,7 +3,7 @@ import unittest
 import openmdao.api as om
 from openmdao.utils.assert_utils import assert_check_partials, assert_near_equal
 
-from aviary.models.large_single_aisle_1.V3_bug_fixed_IO import (
+from aviary.models.aircraft.large_single_aisle_1.V3_bug_fixed_IO import (
     V3_bug_fixed_non_metadata,
     V3_bug_fixed_options,
 )
@@ -66,6 +66,8 @@ class PreMissionTestCase(unittest.TestCase):
         input_options.delete(Aircraft.Wing.ULTIMATE_LOAD_FACTOR)
         input_options.delete(Aircraft.Fuel.TOTAL_CAPACITY)
         input_options.delete(Aircraft.Nacelle.AVG_LENGTH)
+        input_options.delete(Aircraft.HorizontalTail.AREA)
+        input_options.delete(Aircraft.VerticalTail.AREA)
 
         engines = [build_engine_deck(input_options)]
 
@@ -107,6 +109,9 @@ class PreMissionTestCase(unittest.TestCase):
         self.prob.model.set_input_defaults(Aircraft.Wing.SPAN, val=1.0, units='ft')
         self.prob.model.set_input_defaults(Aircraft.Wing.SLAT_SPAN_RATIO, val=0.9)
         self.prob.model.set_input_defaults(Aircraft.Wing.SLAT_CHORD_RATIO, val=0.15)
+        self.prob.model.set_input_defaults(
+            Aircraft.Electrical.SYSTEM_MASS_PER_PASSENGER, val=16.0, units='lbm'
+        )
 
         setup_model_options(self.prob, input_options)
 
@@ -118,7 +123,7 @@ class PreMissionTestCase(unittest.TestCase):
         # We set it to an unconverged value to test convergence.
         self.prob.set_val(Mission.Design.GROSS_MASS, val=1000.0)
 
-        # Set inital values for all variables.
+        # Set initial values for all variables.
         set_aviary_initial_values(self.prob, input_options)
 
         # Adjust WETTED_AREA_SCALER such that WETTED_AREA = 4000.0
@@ -131,9 +136,9 @@ class PreMissionTestCase(unittest.TestCase):
 
         tol = 5e-4
         # size values:
-        assert_near_equal(self.prob['gasp_based_geom.fuselage.cabin_height'], 13.1, tol)
-        assert_near_equal(self.prob['gasp_based_geom.fuselage.cabin_len'], 72.09722222222223, tol)
-        assert_near_equal(self.prob['gasp_based_geom.fuselage.nose_height'], 8.6, tol)
+        assert_near_equal(self.prob['gasp_based_geom.cabin_height'], 13.1, tol)
+        assert_near_equal(self.prob['gasp_based_geom.cabin_len'], 72.09722222222223, tol)
+        assert_near_equal(self.prob['gasp_based_geom.nose_height'], 8.6, tol)
 
         assert_near_equal(self.prob[Aircraft.Wing.CENTER_CHORD], 17.63, tol)
         assert_near_equal(self.prob[Aircraft.Wing.ROOT_CHORD], 16.54, tol)
@@ -147,24 +152,24 @@ class PreMissionTestCase(unittest.TestCase):
 
         # fixed mass values:
         assert_near_equal(self.prob[Aircraft.LandingGear.MAIN_GEAR_MASS], 6384.35, tol)
-        assert_near_equal(self.prob['fixed_mass.tail.loc_MAC_vtail'], 0.44959578484694906, tol)
+        assert_near_equal(self.prob['loc_MAC_vtail'], 0.44959578484694906, tol)
 
         # wing values:
-        assert_near_equal(self.prob['wing_mass.isolated_wing_mass'], 16205, tol)
+        assert_near_equal(self.prob['isolated_wing_mass'], 16205, tol)
         assert_near_equal(self.prob[Aircraft.Propulsion.TOTAL_ENGINE_MASS], 12606, tol)
         assert_near_equal(self.prob[Aircraft.Engine.ADDITIONAL_MASS], 1765 / 2, tol)
 
         # fuel values:
         # modified from GASP value to account for updated crew mass. GASP value is
         # 78843.6
-        assert_near_equal(self.prob['fuel_mass.fuel_and_oem.OEM_wingfuel_mass'], 78145.0, tol)
+        assert_near_equal(self.prob['OEM_wingfuel_mass'], 77977.7, tol)
         # modified from GASP value to account for updated crew mass. GASP value is
         # 102408.05695930264
-        assert_near_equal(self.prob['fuel_mass.fus_mass_full'], 102663.6529626, tol)
+        assert_near_equal(self.prob['fus_mass_full'], 102812.6654177, tol)
         # modified from GASP value to account for updated crew mass. GASP value is
         # 1757
         assert_near_equal(
-            self.prob[Aircraft.Fuel.FUEL_SYSTEM_MASS], 1727.9, tol
+            self.prob[Aircraft.Fuel.FUEL_SYSTEM_MASS], 1721.08, tol
         )  # modified from GASP value to account for updated crew mass. GASP value is 1757
         assert_near_equal(self.prob[Aircraft.Design.STRUCTURE_MASS], 50931.4, tol)
         assert_near_equal(
@@ -174,42 +179,38 @@ class PreMissionTestCase(unittest.TestCase):
         # modified from GASP value to account for updated crew mass. GASP value is
         # 42843.6
         assert_near_equal(
-            self.prob[Mission.Design.FUEL_MASS_REQUIRED], 42145.0, tol
+            self.prob[Mission.Design.FUEL_MASS_REQUIRED], 41977.7, tol
         )  # modified from GASP value to account for updated crew mass. GASP value is 42843.6
         assert_near_equal(
             self.prob[Aircraft.Propulsion.MASS], 16098.7, tol
         )  # modified from GASP value to account for updated crew mass. GASP value is 16127
         assert_near_equal(
-            self.prob[Mission.Design.FUEL_MASS], 42145.0, tol
+            self.prob[Mission.Design.FUEL_MASS], 41977.68, tol
         )  # modified from GASP value to account for updated crew mass. GASP value is 42844.0
         assert_near_equal(
-            self.prob['fuel_mass.fuel_mass_min'], 32105.0, tol
+            self.prob['fuel_mass_min'], 31937.68, tol
         )  # modified from GASP value to account for updated crew mass. GASP value is 32803.6
         assert_near_equal(
-            self.prob[Aircraft.Fuel.WING_VOLUME_DESIGN], 842.53, tol
+            self.prob[Aircraft.Fuel.WING_VOLUME_DESIGN], 839.18, tol
         )  # modified from GASP value to account for updated crew mass. GASP value is 856.4910800459031
         assert_near_equal(
-            self.prob['fuel_mass.fuel_and_oem.OEM_fuel_vol'], 1562.21, tol
+            self.prob['OEM_fuel_vol'], 1558.86, tol
         )  # modified from GASP value to account for updated crew mass. GASP value is 1576.1710061411081
         assert_near_equal(
-            self.prob[Aircraft.Design.OPERATING_MASS], 97255.0, tol
+            self.prob[Aircraft.Design.OPERATING_MASS], 97422.32, tol
         )  # modified from GASP value to account for updated crew mass. GASP value is 96556.0
         # extra_fuel_mass calculated differently in this version, so test for fuel_mass.fuel_and_oem.payload_mass_max_fuel not included
-        assert_near_equal(self.prob['fuel_mass.fuel_and_oem.volume_wingfuel_mass'], 57066.3, tol)
-        assert_near_equal(self.prob['fuel_mass.max_wingfuel_mass'], 57066.3, tol)
+        assert_near_equal(self.prob['volume_wingfuel_mass'], 57066.3, tol)
+        assert_near_equal(self.prob['max_wingfuel_mass'], 57066.3, tol)
 
-        assert_near_equal(
-            self.prob['fuel_mass.body_tank.extra_fuel_volume'], 0, tol
-        )  # always zero when no body tank
-        assert_near_equal(
-            self.prob['fuel_mass.body_tank.max_extra_fuel_mass'], 0, tol
-        )  # always zero when no body tank
+        assert_near_equal(self.prob['extra_fuel_volume'], 0, tol)  # always zero when no body tank
+        assert_near_equal(self.prob['max_extra_fuel_mass'], 0, tol)  # always zero when no body tank
 
         partial_data = self.prob.check_partials(out_stream=None, method='cs')
         assert_check_partials(partial_data, atol=3e-10, rtol=1e-12)
 
-    def test_manual_override(self):
-        # Problem in setup is GASP prioritized, so shared inputs for FLOPS will be manually overriden.
+    def test_code_origin_override(self):
+        # Problem in setup is GASP prioritized, so shared inputs for FLOPS will be overridden.
 
         outs = self.prob.model.pre_mission.list_outputs(
             includes='*gasp*fuselage:avg_diam*', prom_name=True, out_stream=None
@@ -219,7 +220,7 @@ class PreMissionTestCase(unittest.TestCase):
             outs[0][0]
             == f'core_geometry.gasp_based_geom.fuselage.parameters.{Aircraft.Fuselage.AVG_DIAMETER}'
         )
-        self.assertTrue('MANUAL_OVERRIDE' not in outs[0][1]['prom_name'])
+        self.assertTrue('CODE_ORIGIN_OVERRIDE' not in outs[0][1]['prom_name'])
 
         outs = self.prob.model.pre_mission.list_outputs(
             includes='*flops*fuselage:avg_diam*', prom_name=True, out_stream=None
@@ -229,7 +230,7 @@ class PreMissionTestCase(unittest.TestCase):
             outs[0][0]
             == f'core_geometry.flops_based_geom.fuselage_prelim.{Aircraft.Fuselage.AVG_DIAMETER}'
         )
-        self.assertTrue('MANUAL_OVERRIDE' in outs[0][1]['prom_name'])
+        self.assertTrue('CODE_ORIGIN_OVERRIDE' in outs[0][1]['prom_name'])
 
         outs = self.prob.model.pre_mission.list_outputs(
             includes='*gasp*fuselage:wetted_area*', prom_name=True, out_stream=None
@@ -239,7 +240,7 @@ class PreMissionTestCase(unittest.TestCase):
             outs[0][0]
             == f'core_geometry.gasp_based_geom.fuselage.size.{Aircraft.Fuselage.WETTED_AREA}'
         )
-        self.assertTrue('MANUAL_OVERRIDE' not in outs[0][1]['prom_name'])
+        self.assertTrue('CODE_ORIGIN_OVERRIDE' not in outs[0][1]['prom_name'])
 
         outs = self.prob.model.pre_mission.list_outputs(
             includes='*flops*fuselage:wetted_area*', prom_name=True, out_stream=None
@@ -248,7 +249,7 @@ class PreMissionTestCase(unittest.TestCase):
         self.assertTrue(
             outs[0][0] == f'core_geometry.flops_based_geom.fuselage.{Aircraft.Fuselage.WETTED_AREA}'
         )
-        self.assertTrue('MANUAL_OVERRIDE' in outs[0][1]['prom_name'])
+        self.assertTrue('CODE_ORIGIN_OVERRIDE' in outs[0][1]['prom_name'])
 
         # Setup FLOPS prioritized problem.
 
@@ -309,7 +310,7 @@ class PreMissionTestCase(unittest.TestCase):
 
         prob.setup()
 
-        # Problem in setup is FLOPS prioritized, so shared inputs for FLOPS will be manually overriden.
+        # Problem in setup is FLOPS prioritized, so shared inputs for FLOPS will be overridden.
 
         outs = prob.model.pre_mission.list_outputs(
             includes='*gasp*fuselage:avg_diam*', prom_name=True, out_stream=None
@@ -319,7 +320,7 @@ class PreMissionTestCase(unittest.TestCase):
             outs[0][0]
             == f'core_geometry.gasp_based_geom.fuselage.parameters.{Aircraft.Fuselage.AVG_DIAMETER}'
         )
-        self.assertTrue('MANUAL_OVERRIDE' in outs[0][1]['prom_name'])
+        self.assertTrue('CODE_ORIGIN_OVERRIDE' in outs[0][1]['prom_name'])
 
         outs = prob.model.pre_mission.list_outputs(
             includes='*flops*fuselage:avg_diam*', prom_name=True, out_stream=None
@@ -329,7 +330,7 @@ class PreMissionTestCase(unittest.TestCase):
             outs[0][0]
             == f'core_geometry.flops_based_geom.fuselage_prelim.{Aircraft.Fuselage.AVG_DIAMETER}'
         )
-        self.assertTrue('MANUAL_OVERRIDE' not in outs[0][1]['prom_name'])
+        self.assertTrue('CODE_ORIGIN_OVERRIDE' not in outs[0][1]['prom_name'])
 
         outs = prob.model.pre_mission.list_outputs(
             includes='*gasp*fuselage:wetted_area*', prom_name=True, out_stream=None
@@ -339,7 +340,7 @@ class PreMissionTestCase(unittest.TestCase):
             outs[0][0]
             == f'core_geometry.gasp_based_geom.fuselage.size.{Aircraft.Fuselage.WETTED_AREA}'
         )
-        self.assertTrue('MANUAL_OVERRIDE' in outs[0][1]['prom_name'])
+        self.assertTrue('CODE_ORIGIN_OVERRIDE' in outs[0][1]['prom_name'])
 
         outs = prob.model.pre_mission.list_outputs(
             includes='*flops*fuselage:wetted_area*', prom_name=True, out_stream=None
@@ -348,12 +349,8 @@ class PreMissionTestCase(unittest.TestCase):
         self.assertTrue(
             outs[0][0] == f'core_geometry.flops_based_geom.fuselage.{Aircraft.Fuselage.WETTED_AREA}'
         )
-        self.assertTrue('MANUAL_OVERRIDE' not in outs[0][1]['prom_name'])
+        self.assertTrue('CODE_ORIGIN_OVERRIDE' not in outs[0][1]['prom_name'])
 
 
 if __name__ == '__main__':
     unittest.main()
-    # test = PreMissionTestCase()
-    # test.setUp()
-    # test.test_manual_override()
-    # test.test_GASP_mass_FLOPS_everything_else()

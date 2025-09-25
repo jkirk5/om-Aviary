@@ -11,6 +11,7 @@ from collections import namedtuple
 
 import dymos as dm
 import openmdao.api as om
+import numpy as np
 
 from aviary.mission.flops_based.ode.energy_ODE import EnergyODE
 from aviary.mission.initial_guess_builders import InitialGuess
@@ -210,6 +211,18 @@ class PhaseBuilderBase(ABC):
                 ode_class=ode_class, transcription=transcription, ode_init_kwargs=kwargs
             )
 
+        # Add a timeseries for the "mission bus variables" that will be a uniform grid, using Falck Magik™.
+        # https://stackoverflow.com/questions/67771242/openmdao-dymos-interpolate-the-results-of-a-phase-onto-an-equispaced-grid
+        if self.is_analytic_phase:
+            tx_mission_bus = dm.GaussLobatto(num_segments=self.num_nodes, order=3, compressed=True)
+        else:
+            tx_mission_bus = dm.GaussLobatto(
+                num_segments=transcription.options['num_segments'], order=3, compressed=True
+            )
+        phase.add_timeseries(
+            name='mission_bus_variables', transcription=tx_mission_bus, subset='all'
+        )
+
         # overrides should add state, controls, etc.
         return phase
 
@@ -363,149 +376,156 @@ class PhaseBuilderBase(ABC):
         meta_data[name] = dict(apply_initial_guess=initial_guess.apply_initial_guess, desc=desc)
 
     def _add_user_defined_constraints(self, phase, constraints):
-        """Add each constraint and its corresponding arguments to the phase."""
-        for constraint_name, kwargs in constraints.items():
-            if kwargs['type'] == 'boundary':
-                kwargs.pop('type')
-
-                if 'target' in kwargs:
+        """Add each constraint to this phase using the arguments given in the phase_info."""
+        for constraint_name, constraint_dict in constraints.items():
+            con_args = constraint_dict.copy()
+            con_type = con_args.pop('type')
+            if con_type == 'boundary':
+                if 'target' in con_args:
                     # Support for constraint aliases.
-                    target = kwargs.pop('target')
-                    kwargs['constraint_name'] = constraint_name
-                    phase.add_boundary_constraint(target, **kwargs)
+                    target = con_args.pop('target')
+                    con_args['constraint_name'] = constraint_name
+                    phase.add_boundary_constraint(target, **con_args)
                 else:
-                    phase.add_boundary_constraint(constraint_name, **kwargs)
+                    phase.add_boundary_constraint(constraint_name, **con_args)
 
-            elif kwargs['type'] == 'path':
-                kwargs.pop('type')
-                phase.add_path_constraint(constraint_name, **kwargs)
+            elif con_type == 'path':
+                phase.add_path_constraint(constraint_name, **con_args)
 
-    def set_time_options(self, user_options, targets=[]):
-        """Set time options: fix_initial flag, duration upper bounds, duration reference."""
-        fix_initial = user_options.get_val('fix_initial')
-        duration_bounds = user_options.get_val('duration_bounds', units='s')
-        duration_ref = user_options.get_val('duration_ref', units='s')
+            else:
+                raise ValueError(
+                    f'Invalid type "{con_type}" for constraint {constraint_name} in {phase.name}.'
+                )
 
-        self.phase.set_time_options(
-            fix_initial=fix_initial,
-            duration_bounds=duration_bounds,
-            units='s',
-            targets=targets,
-            duration_ref=duration_ref,
-        )
+    def add_state(self, name, target, rate_source):
+        """
+        Add a state to this phase using the options in the phase_info.
 
-    def add_velocity_state(self, user_options):
-        """Add velocity state: lower and upper bounds, reference, zero-reference, and state defect reference."""
-        velocity_lower = user_options.get_val('velocity_lower', units='kn')
-        velocity_upper = user_options.get_val('velocity_upper', units='kn')
-        velocity_ref = user_options.get_val('velocity_ref', units='kn')
-        velocity_ref0 = user_options.get_val('velocity_ref0', units='kn')
-        velocity_defect_ref = user_options.get_val('velocity_defect_ref', units='kn')
+        Parameters
+        ----------
+        name : str
+            The name of this state in the phase_info options.
+        target : str
+            State promoted variable path to the ODE.
+        rate_source : str
+            Source of the state rate in the ODE.
+        """
+        options = self.user_options
+
+        initial, _ = options[f'{name}_initial']
+        final, _ = options[f'{name}_final']
+        bounds, units = options[f'{name}_bounds']
+        ref, _ = options[f'{name}_ref']
+        ref0, _ = options[f'{name}_ref0']
+        defect_ref, _ = options[f'{name}_defect_ref']
+        solve_segments = options[f'{name}_solve_segments']
+
+        # If a value is specified for the starting node, then fix_initial is True.
+        # Otherwise, input_initial is True.
+        # The problem configurator may change input_initial to False requested or necessary, (e.g.,
+        # for parallel phases in MPI.)
+
         self.phase.add_state(
-            Dynamic.Mission.VELOCITY,
-            fix_initial=user_options.get_val('fix_initial'),
-            fix_final=False,
-            lower=velocity_lower,
-            upper=velocity_upper,
-            units='kn',
-            rate_source=Dynamic.Mission.VELOCITY_RATE,
-            targets=Dynamic.Mission.VELOCITY,
-            ref=velocity_ref,
-            ref0=velocity_ref0,
-            defect_ref=velocity_defect_ref,
-        )
-
-    def add_mass_state(self, user_options):
-        """Add mass state: lower and upper bounds, reference, zero-reference, and state defect reference."""
-        mass_lower = user_options.get_val('mass_lower', units='lbm')
-        mass_upper = user_options.get_val('mass_upper', units='lbm')
-        mass_ref = user_options.get_val('mass_ref', units='lbm')
-        mass_ref0 = user_options.get_val('mass_ref0', units='lbm')
-        mass_defect_ref = user_options.get_val('mass_defect_ref', units='lbm')
-        self.phase.add_state(
-            Dynamic.Vehicle.MASS,
-            fix_initial=user_options.get_val('fix_initial'),
-            fix_final=False,
-            lower=mass_lower,
-            upper=mass_upper,
-            units='lbm',
-            rate_source=Dynamic.Vehicle.Propulsion.FUEL_FLOW_RATE_NEGATIVE_TOTAL,
-            targets=Dynamic.Vehicle.MASS,
-            ref=mass_ref,
-            ref0=mass_ref0,
-            defect_ref=mass_defect_ref,
-        )
-
-    def add_distance_state(self, user_options, units='NM'):
-        """Add distance state: lower and upper bounds, reference, zero-reference, and state defect reference."""
-        distance_lower = user_options.get_val('distance_lower', units=units)
-        distance_upper = user_options.get_val('distance_upper', units=units)
-        distance_ref = user_options.get_val('distance_ref', units=units)
-        distance_ref0 = user_options.get_val('distance_ref0', units=units)
-        distance_defect_ref = user_options.get_val('distance_defect_ref', units=units)
-        self.phase.add_state(
-            Dynamic.Mission.DISTANCE,
-            fix_initial=user_options.get_val('fix_initial'),
-            fix_final=False,
-            lower=distance_lower,
-            upper=distance_upper,
+            target,
+            fix_initial=initial is not None,
+            input_initial=False,
+            lower=bounds[0],
+            upper=bounds[1],
             units=units,
-            rate_source=Dynamic.Mission.DISTANCE_RATE,
-            ref=distance_ref,
-            ref0=distance_ref0,
-            defect_ref=distance_defect_ref,
+            rate_source=rate_source,
+            ref=ref,
+            ref0=ref0,
+            defect_ref=defect_ref,
+            solve_segments='forward' if solve_segments else None,
         )
 
-    def add_flight_path_angle_state(self, user_options):
-        """Add flight path angle state: lower and upper bounds, reference, zero-reference, and state defect reference."""
-        angle_lower = user_options.get_val('angle_lower', units='rad')
-        angle_upper = user_options.get_val('angle_upper', units='rad')
-        angle_ref = user_options.get_val('angle_ref', units='rad')
-        angle_ref0 = user_options.get_val('angle_ref0', units='rad')
-        angle_defect_ref = user_options.get_val('angle_defect_ref', units='rad')
-        self.phase.add_state(
-            Dynamic.Mission.FLIGHT_PATH_ANGLE,
-            fix_initial=True,
-            fix_final=False,
-            lower=angle_lower,
-            upper=angle_upper,
-            units='rad',
-            rate_source=Dynamic.Mission.FLIGHT_PATH_ANGLE_RATE,
-            ref=angle_ref,
-            defect_ref=angle_defect_ref,
-            ref0=angle_ref0,
-        )
+        if final is not None:
+            constraint_ref, _ = options[f'{name}_constraint_ref']
+            if constraint_ref is None:
+                # If unspecified, final is a good value for it.
+                constraint_ref = final
+            self.phase.add_boundary_constraint(
+                target,
+                loc='final',
+                equals=final,
+                units=units,
+                ref=final,
+            )
 
-    def add_altitude_state(self, user_options, units='ft'):
-        """Add altitude state: lower and upper bounds, reference, zero-reference, and state defect reference."""
-        alt_lower = user_options.get_val('alt_lower', units=units)
-        alt_upper = user_options.get_val('alt_upper', units=units)
-        alt_ref = user_options.get_val('alt_ref', units=units)
-        alt_ref0 = user_options.get_val('alt_ref0', units=units)
-        alt_defect_ref = user_options.get_val('alt_defect_ref', units=units)
-        self.phase.add_state(
-            Dynamic.Mission.ALTITUDE,
-            fix_final=False,
-            lower=alt_lower,
-            upper=alt_upper,
-            units=units,
-            rate_source=Dynamic.Mission.ALTITUDE_RATE,
-            ref=alt_ref,
-            defect_ref=alt_defect_ref,
-            ref0=alt_ref0,
-        )
+    def add_control(
+        self, name, target, rate_targets=None, rate2_targets=None, add_constraints=True
+    ):
+        """
+        Add a control to this phase using the options in the phase-info.
 
-    def add_altitude_constraint(self, user_options):
-        """Add altitude constraint: final altitude and altitude constraint reference."""
-        final_altitude = user_options.get_val('final_altitude', units='ft')
-        alt_constraint_ref = user_options.get_val('alt_constraint_ref', units='ft')
-        self.phase.add_boundary_constraint(
-            Dynamic.Mission.ALTITUDE,
-            loc='final',
-            equals=final_altitude,
-            units='ft',
-            ref=alt_constraint_ref,
-        )
+        Parameters
+        ----------
+        name : str
+            The name of this control in the phase_info options.
+        target : str
+            Control promoted variable path to the ODE.
+        rate_source : list of str
+            List of rate targets for this control.
+        rate2_targets : Sequence of str or None
+            (Optional) The parameter in the ODE to which the control 2nd derivative is connected.
+        add_constraints : bool
+            When True, add constraints on any declared initial and final values if this control is
+            being optimized. Default is True.
+        """
+        options = self.user_options
+        phase = self.phase
+
+        initial, _ = options[f'{name}_initial']
+        final, _ = options[f'{name}_final']
+        bounds, units = options[f'{name}_bounds']
+        ref, _ = options[f'{name}_ref']
+        ref0, _ = options[f'{name}_ref0']
+        polynomial_order = options[f'{name}_polynomial_order']
+        opt = options[f'{name}_optimize']
+
+        if ref == 1.0:
+            # This has not been moved from default, so find a good value.
+            candidates = [x for x in (bounds[0], bounds[1], initial, final) if x is not None]
+            if len(candidates) > 0:
+                ref = np.max(np.abs(np.array(candidates)))
+
+        extra_options = {}
+        if polynomial_order is not None:
+            extra_options['control_type'] = 'polynomial'
+            extra_options['order'] = polynomial_order
+
+        if opt is True:
+            extra_options['lower'] = bounds[0]
+            extra_options['upper'] = bounds[1]
+            extra_options['ref'] = ref
+            extra_options['ref0'] = ref0
+
+        if units not in ['unitless', None]:
+            extra_options['units'] = units
+
+        if rate_targets is not None:
+            extra_options['rate_targets'] = rate_targets
+
+        if rate2_targets is not None:
+            extra_options['rate2_targets'] = rate2_targets
+
+        phase.add_control(target, targets=target, opt=opt, **extra_options)
+
+        # Add timeseries for any control.
+        phase.add_timeseries_output(target)
+
+        if not add_constraints:
+            return
+
+        # Add an initial constraint.
+        if opt and initial is not None:
+            phase.add_boundary_constraint(
+                target, loc='initial', equals=initial, units=units, ref=ref
+            )
+
+        # Add a final constraint.
+        if opt and final is not None:
+            phase.add_boundary_constraint(target, loc='final', equals=final, units=units, ref=ref)
 
 
 _registered_phase_builder_types = []

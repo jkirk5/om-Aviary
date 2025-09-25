@@ -20,6 +20,19 @@ class TestAeroBuilder(av.TestSubsystemBuilderBase):
         self.subsystem_builder = CoreAerodynamicsBuilder('core_aerodynamics', BaseMetaData, GASP)
         self.aviary_values = av.AviaryValues()
         self.aviary_values.set_val(Aircraft.Engine.NUM_ENGINES, [1], units='unitless')
+        self.aviary_values.set_val(Aircraft.Design.TYPE, 'transport', units='unitless')
+
+    def test_build_mission(self):
+        kwargs = {'method': 'cruise'}
+        return super().test_build_mission(**kwargs)
+
+    def test_get_parameters(self):
+        kwargs = {'method': 'cruise'}
+        return super().test_get_parameters(**kwargs)
+
+    def test_check_parameters(self):
+        kwargs = {'method': 'cruise'}
+        return super().test_check_parameters(**kwargs)
 
 
 if __name__ == '__main__':

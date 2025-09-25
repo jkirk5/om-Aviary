@@ -12,6 +12,8 @@ from aviary.utils.aviary_values import AviaryValues
 from aviary.variable_info.variable_meta_data import _MetaData
 from aviary.variable_info.variables import Dynamic
 
+# Solved 2DOF uses this builder.
+#
 # TODO: support/handle the following in the base class
 # - phase.set_time_options()
 #     - currently handled in level 3 interface implementation
@@ -36,54 +38,15 @@ class GroundrollPhaseOptions(AviaryOptionsDictionary):
             'created in Dymos. The default value is 3.',
         )
 
-        self.declare(
-            name='fix_initial',
-            types=bool,
-            default=False,
-            desc='Fixes the initial states (mass, distance) and does not allow them to '
-            'change during the optimization.',
-        )
+        defaults = {
+            'time_initial_bounds': (0.0, 100.0),
+            'time_duration_bounds': (0.0, 3600.0),
+            'time_initial_ref': 100.0,
+            'time_duration_ref': 100.0,
+        }
+        self.add_time_options(units='kn', defaults=defaults)
 
-        self.declare(
-            name='fix_duration',
-            types=bool,
-            default=False,
-            desc='If True, the time duration of the phase is not treated as a design '
-            'variable for the optimization problem.',
-        )
-
-        self.declare(
-            'initial_bounds',
-            types=tuple,
-            default=(0.0, 100.0),
-            units='kn',
-            desc='Lower and upper bounds on the integration variable, which is speed.',
-        )
-
-        self.declare(
-            name='duration_bounds',
-            types=tuple,
-            default=(0.0, 3600.0),
-            units='kn',
-            desc='Lower and upper bounds on the integration variable, which is speed. It is'
-            'in the form of a nested tuple: '
-            'i.e. ((20, 36), "min") This constrains the duration to be between 20 and 36 min.',
-        )
-
-        self.declare(
-            name='initial_ref',
-            default=100.0,
-            units='kn',
-            desc='Scale factor ref for the phase starting time.',
-        )
-
-        self.declare(
-            name='duration_ref',
-            types=tuple,
-            default=100.0,
-            units='kn',
-            desc='Scale factor ref for duration.',
-        )
+        # The options below have not yet been revamped.
 
         self.declare(
             name='constraints',
@@ -138,8 +101,8 @@ class GroundrollPhase(PhaseBuilderBase):
 
         user_options: AviaryValues = self.user_options
 
-        duration_bounds = user_options.get_val('duration_bounds', units='kn')
-        duration_ref = user_options.get_val('duration_ref', units='kn')
+        duration_bounds = user_options.get_val('time_duration_bounds', units='kn')
+        duration_ref = user_options.get_val('time_duration_ref', units='kn')
         constraints = user_options.get_val('constraints')
 
         phase.set_time_options(

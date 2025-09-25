@@ -2,16 +2,17 @@ import argparse
 import os
 import sys
 
-import aviary
 from aviary.interface.download_models import _exec_hangar, _setup_hangar_parser
 from aviary.interface.graphical_input import _exec_flight_profile, _setup_flight_profile_parser
 from aviary.interface.methods_for_level1 import _exec_level1, _setup_level1_parser
 from aviary.interface.plot_drag_polar import _exec_plot_drag_polar, _setup_plot_drag_polar_parser
+from aviary.interface.test_installation import _exec_installation_test, _setup_installation_test
 from aviary.utils.aero_table_conversion import _exec_ATC, _setup_ATC_parser
 from aviary.utils.engine_deck_conversion import EDC_description, _exec_EDC, _setup_EDC_parser
 from aviary.utils.fortran_to_aviary import _exec_F2A, _setup_F2A_parser
 from aviary.utils.propeller_map_conversion import _exec_PMC, _setup_PMC_parser
 from aviary.visualization.dashboard import _dashboard_cmd, _dashboard_setup_parser
+from aviary.visualization.realtime_plot import _rtplot_cmd, _rtplot_setup_parser
 
 
 def _load_and_exec(script_name, user_args):
@@ -43,6 +44,11 @@ def _load_and_exec(script_name, user_args):
 
 
 _command_map = {
+    'check': (
+        _setup_installation_test,
+        _exec_installation_test,
+        'Verifies Aviary installation',
+    ),
     'fortran_to_aviary': (
         _setup_F2A_parser,
         _exec_F2A,
@@ -75,6 +81,11 @@ _command_map = {
         _setup_plot_drag_polar_parser,
         _exec_plot_drag_polar,
         'Plot a Drag Polar Graph using a provided polar data csv input',
+    ),
+    'rtplot': (
+        _rtplot_setup_parser,
+        _rtplot_cmd,
+        'Run a script and automatically show a real-time plot of the optimization progress',
     ),
 }
 
@@ -113,8 +124,12 @@ def aviary_cmd():
     # '--version', '--dependency_versions')]
     cmdargs = [a for a in sys.argv[1:] if a not in ('-h',)]
 
+    if len(args) == 0 and len(cmdargs) == 0:
+        args = ['-h']
+
     if len(args) == 1 and len(user_args) == 0:
-        if args[0] not in ('draw_mission', 'run_mission', 'plot_drag_polar'):
+        # if command requires arguments but is run without any, return help for that command
+        if args[0] not in ('check', 'draw_mission', 'run_mission', 'plot_drag_polar'):
             parser.parse_args([args[0], '-h'])
 
     if not set(args).intersection(subs.choices) and len(args) == 1 and os.path.isfile(cmdargs[0]):
@@ -140,8 +155,6 @@ def aviary_cmd():
 
         if hasattr(options, 'executor'):
             options.executor(options, user_args)
-        else:
-            os.system('aviary -h')
 
 
 if __name__ == '__main__':

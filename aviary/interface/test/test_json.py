@@ -5,7 +5,7 @@ from pathlib import Path
 from openmdao.utils.testing_utils import use_tempdirs
 
 import aviary.api as av
-from aviary.interface.default_phase_info.height_energy import (
+from aviary.models.missions.height_energy_default import (
     phase_info,
     phase_info_parameterization,
 )
@@ -20,7 +20,7 @@ class TestJson(unittest.TestCase):
     These tests just check that the json files can be saved or loaded
     They don't check that the files were properly created or that the
     off-design mission ran correctly.
-    run_off_design_example.py in aviary/examples tests the full functionality.
+    off_design_example.py in aviary/examples tests the full functionality.
     """
 
     def get_file(self, filename):
@@ -33,10 +33,13 @@ class TestJson(unittest.TestCase):
         self.prob = prob = av.AviaryProblem()
         # Load aircraft and options data from user
         # Allow for user overrides here
-        prob.load_inputs('models/test_aircraft/aircraft_for_bench_FwFm.csv', local_phase_info)
+        prob.load_inputs(
+            'models/aircraft/test_aircraft/aircraft_for_bench_FwFm.csv',
+            local_phase_info,
+        )
 
-        # Preprocess inputs
         prob.check_and_preprocess_inputs()
+
         prob.add_pre_mission_systems()
         prob.add_phases(phase_info_parameterization=phase_info_parameterization)
         prob.add_post_mission_systems()
@@ -50,7 +53,6 @@ class TestJson(unittest.TestCase):
         # Detail which variables the optimizer can control
         prob.add_objective()
         prob.setup()
-        prob.set_initial_guesses()
 
     def test_save_json(self):
         self.prob.run_aviary_problem()

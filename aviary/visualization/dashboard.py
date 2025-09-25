@@ -29,7 +29,7 @@ from bokeh.models import (
 )
 from bokeh.palettes import Category20, d3
 from bokeh.plotting import figure
-from openmdao.utils.general_utils import env_truthy
+from openmdao.utils.general_utils import env_truthy, make_serializable
 from openmdao.utils.units import conversion_to_base_units
 
 try:
@@ -523,6 +523,8 @@ def create_aviary_variables_table_data_nested(script_name, recorder_file):
             var_info = grouped[group_name][0]
             prom_name = outputs[var_info]['prom_name']
             aviary_metadata = av.CoreMetaData.get(prom_name)
+            # the metadata has some object types, like "type", that don't serialize normally
+            aviary_metadata = make_serializable(aviary_metadata)
             table_data_nested.append(
                 {
                     'abs_name': group_name,
@@ -538,6 +540,8 @@ def create_aviary_variables_table_data_nested(script_name, recorder_file):
             for children_name in grouped[group_name]:
                 prom_name = outputs[children_name]['prom_name']
                 aviary_metadata = av.CoreMetaData.get(prom_name)
+                # the metadata has some object types, like "type", that don't serialize normally
+                aviary_metadata = make_serializable(aviary_metadata)
                 children_list.append(
                     {
                         'abs_name': children_name,
@@ -878,7 +882,7 @@ def create_optimization_history_plot(case_recorder, df):
         f"""
         <label style="display:block; margin-bottom:5px;">
             <input type="checkbox" value="{variable_name}"
-                onchange="Bokeh.documents[0].get_model_by_id('{variable_checkbox_callback.id}').execute({index: {i}, checked: this.checked} )">
+                onchange="Bokeh.documents[0].get_model_by_id('{variable_checkbox_callback.id}').execute({{index: {i}, checked: this.checked}} )">
             {variable_name}
         </label>
     """
@@ -1063,6 +1067,74 @@ def _create_interactive_xy_plot_mission_variables(documentation, problem_recorde
         )
 
     return interactive_mission_var_plot_pane_with_doc
+
+
+def create_payload_range_frame(title, results_tabs_list, documentation, csv_filepath):
+    """
+    Create a Panel Pane that contains a Bokeh chart display of the data in a CSV file.
+
+    Parameters
+    ----------
+    title : str
+        Title for the tab.
+    results_tabs_list : list
+        List to append the chart frame to.
+    documentation : str
+        Explanation of what this tab is showing.
+    csv_filepath : str or Path
+        Path to the input CSV file.
+
+    Returns
+    -------
+    None
+        Appends the chart pane to results_tabs_list.
+    """
+    if os.path.isfile(csv_filepath):
+        df = pd.read_csv(csv_filepath)
+
+        # column data source for hover
+        source = ColumnDataSource(
+            data=dict(x=df['Range (NM)'], y=df['Payload (lbs)'], point_name=df['Point'])
+        )
+
+        # Create Bokeh figure with hover tool
+        p = figure(
+            title='Aircraft Payload-Range Envelope',
+            x_axis_label='Range (NM)',
+            y_axis_label='Payload (lbs)',
+            width=600,
+            height=400,
+            tools=['pan,wheel_zoom, hover, box_zoom,reset,save'],
+        )
+        p.hover.tooltips = [('Point', '@point_name'), ('Range (NM)', '@x'), ('Payload (lbs)', '@y')]
+        # Add scatter points
+        p.scatter('x', 'y', size=10, color='rgb(0, 212, 169)', source=source)
+
+        # Add lines connecting the points to show envelope
+        p.line('x', 'y', line_width=2, color='rgb(0, 212, 169)', source=source)
+
+        # Create Panel pane with the chart
+        chart_pane = pn.pane.Bokeh(p)
+
+        report_pane = pn.Column(
+            pn.pane.HTML(
+                f'<p class="pane_doc">{documentation}</p>',
+                stylesheets=['assets/aviary_styles.css'],
+            ),
+            chart_pane,
+        )
+    else:
+        report_pane = pn.Column(
+            pn.pane.HTML(
+                f'<p class="pane_doc">{documentation}</p>',
+                stylesheets=['assets/aviary_styles.css'],
+            ),
+            pn.pane.Markdown(
+                f"# Chart not shown because data source CSV file, '{csv_filepath}', not found."
+            ),
+        )
+
+    results_tabs_list.append((title, report_pane))
 
 
 # The main script that generates all the tabs in the dashboard
@@ -1362,6 +1434,16 @@ def dashboard(script_name, problem_recorder, driver_recorder, port, run_in_backg
         This data is useful for post-processing, especially those used for acoustic analysis.
         """,
         Path(reports_dir) / 'mission_timeseries_data.csv',
+    )
+
+    # Paylaod Range Output Pane
+    create_payload_range_frame(
+        'Payload/Range Diagram',
+        results_tabs_list,
+        """
+        Defines key operating points on the aircraft's payload-range envelope from Design and Fallout missions.
+        """,
+        Path(reports_dir) / 'payload_range_data.csv',
     )
 
     # Trajectory results

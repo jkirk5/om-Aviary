@@ -11,7 +11,7 @@ phase_info = deepcopy(av.default_height_energy_phase_info)
 
 
 @use_tempdirs
-class TestBattery(av.TestSubsystemBuilderBase):
+class TestExternalAero(av.TestSubsystemBuilderBase):
     """
     Test replacing internal drag calculation with an external subsystem.
 
@@ -38,14 +38,11 @@ class TestBattery(av.TestSubsystemBuilderBase):
         prob = av.AviaryProblem()
 
         # Load aircraft and options data from user
-        prob.load_inputs('models/test_aircraft/aircraft_for_bench_FwFm.csv', phase_info)
+        prob.load_inputs('models/aircraft/test_aircraft/aircraft_for_bench_FwFm.csv', phase_info)
 
         prob.check_and_preprocess_inputs()
-        prob.add_pre_mission_systems()
-        prob.add_phases()
-        prob.add_post_mission_systems()
 
-        prob.link_phases()
+        prob.build_model()
 
         # SLSQP didn't work so well here.
         prob.add_driver('IPOPT')
@@ -55,12 +52,10 @@ class TestBattery(av.TestSubsystemBuilderBase):
 
         prob.setup()
 
-        prob.set_initial_guesses()
-
         prob.run_aviary_problem(suppress_solver_print=True)
 
         drag = prob.get_val('traj.cruise.rhs_all.drag', units='lbf')
-        assert_near_equal(drag[0], 7272.0265, tolerance=1e-3)
+        assert_near_equal(drag[0], 5540.7442556, tolerance=1e-3)
 
 
 if __name__ == '__main__':

@@ -22,48 +22,41 @@ class TestSubsystemsMission(unittest.TestCase):
                 'subsystem_options': {'core_aerodynamics': {'method': 'computed'}},
                 'external_subsystems': [BatteryBuilder()],
                 'user_options': {
-                    'optimize_mach': False,
-                    'optimize_altitude': False,
-                    'polynomial_control_order': 1,
                     'num_segments': 5,
                     'order': 3,
-                    'solve_for_distance': False,
-                    'initial_mach': (0.72, 'unitless'),
-                    'final_mach': (0.72, 'unitless'),
+                    'mach_optimize': False,
+                    'mach_polynomial_order': 1,
+                    'mach_initial': (0.72, 'unitless'),
                     'mach_bounds': ((0.7, 0.74), 'unitless'),
-                    'initial_altitude': (35000.0, 'ft'),
-                    'final_altitude': (35000.0, 'ft'),
+                    'altitude_optimize': False,
+                    'altitude_polynomial_order': 1,
+                    'altitude_initial': (35000.0, 'ft'),
+                    'altitude_final': (35000.0, 'ft'),
                     'altitude_bounds': ((23000.0, 38000.0), 'ft'),
                     'throttle_enforcement': 'boundary_constraint',
-                    'fix_initial': True,
-                    'constrain_final': False,
-                    'fix_duration': False,
-                    'initial_bounds': ((0.0, 0.0), 'min'),
-                    'duration_bounds': ((5.0, 30.0), 'min'),
+                    'time_initial': (0.0, 'min'),
+                    'time_duration_bounds': ((5.0, 30.0), 'min'),
                 },
             },
             'cruise2': {
                 'subsystem_options': {'core_aerodynamics': {'method': 'computed'}},
                 'external_subsystems': [BatteryBuilder()],
                 'user_options': {
-                    'optimize_mach': False,
-                    'optimize_altitude': False,
-                    'polynomial_control_order': 1,
                     'num_segments': 5,
                     'order': 3,
-                    'solve_for_distance': False,
-                    'initial_mach': (0.72, 'unitless'),
-                    'final_mach': (0.72, 'unitless'),
+                    'mach_optimize': False,
+                    'mach_polynomial_order': 1,
+                    'mach_initial': (0.72, 'unitless'),
+                    'mach_final': (0.72, 'unitless'),
                     'mach_bounds': ((0.7, 0.74), 'unitless'),
-                    'initial_altitude': (35000.0, 'ft'),
-                    'final_altitude': (35000.0, 'ft'),
+                    'altitude_optimize': False,
+                    'altitude_polynomial_order': 1,
+                    'altitude_initial': (35000.0, 'ft'),
+                    'altitude_final': (35000.0, 'ft'),
                     'altitude_bounds': ((23000.0, 38000.0), 'ft'),
                     'throttle_enforcement': 'boundary_constraint',
-                    'fix_initial': False,
-                    'constrain_final': False,
-                    'fix_duration': False,
-                    'initial_bounds': ((0.0, 0.0), 'min'),
-                    'duration_bounds': ((5.0, 30.0), 'min'),
+                    'time_initial': (0.0, 'min'),
+                    'time_duration_bounds': ((5.0, 30.0), 'min'),
                 },
             },
             'post_mission': {
@@ -78,20 +71,13 @@ class TestSubsystemsMission(unittest.TestCase):
         prob = av.AviaryProblem(verbosity=0)
 
         prob.load_inputs(
-            'models/test_aircraft/aircraft_for_bench_FwFm_with_electric.csv', phase_info
+            'models/aircraft/test_aircraft/aircraft_for_bench_FwFm_with_electric.csv',
+            phase_info,
         )
 
-        # Preprocess inputs
         prob.check_and_preprocess_inputs()
 
-        prob.add_pre_mission_systems()
-
-        prob.add_phases()
-
-        prob.add_post_mission_systems()
-
-        # Link phases and variables
-        prob.link_phases()
+        prob.build_model()
 
         prob.add_driver('SLSQP')
 
@@ -100,8 +86,6 @@ class TestSubsystemsMission(unittest.TestCase):
         prob.add_objective('fuel_burned')
 
         prob.setup()
-
-        prob.set_initial_guesses()
 
         prob.set_val(av.Aircraft.Battery.PACK_ENERGY_DENSITY, 550, units='kJ/kg')
         prob.set_val(av.Aircraft.Battery.PACK_MASS, 1000, units='lbm')
@@ -183,7 +167,7 @@ class TestSubsystemsMission(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    # unittest.main()
-    test = TestSubsystemsMission()
-    test.setUp()
-    test.test_subsystems_in_a_mission()
+    unittest.main()
+    # test = TestSubsystemsMission()
+    # test.setUp()
+    # test.test_subsystems_in_a_mission()

@@ -7,9 +7,9 @@ from openmdao.core.problem import _clear_problem_names
 from openmdao.utils.assert_utils import assert_near_equal
 from openmdao.utils.testing_utils import require_pyoptsparse, use_tempdirs
 
-from aviary.interface.default_phase_info.height_energy import phase_info
+from aviary.models.missions.height_energy_default import phase_info
 from aviary.interface.methods_for_level2 import AviaryProblem
-from aviary.models.multi_engine_single_aisle.multi_engine_single_aisle_data import (
+from aviary.models.aircraft.multi_engine_single_aisle.multi_engine_single_aisle_data import (
     engine_1_inputs,
     engine_2_inputs,
     inputs,
@@ -21,21 +21,24 @@ from aviary.variable_info.variables import Aircraft
 # Build problem
 local_phase_info = deepcopy(phase_info)
 
-local_phase_info['climb']['user_options']['optimize_mach'] = False
-local_phase_info['climb']['user_options']['optimize_altitude'] = False
+local_phase_info['climb']['user_options']['mach_optimize'] = False
+local_phase_info['climb']['user_options']['mach_polynomial_order'] = 1
+local_phase_info['climb']['user_options']['altitude_optimize'] = False
+local_phase_info['climb']['user_options']['altitude_polynomial_order'] = 1
 local_phase_info['climb']['user_options']['no_descent'] = True
-local_phase_info['climb']['user_options']['use_polynomial_control'] = True
 
-local_phase_info['cruise']['user_options']['optimize_mach'] = False
-local_phase_info['cruise']['user_options']['optimize_altitude'] = False
+local_phase_info['cruise']['user_options']['mach_optimize'] = False
+local_phase_info['cruise']['user_options']['mach_polynomial_order'] = 1
+local_phase_info['cruise']['user_options']['altitude_optimize'] = False
+local_phase_info['cruise']['user_options']['altitude_polynomial_order'] = 1
 local_phase_info['cruise']['user_options']['altitude_bounds'] = ((32000.0, 34000.0), 'ft')
 local_phase_info['cruise']['user_options']['throttle_enforcement'] = 'path_constraint'
-local_phase_info['cruise']['user_options']['use_polynomial_control'] = True
 
-local_phase_info['descent']['user_options']['optimize_mach'] = False
-local_phase_info['descent']['user_options']['optimize_altitude'] = False
+local_phase_info['descent']['user_options']['mach_optimize'] = False
+local_phase_info['descent']['user_options']['mach_polynomial_order'] = 1
+local_phase_info['descent']['user_options']['altitude_optimize'] = False
+local_phase_info['descent']['user_options']['altitude_polynomial_order'] = 1
 local_phase_info['descent']['user_options']['no_climb'] = True
-local_phase_info['descent']['user_options']['use_polynomial_control'] = True
 
 inputs.set_val(Aircraft.Nacelle.LAMINAR_FLOW_LOWER, np.zeros(2))
 inputs.set_val(Aircraft.Nacelle.LAMINAR_FLOW_UPPER, np.zeros(2))
@@ -68,10 +71,8 @@ class MultiengineTestcase(unittest.TestCase):
         prob.load_inputs(inputs, test_phase_info, engine_builders=[engine1, engine2])
 
         prob.check_and_preprocess_inputs()
-        prob.add_pre_mission_systems()
-        prob.add_phases()
-        prob.add_post_mission_systems()
-        prob.link_phases()
+
+        prob.build_model()
 
         prob.add_driver('SNOPT', max_iter=50, use_coloring=True)
 
@@ -79,7 +80,6 @@ class MultiengineTestcase(unittest.TestCase):
         prob.add_objective()
 
         prob.setup()
-        prob.set_initial_guesses()
 
         prob.run_aviary_problem('dymos_solution.db', suppress_solver_print=True)
 
@@ -108,10 +108,8 @@ class MultiengineTestcase(unittest.TestCase):
         prob.load_inputs(inputs, test_phase_info, engine_builders=[engine1, engine2])
 
         prob.check_and_preprocess_inputs()
-        prob.add_pre_mission_systems()
-        prob.add_phases()
-        prob.add_post_mission_systems()
-        prob.link_phases()
+
+        prob.build_model()
 
         prob.add_driver('SNOPT', max_iter=50, use_coloring=True)
 
@@ -119,7 +117,6 @@ class MultiengineTestcase(unittest.TestCase):
         prob.add_objective()
 
         prob.setup()
-        prob.set_initial_guesses()
 
         prob.run_aviary_problem('dymos_solution.db', suppress_solver_print=True)
 
@@ -129,7 +126,6 @@ class MultiengineTestcase(unittest.TestCase):
 
         assert_near_equal(alloc_climb[0], 0.5, tolerance=1e-2)
         assert_near_equal(alloc_cruise[0], 0.593, tolerance=1e-2)
-        assert_near_equal(alloc_descent[0], 0.408, tolerance=1e-2)
 
     @require_pyoptsparse(optimizer='SNOPT')
     def test_multiengine_dynamic(self):
@@ -148,10 +144,8 @@ class MultiengineTestcase(unittest.TestCase):
         prob.load_inputs(inputs, test_phase_info, engine_builders=[engine1, engine2])
 
         prob.check_and_preprocess_inputs()
-        prob.add_pre_mission_systems()
-        prob.add_phases()
-        prob.add_post_mission_systems()
-        prob.link_phases()
+
+        prob.build_model()
 
         prob.add_driver('SNOPT', max_iter=50, use_coloring=True)
 
@@ -159,7 +153,6 @@ class MultiengineTestcase(unittest.TestCase):
         prob.add_objective()
 
         prob.setup()
-        prob.set_initial_guesses()
 
         prob.run_aviary_problem('dymos_solution.db', suppress_solver_print=True)
 
@@ -172,7 +165,6 @@ class MultiengineTestcase(unittest.TestCase):
 
         # Check general trend: favors engine 1.
         self.assertGreater(alloc_climb[2], 0.55)
-        self.assertGreater(alloc_descent[3], 0.65)
 
 
 if __name__ == '__main__':

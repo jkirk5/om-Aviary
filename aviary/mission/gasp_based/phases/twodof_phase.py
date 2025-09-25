@@ -9,6 +9,7 @@ from aviary.mission.initial_guess_builders import (
 )
 from aviary.utils.aviary_options_dict import AviaryOptionsDictionary
 from aviary.utils.aviary_values import AviaryValues
+from aviary.utils.utils import wrapped_convert_units
 from aviary.variable_info.enums import EquationsOfMotion, SpeedType, ThrottleAllocation
 from aviary.variable_info.variables import Dynamic
 
@@ -21,6 +22,59 @@ from aviary.variable_info.variables import Dynamic
 
 class TwoDOFPhaseOptions(AviaryOptionsDictionary):
     def declare_options(self):
+        self.declare(
+            name='num_segments',
+            types=int,
+            default=1,
+            desc='The number of segments in transcription creation in Dymos. '
+            'The default value is 1.',
+        )
+
+        self.declare(
+            name='order',
+            types=int,
+            default=3,
+            desc='The order of polynomials for interpolation in the transcription '
+            'created in Dymos. The default value is 3.',
+        )
+
+        # TODO: These defaults aren't great, but need to keep things the same for now.
+        defaults = {
+            'mass_ref': 1e4,
+            'mass_defect_ref': 1e6,
+            'mass_bounds': (0.0, None),
+        }
+        self.add_state_options('mass', units='kg', defaults=defaults)
+
+        # TODO: These defaults aren't great, but need to keep things the same for now.
+        defaults = {
+            'distance_ref': 1e6,
+            'distance_defect_ref': 1e8,
+            'distance_bounds': (0.0, None),
+            'mass_bounds': (0.0, None),
+        }
+        self.add_state_options('distance', units='m', defaults=defaults)
+
+        self.add_control_options('altitude', units='ft')
+
+        # TODO: These defaults aren't great, but need to keep things the same for now.
+        defaults = {
+            'mach_ref': 0.5,
+        }
+        self.add_control_options('mach', units='unitless', defaults=defaults)
+
+        defaults = {
+            'angle_of_attack_polynomial_order': 1,
+            'angle_of_attack_optimize': True,
+            'angle_of_attack_ref': 10.0,
+            'angle_of_attack_bounds': (0.0, 15.0),
+            'angle_of_attack_optimize': True,
+            'angle_of_attack_initial': 0.0,
+        }
+        self.add_control_options('angle_of_attack', units='deg', defaults=defaults)
+
+        self.add_time_options(units='ft')
+
         self.declare(
             'reserve',
             types=bool,
@@ -40,46 +94,6 @@ class TwoDOFPhaseOptions(AviaryOptionsDictionary):
         )
 
         self.declare(
-            'target_duration',
-            types=tuple,
-            default=None,
-            units='s',
-            desc='The amount of time taken by this phase added as a constraint.',
-        )
-
-        self.declare(
-            name='num_segments',
-            types=int,
-            default=1,
-            desc='The number of segments in transcription creation in Dymos. '
-            'The default value is 1.',
-        )
-
-        self.declare(
-            name='order',
-            types=int,
-            default=3,
-            desc='The order of polynomials for interpolation in the transcription '
-            'created in Dymos. The default value is 3.',
-        )
-
-        self.declare(
-            name='polynomial_control_order',
-            types=int,
-            default=3,
-            desc='The order of the polynomial fit to control values. '
-            'Only used if polynomial_control = True',
-        )
-
-        self.declare(
-            name='use_polynomial_control',
-            types=bool,
-            default=True,
-            desc='Set fo True to use polynomial controls in this phase, which smooths the '
-            'control inputs.',
-        )
-
-        self.declare(
             name='ground_roll',
             types=bool,
             default=False,
@@ -87,68 +101,7 @@ class TwoDOFPhaseOptions(AviaryOptionsDictionary):
             'All other phases of flight (climb, cruise, descent) this must be set to False.',
         )
 
-        self.declare(
-            name='add_initial_mass_constraint',
-            types=bool,
-            default=False,
-            desc='Use a constraint for mass instead of connected initial mass for this phase. '
-            'Overwrites input_initial=True and sets it to False.',
-        )
-
-        self.declare(
-            name='input_initial',
-            types=bool,
-            default=False,
-            desc='Links all states (mass, distance) to a calculation external to this phase.',
-        )
-
-        self.declare(
-            name='fix_initial',
-            types=bool,
-            default=True,
-            desc='Fixes the initial states (mass, distance) and does not allow them to '
-            'change during the optimization.',
-        )
-
-        self.declare(
-            name='fix_duration',
-            types=bool,
-            default=True,
-            desc='If True, the time duration of the phase is not treated as a design '
-            'variable for the optimization problem.',
-        )
-
-        self.declare(
-            name='optimize_mach',
-            types=bool,
-            default=False,
-            desc='Adds the Mach number as a design variable controlled by the optimizer.',
-        )
-
-        self.declare(
-            name='optimize_altitude',
-            types=bool,
-            default=False,
-            desc='Adds the Altitude as a design variable controlled by the optimizer.',
-        )
-
-        self.declare(
-            'initial_bounds',
-            types=tuple,
-            default=(None, None),
-            units='ft',
-            desc='Lower and upper bounds on the integration variable, which is speed.',
-        )
-
-        self.declare(
-            name='duration_bounds',
-            types=tuple,
-            default=(None, None),
-            units='ft',
-            desc='Lower and upper bounds on the integration variable, which is speed. It is'
-            'in the form of a nested tuple: '
-            'i.e. ((20, 36), "min") This constrains the duration to be between 20 and 36 min.',
-        )
+        # The options below have not yet been revamped.
 
         self.declare(
             name='required_available_climb_rate',
@@ -177,50 +130,6 @@ class TwoDOFPhaseOptions(AviaryOptionsDictionary):
         )
 
         self.declare(
-            name='constrain_final',
-            types=bool,
-            default=False,
-            desc='Fixes the final states (mach and altitude) to the values of final_altitude '
-            'and final_mach. These values will be unable to change during the optimization.',
-        )
-
-        self.declare(
-            name='initial_mach',
-            types=float,
-            allow_none=True,
-            default=None,
-            desc='The initial Mach number at the start of the phase. This option is only valid '
-            'when fix_initial is True.',
-        )
-
-        self.declare(
-            name='final_mach',
-            types=float,
-            allow_none=True,
-            default=None,
-            desc='The final Mach number at the end of the phase. This option is only valid '
-            'when fix_initial is True.',
-        )
-
-        self.declare(
-            name='initial_altitude',
-            types=tuple,
-            default=None,
-            units='ft',
-            desc='The initial altitude at the start of the phase. This option is only valid '
-            'when fix_initial is True.',
-        )
-
-        self.declare(
-            name='final_altitude',
-            types=tuple,
-            default=None,
-            units='ft',
-            desc='The final altitude at the end of the phase. This option is only valid '
-            'when fix_initial is True.',
-        )
-
-        self.declare(
             name='throttle_enforcement',
             default='path_constraint',
             values=['path_constraint', 'boundary_constraint', 'bounded', None],
@@ -242,61 +151,12 @@ class TwoDOFPhaseOptions(AviaryOptionsDictionary):
         )
 
         self.declare(
-            name='mach_bounds',
-            types=tuple,
-            default=(None, None),
-            desc='The lower and upper constraints on mach during this phase i.e., '
-            '((0.18, 0.74), "unitless"). The optimizer is never allowed choose mach values '
-            'outside of these bounds constraints.',
-        )
-
-        self.declare(
-            name='altitude_bounds',
-            types=tuple,
-            default=(None, None),
-            units='ft',
-            desc='The lower and upper constraints on altitude during this phase i.e., '
-            '((0.0, 34000.0), "ft"). The optimizer is never allowed choose mach values '
-            'outside of these bounds constraints.',
-        )
-
-        self.declare(
-            name='solve_for_distance',
-            types=bool,
-            default=False,
-            desc='if True, use a nonlinear solver to converge the distance state variable to '
-            'the desired value. Otherwise uses the optimizer to converge the distance state.',
-        )
-
-        self.declare(
             name='constraints',
             types=dict,
             default={},
             desc="Add in custom constraints i.e. 'flight_path_angle': {'equals': -3., "
             "'loc': 'initial', 'units': 'deg', 'type': 'boundary',}. For more details see "
             '_add_user_defined_constraints().',
-        )
-
-        self.declare(
-            name='initial_ref',
-            default=100.0,
-            units='ft',
-            desc='Scale factor initial ref for the phase integration variable, which is range.',
-        )
-
-        self.declare(
-            name='duration_ref',
-            types=tuple,
-            default=1000.0,
-            units='ft',
-            desc='Scale factor duration ref for the phase integration variable, which is range.',
-        )
-
-        self.declare(
-            name='control_order',
-            types=int,
-            default=1,
-            desc='The polynomial order for the angle of attack control.',
         )
 
         self.declare(
@@ -311,14 +171,6 @@ class TwoDOFPhaseOptions(AviaryOptionsDictionary):
             types=bool,
             default=False,
             desc='Set to true to use clean aero with no ground effects.',
-        )
-
-        self.declare(
-            name='ground_roll',
-            types=bool,
-            default=False,
-            desc='Set to True only for phases where the aircraft is rolling on the ground. '
-            'All other phases of flight (climb, cruise, descent) this must be set to False.',
         )
 
 
@@ -353,28 +205,37 @@ class TwoDOFPhase(FlightPhaseBase):
 
         user_options = self.user_options
 
-        control_order = user_options.get_val('control_order')
-
-        fix_initial = user_options.get_val('fix_initial')
-        duration_bounds = user_options.get_val('duration_bounds', units='ft')
-        duration_ref = user_options.get_val('duration_ref', units='ft')
+        time_units = 'ft'
+        initial = wrapped_convert_units(user_options['time_initial'], time_units)
+        duration = wrapped_convert_units(user_options['time_duration'], time_units)
+        initial_bounds = wrapped_convert_units(user_options['time_initial_bounds'], time_units)
+        duration_bounds = wrapped_convert_units(user_options['time_duration_bounds'], time_units)
+        initial_ref = wrapped_convert_units(user_options['time_initial_ref'], time_units)
+        duration_ref = wrapped_convert_units(user_options['time_duration_ref'], time_units)
         rotation = user_options.get_val('rotation')
 
-        initial_kwargs = {}
+        fix_duration = duration is not None
+        fix_initial = initial is not None
+
+        extra_options = {}
         if not fix_initial:
-            initial_kwargs = {
-                'initial_bounds': user_options.get_val('initial_bounds', units='ft'),
-                'initial_ref': user_options.get_val('initial_ref', units='ft'),
+            extra_options = {
+                'initial_bounds': initial_bounds,
+                'initial_ref': initial_ref,
+            }
+
+        if not fix_duration:
+            extra_options = {
+                'duration_bounds': duration_bounds,
+                'duration_ref': duration_ref,
             }
 
         phase.set_time_options(
             fix_initial=fix_initial,
-            fix_duration=False,
-            units='ft',
+            fix_duration=fix_duration,
+            units=time_units,
             name=Dynamic.Mission.DISTANCE,
-            duration_bounds=duration_bounds,
-            duration_ref=duration_ref,
-            **initial_kwargs,
+            **extra_options,
         )
 
         phase.set_state_options(
@@ -387,17 +248,9 @@ class TwoDOFPhase(FlightPhaseBase):
         )
 
         if rotation:
-            phase.add_control(
+            self.add_control(
+                'angle_of_attack',
                 Dynamic.Vehicle.ANGLE_OF_ATTACK,
-                control_type='polynomial',
-                order=control_order,
-                fix_initial=True,
-                lower=0,
-                upper=15,
-                units='deg',
-                ref=10.0,
-                val=0.0,
-                opt=True,
             )
 
         phase.add_timeseries_output('EAS', units='kn')

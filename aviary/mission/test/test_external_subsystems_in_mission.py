@@ -6,8 +6,8 @@ from copy import deepcopy
 import openmdao.api as om
 from openmdao.utils.testing_utils import use_tempdirs
 
-from aviary.interface.default_phase_info.height_energy import phase_info as energy_phase_info
-from aviary.interface.default_phase_info.two_dof import phase_info as two_dof_phase_info
+from aviary.models.missions.height_energy_default import phase_info as energy_phase_info
+from aviary.models.missions.two_dof_default import phase_info as two_dof_phase_info
 from aviary.interface.methods_for_level2 import AviaryProblem
 from aviary.subsystems.subsystem_builder_base import SubsystemBuilderBase
 from aviary.variable_info.variables import Aircraft
@@ -45,18 +45,11 @@ class TestExternalSubsystems(unittest.TestCase):
             local_phase_info,
         )
 
-        # Preprocess inputs
         prob.check_and_preprocess_inputs()
 
-        prob.add_pre_mission_systems()
-        prob.add_phases()
-        prob.add_post_mission_systems()
-
-        prob.link_phases()
+        prob.build_model()
 
         prob.setup()
-
-        prob.set_initial_guesses()
 
         prob.run_model()
 
@@ -80,18 +73,11 @@ class TestExternalSubsystems(unittest.TestCase):
             local_phase_info,
         )
 
-        # Preprocess inputs
         prob.check_and_preprocess_inputs()
 
-        prob.add_pre_mission_systems()
-        prob.add_phases()
-        prob.add_post_mission_systems()
-
-        prob.link_phases()
+        prob.build_model()
 
         prob.setup()
-
-        prob.set_initial_guesses()
 
         prob.run_model()
 
@@ -109,22 +95,15 @@ class TestExternalSubsystems(unittest.TestCase):
         prob = AviaryProblem()
 
         prob.load_inputs(
-            'models/large_single_aisle_1/large_single_aisle_1_GASP.csv',
+            'models/aircraft/large_single_aisle_1/large_single_aisle_1_GASP.csv',
             local_phase_info,
         )
 
-        # Preprocess inputs
         prob.check_and_preprocess_inputs()
 
-        prob.add_pre_mission_systems()
-        prob.add_phases()
-        prob.add_post_mission_systems()
-
-        prob.link_phases()
+        prob.build_model()
 
         prob.setup()
-
-        prob.set_initial_guesses()
 
         prob.run_model()
 
@@ -145,22 +124,15 @@ class TestExternalSubsystems(unittest.TestCase):
         prob = AviaryProblem()
 
         prob.load_inputs(
-            'models/large_single_aisle_1/large_single_aisle_1_GASP.csv',
+            'models/aircraft/large_single_aisle_1/large_single_aisle_1_GASP.csv',
             local_phase_info,
         )
 
-        # Preprocess inputs
         prob.check_and_preprocess_inputs()
 
-        prob.add_pre_mission_systems()
-        prob.add_phases()
-        prob.add_post_mission_systems()
-
-        prob.link_phases()
+        prob.build_model()
 
         prob.setup()
-
-        prob.set_initial_guesses()
 
         prob.run_model()
 

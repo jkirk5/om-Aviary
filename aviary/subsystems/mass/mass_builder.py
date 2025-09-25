@@ -8,7 +8,7 @@ MassBuilderBase : the interface for a mass subsystem builder.
 CoreMassBuilder : the interface for Aviary's core mass subsystem builder
 """
 
-from aviary.interface.utils.markdown_utils import write_markdown_variable_table
+from aviary.interface.utils import write_markdown_variable_table
 from aviary.subsystems.mass.flops_based.mass_premission import MassPremission as MassPremissionFLOPS
 from aviary.subsystems.mass.gasp_based.mass_premission import MassPremission as MassPremissionGASP
 from aviary.subsystems.subsystem_builder_base import SubsystemBuilderBase
@@ -54,7 +54,7 @@ class CoreMassBuilder(MassBuilderBase):
     def build_pre_mission(self, aviary_inputs, **kwargs):
         code_origin = self.code_origin
         try:
-            method = kwargs.pop('method')
+            method = kwargs['method']
         except KeyError:
             method = None
         mass_group = None
@@ -71,7 +71,7 @@ class CoreMassBuilder(MassBuilderBase):
     def build_mission(self, num_nodes, aviary_inputs, **kwargs):
         # by default there is no mass mission, but call super for safety/future-proofing
         try:
-            method = kwargs.pop('method')
+            method = kwargs['method']
         except KeyError:
             method = None
         mass_group = None
@@ -79,7 +79,7 @@ class CoreMassBuilder(MassBuilderBase):
         if method != 'external':
             mass_group = super().build_mission(num_nodes, aviary_inputs)
 
-        mass_group
+        return mass_group
 
     def report(self, prob, reports_folder, **kwargs):
         """
@@ -103,7 +103,9 @@ class CoreMassBuilder(MassBuilderBase):
             Aircraft.Fins.MASS,
             Aircraft.Canard.MASS,
             Aircraft.Fuselage.MASS,
-            Aircraft.LandingGear.TOTAL_MASS,
+            Aircraft.LandingGear.NOSE_GEAR_MASS,
+            Aircraft.LandingGear.MAIN_GEAR_MASS,
+            Aircraft.Paint.MASS,
             Aircraft.Nacelle.MASS,
             Aircraft.Design.STRUCTURE_MASS,
             Aircraft.Propulsion.TOTAL_ENGINE_MASS,
@@ -111,7 +113,7 @@ class CoreMassBuilder(MassBuilderBase):
             Aircraft.Propulsion.TOTAL_MISC_MASS,
             Aircraft.Fuel.FUEL_SYSTEM_MASS,
             Aircraft.Propulsion.MASS,
-            Aircraft.Controls.TOTAL_MASS,
+            Aircraft.Wing.SURFACE_CONTROL_MASS,
             Aircraft.APU.MASS,
             Aircraft.Instruments.MASS,
             Aircraft.Hydraulics.MASS,
