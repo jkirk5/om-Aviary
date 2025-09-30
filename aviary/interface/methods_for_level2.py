@@ -1558,7 +1558,7 @@ class AviaryProblem(om.Problem):
             # An aircraft may be designed with fuel tank capacity that, if filled, would exceed
             # MTOW. In this scenario, Max Economic Range and Ferry Range are the same, and the point
             # only needs to be run once.
-            if operating_mass + fuel_capacity < gross_mass:
+            if operating_mass + fuel_capacity - cargo_container_mass < gross_mass:
                 # Point 3 (Max Economic Range): max fuel and remaining payload capacity
 
                 economic_mission_total_payload = gross_mass - operating_mass - fuel_capacity + cargo_container_mass
