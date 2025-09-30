@@ -5,6 +5,7 @@ import warnings
 from copy import deepcopy
 from datetime import datetime
 from enum import Enum
+from math import ceil
 from pathlib import Path
 
 import dymos as dm
@@ -1507,6 +1508,7 @@ class AviaryProblem(om.Problem):
             phase_info = self.model.mission_info.copy()
             phase_info['pre_mission'] = self.model.pre_mission_info.copy()
             phase_info['post_mission'] = self.model.post_mission_info.copy()
+
             # This checks if the 'cruise' phase exists, then automatically extends duration
             # bounds of the cruise stage to allow for the economic and ferry missions.
             if phase_info['cruise']:
@@ -1532,11 +1534,24 @@ class AviaryProblem(om.Problem):
 
             range_2 = float(self.get_val(Mission.Summary.RANGE)[0])
             gross_mass = float(self.get_val(Mission.Summary.GROSS_MASS)[0])
+
             # NOTE this operating mass is based on the previously run mission - assumed this is the
             # design mission!! Includes cargo containers needed for design (max payload)
             operating_mass = float(self.get_val(Mission.Summary.OPERATING_MASS)[0])
-            fuel_capacity = float(self.get_val(Aircraft.Fuel.TOTAL_CAPACITY)[0])
+
+            total_fuel_capacity = float(self.get_val(Aircraft.Fuel.TOTAL_CAPACITY)[0])
+            unusable_fuel = float(self.get_val(Aircraft.Fuel.UNUSABLE_FUEL_MASS)[0])
             max_payload = float(self.get_val(Aircraft.CrewPayload.TOTAL_PAYLOAD_MASS)[0])
+
+            # TODO: This may be a temporary fix.
+            # The cargo container mass scales with num passengers via baggage mass, and scales
+            # directly with cargo mass. This is unfortunate, because it means that operating
+            # mass wil change. To offset this, and allow the econmic mission to solve, we need
+            # to account for the cargo_container_mass when computing the payload_frac.
+            cargo_container_mass = float(self.get_val(Aircraft.CrewPayload.CARGO_CONTAINER_MASS)[0])
+
+            # Unusable fuel is accounted for in the operating_mass, so we don't want to double count it.
+            fuel_capacity = total_fuel_capacity - unusable_fuel
 
             fuel_2 = self.get_val(Mission.Summary.FUEL_BURNED)[0]
 
@@ -1546,9 +1561,9 @@ class AviaryProblem(om.Problem):
             if operating_mass + fuel_capacity < gross_mass:
                 # Point 3 (Max Economic Range): max fuel and remaining payload capacity
 
-                economic_mission_total_payload = gross_mass - operating_mass - fuel_capacity
+                economic_mission_total_payload = gross_mass - operating_mass - fuel_capacity + cargo_container_mass
 
-                payload_frac = economic_mission_total_payload / max_payload
+                payload_frac = economic_mission_total_payload / (max_payload + cargo_container_mass)
 
                 # Calculates Different payload quantities
                 economic_mission_wing_cargo = (
@@ -1559,11 +1574,11 @@ class AviaryProblem(om.Problem):
                     self.model.aviary_inputs.get_val(Aircraft.CrewPayload.MISC_CARGO, 'lbm')
                     * payload_frac
                 )
-                economic_mission_num_first = int(
+                economic_mission_num_first = ceil(
                     (self.model.aviary_inputs.get_val(Aircraft.CrewPayload.Design.NUM_FIRST_CLASS))
                     * payload_frac
                 )
-                economic_mission_num_bus = int(
+                economic_mission_num_bus = ceil(
                     (
                         self.model.aviary_inputs.get_val(
                             Aircraft.CrewPayload.Design.NUM_BUSINESS_CLASS
@@ -1571,7 +1586,7 @@ class AviaryProblem(om.Problem):
                     )
                     * payload_frac
                 )
-                economic_mission_num_tourist = int(
+                economic_mission_num_tourist = ceil(
                     (
                         self.model.aviary_inputs.get_val(
                             Aircraft.CrewPayload.Design.NUM_TOURIST_CLASS
@@ -1609,7 +1624,7 @@ class AviaryProblem(om.Problem):
                 )  # override theoretical fuel capacity with flyable amount
 
             # Point 4 (Ferry Range): maximum fuel and 0 payload
-            ferry_range_gross_mass = operating_mass + fuel_capacity
+            ferry_range_gross_mass = operating_mass + fuel_capacity - cargo_container_mass
             # BUG 0 passengers breaks the problem, so 1 must be used
             ferry_range_prob = self.run_off_design_mission(
                 problem_type=ProblemType.FALLOUT,
