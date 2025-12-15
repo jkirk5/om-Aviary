@@ -1064,7 +1064,7 @@ class AeroGeom(om.ExplicitComponent):
         # protect against Mach 0, any other small Mach should be ok
         dtype = complex if self.under_complex_step else float
         ffre, fwre, fvtre, fhtre, fstrtre = np.ones((5, num_nodes), dtype=dtype)
-        fnre = np.ones((num_nodes, num_engine_types), dtype=dtype)
+        fnre = np.ones((num_engine_types, num_nodes), dtype=dtype)
         if self.under_complex_step:
             good_mask = reli.real > 1
         else:
@@ -1086,7 +1086,7 @@ class AeroGeom(om.ExplicitComponent):
         # GASP uses different values of cf for wing, nacelle, fuselage, etc.
         fef = fus_SA * cf * ffre * ff_fus + fe_fus_inc
         few = ff_wing * wing_area * cf * fwre
-        fen = np.ones((num_nodes, num_engine_types), dtype=dtype)
+        fen = np.ones((num_engine_types, num_nodes), dtype=dtype)
         for i in range(num_engine_types):
             fen[i] = num_engines[i] * ff_nac[i] * nacelle_area[i] * cf * fnre[i]
         fevt = ff_vtail * vtail_area * cf * fvtre
