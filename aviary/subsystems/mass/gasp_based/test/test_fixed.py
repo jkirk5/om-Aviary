@@ -126,7 +126,7 @@ class MassParametersTestCase2(unittest.TestCase):
 class MassParametersTestCase3(unittest.TestCase):
     def setUp(self):
         options = get_option_defaults()
-        options.set_val(Aircraft.Propulsion.TOTAL_NUM_ENGINES, val=3, units='unitless')
+        options.set_val(Aircraft.Engine.NUM_ENGINES, val=np.array([3]), units='unitless')
         options.set_val(Aircraft.Engine.NUM_FUSELAGE_ENGINES, val=0, units='unitless')
 
         self.prob = om.Problem()
@@ -173,7 +173,7 @@ class MassParametersTestCase3(unittest.TestCase):
 class MassParametersTestCase4(unittest.TestCase):
     def setUp(self):
         options = get_option_defaults()
-        options.set_val(Aircraft.Propulsion.TOTAL_NUM_ENGINES, val=4, units='unitless')
+        options.set_val(Aircraft.Engine.NUM_ENGINES, val=np.array([4]), units='unitless')
         options.set_val(Aircraft.Engine.NUM_FUSELAGE_ENGINES, val=0, units='unitless')
 
         self.prob = om.Problem()
@@ -220,7 +220,7 @@ class MassParametersTestCase4(unittest.TestCase):
 class MassParametersTestCase5(unittest.TestCase):
     def setUp(self):
         options = get_option_defaults()
-        options.set_val(Aircraft.Propulsion.TOTAL_NUM_ENGINES, val=4, units='unitless')
+        options.set_val(Aircraft.Engine.NUM_ENGINES, val=np.array([4]), units='unitless')
         options.set_val(Aircraft.Engine.NUM_FUSELAGE_ENGINES, val=0, units='unitless')
 
         self.prob = om.Problem()
@@ -266,9 +266,10 @@ class MassParametersTestCase5(unittest.TestCase):
 class MassParametersTestCaseMultiEngine(unittest.TestCase):
     def setUp(self):
         options = get_option_defaults()
-        options.set_val(Aircraft.Engine.NUM_ENGINES, [2, 3])
-        options.set_val(Aircraft.Propulsion.TOTAL_NUM_ENGINES, val=5, units='unitless')
-        options.set_val(Aircraft.Engine.NUM_FUSELAGE_ENGINES, val=[0, 0], units='unitless')
+        options.set_val(Aircraft.Engine.NUM_ENGINES, np.array([2, 3, 4]))
+        options.set_val(
+            Aircraft.Engine.NUM_FUSELAGE_ENGINES, val=np.array([1, 0, 0]), units='unitless'
+        )
 
         self.prob = om.Problem()
         self.prob.model.add_subsystem(
@@ -288,9 +289,28 @@ class MassParametersTestCaseMultiEngine(unittest.TestCase):
         )  # not actual bug fixed value
         self.prob.model.set_input_defaults(Aircraft.LandingGear.MAIN_GEAR_LOCATION, val=0)
 
-        setup_model_options(self.prob, options)
+        # from aviary.models.aircraft.test_aircraft.GASP_multiengine import engines
+
+        # self.prob.model.engine_builders = engines
+        from aviary.variable_info.functions import extract_options
+
+        # setup_model_options(self.prob, options)
+        self.prob.model_options['*'] = extract_options(options)
 
         self.prob.setup(check=False, force_alloc_complex=True)
+
+    def test_case_1(self):
+        self.prob.run_model()
+
+        tol = 1e-4
+        assert_near_equal(
+            self.prob[Aircraft.Engine.POSITION_FACTOR],
+            [1.000003386207481, 0.9799979682755116, 0.9499966137925191],
+            tol,
+        )
+
+        partial_data = self.prob.check_partials(out_stream=None, method='cs')
+        assert_check_partials(partial_data, atol=1e-12, rtol=1e-12)
 
 
 # this is the large single aisle 1 V3 test case
@@ -2151,3 +2171,6 @@ class BWBFixedMassGroupTestCase1(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+    # test = MassParametersTestCaseMultiEngine()
+    # test.setUp()
+    # test.test_case_1()

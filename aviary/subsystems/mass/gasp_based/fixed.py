@@ -20,7 +20,6 @@ class MassParameters(om.ExplicitComponent):
     def initialize(self):
         add_aviary_option(self, Aircraft.Engine.NUM_ENGINES)
         add_aviary_option(self, Aircraft.Engine.NUM_FUSELAGE_ENGINES)
-        add_aviary_option(self, Aircraft.Propulsion.TOTAL_NUM_ENGINES)
         add_aviary_option(self, Aircraft.Design.SMOOTH_MASS_DISCONTINUITIES)
 
     def setup(self):
@@ -95,7 +94,8 @@ class MassParameters(om.ExplicitComponent):
         taper_ratio = inputs[Aircraft.Wing.TAPER_RATIO]
         AR = inputs[Aircraft.Wing.ASPECT_RATIO]
         wingspan = inputs[Aircraft.Wing.SPAN]
-        num_engines = self.options[Aircraft.Propulsion.TOTAL_NUM_ENGINES]
+        num_engines = self.options[Aircraft.Engine.NUM_ENGINES]
+        num_fuselage_engines = self.options[Aircraft.Engine.NUM_FUSELAGE_ENGINES]
         max_mach = inputs['max_mach']
         strut_x = inputs[Aircraft.Strut.ATTACHMENT_LOCATION_DIMENSIONLESS]
         loc_main_gear = inputs[Aircraft.LandingGear.MAIN_GEAR_LOCATION]
@@ -107,8 +107,6 @@ class MassParameters(om.ExplicitComponent):
         struct_span = wingspan / cos_half_sweep
         c_material = 1.0 + 2.5 / (struct_span**0.5)
         c_strut_braced = 1.0 - strut_x**2
-
-        not_fuselage_mounted = self.options[Aircraft.Engine.NUM_FUSELAGE_ENGINES] == 0
 
         # note: c_gear_loc doesn't actually depend on any of the inputs... perhaps use a
         # set_input_defaults call to declare this at a higher level
@@ -124,17 +122,23 @@ class MassParameters(om.ExplicitComponent):
                 c_gear_loc = 0.95
 
         # why always use sigmoid function?
-        c_eng_pos = 1.0 * sigmoidX(max_mach, 0.75, -1.0 / 320.0) + 1.05 * sigmoidX(
+        c_eng_pos = np.ones(len(num_engines)) * (
+            1.0 * sigmoidX(max_mach, 0.75, -1.0 / 320.0)
+            + 1.05 * sigmoidX(max_mach, 0.75, 1.0 / 320.0)
+        )
+
+        use_alt_eq_1 = np.where(
+            ((num_engines == 2) | (num_engines == 3)) & (num_fuselage_engines == 0)
+        )
+        use_alt_eq_2 = np.where((num_engines == 4) & (num_fuselage_engines == 0))
+
+        c_eng_pos[use_alt_eq_1] = 0.98 * sigmoidX(max_mach, 0.75, -1.0 / 320.0) + 0.95 * sigmoidX(
             max_mach, 0.75, 1.0 / 320.0
         )
-        if not_fuselage_mounted and num_engines == 2 or num_engines == 3:
-            c_eng_pos = 0.98 * sigmoidX(max_mach, 0.75, -1.0 / 320.0) + 0.95 * sigmoidX(
-                max_mach, 0.75, 1.0 / 320.0
-            )
-        if not_fuselage_mounted and num_engines == 4:
-            c_eng_pos = 0.95 * sigmoidX(max_mach, 0.75, -1.0 / 320.0) + 0.9 * sigmoidX(
-                max_mach, 0.75, 1.0 / 320.0
-            )
+
+        c_eng_pos[use_alt_eq_2] = 0.95 * sigmoidX(max_mach, 0.75, -1.0 / 320.0) + 0.9 * sigmoidX(
+            max_mach, 0.75, 1.0 / 320.0
+        )
 
         outputs[Aircraft.Wing.MATERIAL_FACTOR] = c_material
         outputs['c_strut_braced'] = c_strut_braced
@@ -147,7 +151,8 @@ class MassParameters(om.ExplicitComponent):
         taper_ratio = inputs[Aircraft.Wing.TAPER_RATIO]
         AR = inputs[Aircraft.Wing.ASPECT_RATIO]
         wingspan = inputs[Aircraft.Wing.SPAN]
-        num_engines = self.options[Aircraft.Propulsion.TOTAL_NUM_ENGINES]
+        num_engines = self.options[Aircraft.Engine.NUM_ENGINES]
+        num_fuselage_engines = self.options[Aircraft.Engine.NUM_FUSELAGE_ENGINES]
         max_mach = inputs['max_mach']
         strut_x = inputs[Aircraft.Strut.ATTACHMENT_LOCATION_DIMENSIONLESS]
         loc_main_gear = inputs[Aircraft.LandingGear.MAIN_GEAR_LOCATION]
@@ -157,13 +162,16 @@ class MassParameters(om.ExplicitComponent):
         cos_half_sweep = np.cos(half_sweep)
         struct_span = wingspan / cos_half_sweep
 
-        not_fuselage_mounted = self.options[Aircraft.Engine.NUM_FUSELAGE_ENGINES] == 0
-
         dTanHS_dSC4 = 1 / np.cos(sweep_c4) ** 2
         dTanHS_TR = (
             -(1 / AR) * ((1 + taper_ratio) * (-1) - (1 - taper_ratio)) / (1 + taper_ratio) ** 2
         )
         dTanHS_dAR = (1.0 - taper_ratio) / (1.0 + taper_ratio) / AR**2
+
+        use_alt_eq_1 = np.where(
+            ((num_engines == 2) | (num_engines == 3)) & (num_fuselage_engines == 0)
+        )
+        use_alt_eq_2 = np.where((num_engines == 4) & (num_fuselage_engines == 0))
 
         J[Aircraft.Wing.MATERIAL_FACTOR, Aircraft.Wing.SPAN] = (
             -0.5 * 2.5 / struct_span ** (1.5) * (1 / cos_half_sweep)
@@ -196,17 +204,18 @@ class MassParameters(om.ExplicitComponent):
             * dTanHS_dAR
         )
 
-        J[Aircraft.Engine.POSITION_FACTOR, 'max_mach'] = -dSigmoidXdx(
+        dposition_dmax_mach = np.ones(len(num_engines)) * (
+            -dSigmoidXdx(max_mach, 0.75, 1 / 320.0) + 1.05 * dSigmoidXdx(max_mach, 0.75, 1 / 320.0)
+        )
+        dposition_dmax_mach[use_alt_eq_1] = -0.98 * dSigmoidXdx(
             max_mach, 0.75, 1 / 320.0
-        ) + 1.05 * dSigmoidXdx(max_mach, 0.75, 1 / 320.0)
-        if not_fuselage_mounted and num_engines == 2 or num_engines == 3:
-            J[Aircraft.Engine.POSITION_FACTOR, 'max_mach'] = -0.98 * dSigmoidXdx(
-                max_mach, 0.75, 1 / 320.0
-            ) + 0.95 * dSigmoidXdx(max_mach, 0.75, 1 / 320.0)
-        if not_fuselage_mounted and num_engines == 4:
-            J[Aircraft.Engine.POSITION_FACTOR, 'max_mach'] = -0.95 * dSigmoidXdx(
-                max_mach, 0.75, 1 / 320.0
-            ) + 0.9 * dSigmoidXdx(max_mach, 0.75, 1 / 320.0)
+        ) + 0.95 * dSigmoidXdx(max_mach, 0.75, 1 / 320.0)
+
+        dposition_dmax_mach[use_alt_eq_2] = -0.95 * dSigmoidXdx(
+            max_mach, 0.75, 1 / 320.0
+        ) + 0.9 * dSigmoidXdx(max_mach, 0.75, 1 / 320.0)
+
+        J[Aircraft.Engine.POSITION_FACTOR, 'max_mach'] = dposition_dmax_mach
 
         J['half_sweep', Aircraft.Wing.SWEEP] = 1 / (tan_half_sweep**2 + 1) * dTanHS_dSC4
         J['half_sweep', Aircraft.Wing.TAPER_RATIO] = 1 / (tan_half_sweep**2 + 1) * dTanHS_TR
