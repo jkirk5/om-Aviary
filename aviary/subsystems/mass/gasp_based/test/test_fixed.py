@@ -263,6 +263,36 @@ class MassParametersTestCase5(unittest.TestCase):
         assert_check_partials(partial_data, atol=1e-12, rtol=1e-12)
 
 
+class MassParametersTestCaseMultiEngine(unittest.TestCase):
+    def setUp(self):
+        options = get_option_defaults()
+        options.set_val(Aircraft.Engine.NUM_ENGINES, [2, 3])
+        options.set_val(Aircraft.Propulsion.TOTAL_NUM_ENGINES, val=5, units='unitless')
+        options.set_val(Aircraft.Engine.NUM_FUSELAGE_ENGINES, val=[0, 0], units='unitless')
+
+        self.prob = om.Problem()
+        self.prob.model.add_subsystem(
+            'parameters',
+            MassParameters(),
+            promotes=['*'],
+        )
+
+        self.prob.model.set_input_defaults(Aircraft.Wing.SWEEP, val=25, units='deg')
+        self.prob.model.set_input_defaults(Aircraft.Wing.TAPER_RATIO, val=0.33, units='unitless')
+        self.prob.model.set_input_defaults(Aircraft.Wing.ASPECT_RATIO, val=10.13, units='unitless')
+        self.prob.model.set_input_defaults(
+            Aircraft.Wing.SPAN, val=117.8, units='ft'
+        )  # not actual bug fixed value
+        self.prob.model.set_input_defaults(
+            'max_mach', val=0.72, units='unitless'
+        )  # not actual bug fixed value
+        self.prob.model.set_input_defaults(Aircraft.LandingGear.MAIN_GEAR_LOCATION, val=0)
+
+        setup_model_options(self.prob, options)
+
+        self.prob.setup(check=False, force_alloc_complex=True)
+
+
 # this is the large single aisle 1 V3 test case
 @use_tempdirs
 class PayloadGroupTestCase(unittest.TestCase):
