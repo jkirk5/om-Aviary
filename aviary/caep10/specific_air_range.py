@@ -14,6 +14,7 @@ inv_sar_avg = om.ExecComp(
     sar_3={'val': 1.0, 'units': 'm/lbm'},
     inv_sar_avg={'val': 1.0, 'units': 'kg/m'},
 )
+# TODO vectorize me across three SARs - can't make copies of same component
 sar_calc = om.ExecComp(
     'sar = tas/w_f',
     sar={'val': 1.0, 'units': 'm/lbm'},
