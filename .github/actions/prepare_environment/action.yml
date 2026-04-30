@@ -100,8 +100,14 @@ runs:
         SECRET_ssh_private_key: ${{ inputs.SECRET_ssh_private_key }}
         SECRET_ssh_known_hosts: ${{ inputs.SECRET_ssh_known_hosts }}
 
-    - name: Checkout Aviary
+    - name: Install Tkinter
       uses: actions/checkout@v6
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-tk
+
+    - name: Checkout Aviary
+      shell: bash -l {0}
 
     - name: Install Aviary
       shell: bash -l {0}
