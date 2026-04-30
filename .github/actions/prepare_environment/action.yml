@@ -4,22 +4,16 @@ inputs:
     NAME:
         required: true
         type: string
-    PY:
+    OPENMDAO_PIXI_ENVIRONMENT:
         required: true
         type: string
-    NUMPY:
-        required: true
-        type: string
-    SCIPY:
-        required: true
-        type: string
-    PYOPTSPARSE:
-        required: true
-        type: string
-    SNOPT:
+    OPENMDAO_INSTALL_FROM:
         required: true
         type: string
     OPENMDAO:
+        required: true
+        type: string
+    SNOPT:
         required: true
         type: string
     DYMOS:
@@ -32,12 +26,32 @@ inputs:
     SNOPT_LOCATION_77:
         required: true
 
+    # Deprecate
+    PY:
+        required: true
+        type: string
+    NUMPY:
+        required: true
+        type: string
+    SCIPY:
+        required: true
+        type: string
+    PYOPTSPARSE:
+        required: true
+        type: string
+
+    OPENMDAO:
+        required: true
+        type: string
+
+
 runs:
   using: "composite"
   steps:
     - name: Display run details
       shell: bash
       run: |
+        eval "$(pixi shell-hook -e ${{ matrix.OPENMDAO_PIXI_ENVIRONMENT }} --manifest-path=${{ env.PIXI_MANIFEST }})"
         echo "============================================================="
         echo "Run #${GITHUB_RUN_NUMBER}"
         echo "Run ID: ${GITHUB_RUN_ID}"
@@ -57,114 +71,114 @@ runs:
         sudo chmod 600 ~/.ssh/id_rsa
         echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
 
-    - name: Setup miniconda
-      uses: conda-incubator/setup-miniconda@v3
-      with:
-        auto-update-conda: true
-        python-version: ${{ inputs.PY }}
-        channels: conda-forge
+    # - name: Setup miniconda
+    #   uses: conda-incubator/setup-miniconda@v3
+    #   with:
+    #     auto-update-conda: true
+    #     python-version: ${{ inputs.PY }}
+    #     channels: conda-forge
 
-    - name: Install dependencies
-      shell: bash -l {0}
-      run: |
-        echo "============================================================="
-        echo "Install dependencies"
-        echo "============================================================="
-        conda install numpy=${{ inputs.NUMPY }} scipy=${{ inputs.SCIPY }} -q -y
-        conda install matplotlib pandas panel hvplot -q -y
-        pip install testflo -q
+    # - name: Install dependencies
+    #   shell: bash -l {0}
+    #   run: |
+    #     echo "============================================================="
+    #     echo "Install dependencies"
+    #     echo "============================================================="
+    #     conda install numpy=${{ inputs.NUMPY }} scipy=${{ inputs.SCIPY }} -q -y
+    #     conda install matplotlib pandas panel hvplot -q -y
+    #     pip install testflo -q
 
-    - name: Install pyOptSparse
-      if: inputs.PYOPTSPARSE
-      shell: bash -l {0}
-      run: |
-        echo "============================================================="
-        echo "Determine which branch/version of pyoptsparse to install"
-        echo "============================================================="
-        if [[ "${{ inputs.PYOPTSPARSE }}" == "latest" ]]; then
-          function latest_version() {
-            local REPO_URL=$1/releases/latest
-            local LATEST_URL=`curl -fsSLI -o /dev/null -w %{url_effective} $REPO_URL`
-            local LATEST_VER=`echo $LATEST_URL | awk '{split($0,a,"/tag/"); print a[2]}'`
-            echo $LATEST_VER
-          }
-          BRANCH="-b $(latest_version https://github.com/mdolab/pyoptsparse)"
-        else
-          BRANCH="-b ${{ inputs.PYOPTSPARSE }}"
-        fi
+    # - name: Install pyOptSparse
+    #   if: inputs.PYOPTSPARSE
+    #   shell: bash -l {0}
+    #   run: |
+    #     echo "============================================================="
+    #     echo "Determine which branch/version of pyoptsparse to install"
+    #     echo "============================================================="
+    #     if [[ "${{ inputs.PYOPTSPARSE }}" == "latest" ]]; then
+    #       function latest_version() {
+    #         local REPO_URL=$1/releases/latest
+    #         local LATEST_URL=`curl -fsSLI -o /dev/null -w %{url_effective} $REPO_URL`
+    #         local LATEST_VER=`echo $LATEST_URL | awk '{split($0,a,"/tag/"); print a[2]}'`
+    #         echo $LATEST_VER
+    #       }
+    #       BRANCH="-b $(latest_version https://github.com/mdolab/pyoptsparse)"
+    #     else
+    #       BRANCH="-b ${{ inputs.PYOPTSPARSE }}"
+    #     fi
 
-        echo "============================================================="
-        echo "Install pyoptsparse"
-        echo "============================================================="
-        if [[ "${{ inputs.SNOPT }}" == "7.7" && "${{ inputs.SNOPT_LOCATION_77 }}" ]]; then
-          mkdir SNOPT
-          echo "  > Secure copying SNOPT 7.7 over SSH"
-          scp -qr ${{ inputs.SNOPT_LOCATION_77 }} SNOPT
-          SNOPT="-s SNOPT/src"
-        elif [[ "${{ inputs.SNOPT }}" ]]; then
-          echo "SNOPT version ${{ inputs.SNOPT }} was requested but source is not available"
-        fi
+    #     echo "============================================================="
+    #     echo "Install pyoptsparse"
+    #     echo "============================================================="
+    #     if [[ "${{ inputs.SNOPT }}" == "7.7" && "${{ inputs.SNOPT_LOCATION_77 }}" ]]; then
+    #       mkdir SNOPT
+    #       echo "  > Secure copying SNOPT 7.7 over SSH"
+    #       scp -qr ${{ inputs.SNOPT_LOCATION_77 }} SNOPT
+    #       SNOPT="-s SNOPT/src"
+    #     elif [[ "${{ inputs.SNOPT }}" ]]; then
+    #       echo "SNOPT version ${{ inputs.SNOPT }} was requested but source is not available"
+    #     fi
 
-        conda config --add channels conda-forge
+    #     conda config --add channels conda-forge
 
-        pip install git+https://github.com/OpenMDAO/build_pyoptsparse@v2.0.13
-        build_pyoptsparse -v $BRANCH $SNOPT
+    #     pip install git+https://github.com/OpenMDAO/build_pyoptsparse@v2.0.13
+    #     build_pyoptsparse -v $BRANCH $SNOPT
 
-        echo "The build script has been grabbing an older version of IPOPT with some problems."
-        conda install ipopt=3.14
+    #     echo "The build script has been grabbing an older version of IPOPT with some problems."
+    #     conda install ipopt=3.14
 
-    - name: Install OpenMDAO
-      if: inputs.OPENMDAO
-      shell: bash -l {0}
-      run: |
-        echo "============================================================="
-        echo "Install OpenMDAO"
-        echo "============================================================="
-        if [[ "${{ inputs.OPENMDAO }}" == "dev" ]]; then
-          pip install git+https://github.com/OpenMDAO/OpenMDAO
-        elif [[ "${{ inputs.OPENMDAO }}" == "latest" ]]; then
-          pip install openmdao
-        else
-          pip install openmdao==${{ inputs.OPENMDAO }}
-        fi
+    # - name: Install OpenMDAO
+    #   if: inputs.OPENMDAO
+    #   shell: bash -l {0}
+    #   run: |
+    #     echo "============================================================="
+    #     echo "Install OpenMDAO"
+    #     echo "============================================================="
+    #     if [[ "${{ inputs.OPENMDAO }}" == "dev" ]]; then
+    #       pip install git+https://github.com/OpenMDAO/OpenMDAO
+    #     elif [[ "${{ inputs.OPENMDAO }}" == "latest" ]]; then
+    #       pip install openmdao
+    #     else
+    #       pip install openmdao==${{ inputs.OPENMDAO }}
+    #     fi
 
-    - name: Install Dymos
-      if: inputs.DYMOS
-      shell: bash -l {0}
-      run: |
-        echo "============================================================="
-        echo "Install Dymos"
-        echo "============================================================="
-        if [[ "${{ inputs.DYMOS }}" == "dev" ]]; then
-          pip install git+https://github.com/OpenMDAO/Dymos
-        elif [[ "${{ inputs.DYMOS }}" == "latest" ]]; then
-          pip install dymos
-        else
-          pip install dymos==${{ inputs.DYMOS }}
-        fi
+    # - name: Install Dymos
+    #   if: inputs.DYMOS
+    #   shell: bash -l {0}
+    #   run: |
+    #     echo "============================================================="
+    #     echo "Install Dymos"
+    #     echo "============================================================="
+    #     if [[ "${{ inputs.DYMOS }}" == "dev" ]]; then
+    #       pip install git+https://github.com/OpenMDAO/Dymos
+    #     elif [[ "${{ inputs.DYMOS }}" == "latest" ]]; then
+    #       pip install dymos
+    #     else
+    #       pip install dymos==${{ inputs.DYMOS }}
+    #     fi
 
-    - name: Checkout Aviary
-      uses: actions/checkout@v6
+    # - name: Checkout Aviary
+    #   uses: actions/checkout@v6
 
-    - name: Install Aviary
-      shell: bash -l {0}
-      run: |
-        echo "============================================================="
-        echo "Install Aviary"
-        echo "============================================================="
-        pip install -e .[all]
+    # - name: Install Aviary
+    #   shell: bash -l {0}
+    #   run: |
+    #     echo "============================================================="
+    #     echo "Install Aviary"
+    #     echo "============================================================="
+    #     pip install -e .[all]
 
-    - name: Display conda environment info
-      shell: bash -l {0}
-      run: |
-        conda info
-        conda list
-        conda env export --file environment.yml
-        mv environment.yml ${{ inputs.NAME }}_environment.yml
+    # - name: Display conda environment info
+    #   shell: bash -l {0}
+    #   run: |
+    #     conda info
+    #     conda list
+    #     conda env export --file environment.yml
+    #     mv environment.yml ${{ inputs.NAME }}_environment.yml
 
-    - name: 'Upload environment artifact'
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ inputs.NAME }}_environment
-        path: ${{ inputs.NAME }}_environment.yml
-        retention-days: 5
+    # - name: 'Upload environment artifact'
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: ${{ inputs.NAME }}_environment
+    #     path: ${{ inputs.NAME }}_environment.yml
+    #     retention-days: 5
