@@ -80,13 +80,13 @@ jobs:
           SSH_KNOWN_HOSTS: ${{secrets.SSH_KNOWN_HOSTS}}
           SNOPT_LOCATION_77: ${{ secrets.SNOPT_LOCATION_77 }}
 
-      # - name: Run tests
-      #   shell: bash -l {0}
-      #   run: |
-      #     echo "============================================================="
-      #     echo "Run Tests"
-      #     echo "============================================================="
-      #     testflo . -n 1 --timeout=200 --show_skipped --coverage --coverpkg aviary
+      - name: Run tests
+        shell: bash -l {0}
+        run: |
+          echo "============================================================="
+          echo "Run Tests"
+          echo "============================================================="
+          testflo . -n 1 --timeout=200 --show_skipped --coverage --coverpkg aviary
 
       - name: Checkout actions (again)
         uses: actions/checkout@v6
