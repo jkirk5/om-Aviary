@@ -23,7 +23,6 @@ dependencies = [
 docs = [
     "jupyter-book<2",
     "itables",
-    "tkinter",
 ]
 dev = [
     "pre-commit",
