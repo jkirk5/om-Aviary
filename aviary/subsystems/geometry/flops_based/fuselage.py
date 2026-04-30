@@ -686,9 +686,6 @@ class BWBDetailedCabinLayout(om.ExplicitComponent):
 
             # Enforce maximum bay width
             bay_width = max_width[0] / num_bays
-            import pdb
-
-            pdb.set_trace()
             if bay_width > bay_width_max and bay_width_max > 0.0:
                 bay_width = bay_width_max
                 num_bays = max_width[0] / bay_width
