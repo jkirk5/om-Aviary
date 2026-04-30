@@ -89,17 +89,6 @@ runs:
           pip install dymos==${{ inputs.DYMOS }}
         fi
 
-    - name: 'Setup pyoptsparse'
-      id: setup_pyoptsparse
-      uses: OpenMDAO/OpenMDAO/.github/actions/install_pyoptsparse@master
-      with:
-        pyoptsparse_version: '${{ matrix.PYOPTSPARSE }}'
-        snopt_version: '7.7'
-        pyoptsparse_from: 'build_pyoptsparse'
-        SECRET_snopt_location: '${{ matrix.SNOPT_LOCATION_77 }}'
-        SECRET_ssh_private_key: ${{ inputs.SECRET_ssh_private_key }}
-        SECRET_ssh_known_hosts: ${{ inputs.SECRET_ssh_known_hosts }}
-
     - name: Install Tkinter
       shell: bash -l {0}
       run: |
