@@ -19,6 +19,9 @@ inputs:
     DYMOS:
         required: true
         type: string
+    PYOPTSPARSE:
+        required: true
+        type: string
     SSH_PRIVATE_KEY:
         required: true
     SSH_KNOWN_HOSTS:
@@ -36,9 +39,7 @@ inputs:
     SCIPY:
         required: true
         type: string
-    PYOPTSPARSE:
-        required: true
-        type: string
+
 
 
 runs:
@@ -89,6 +90,17 @@ runs:
         else
           pip install dymos==${{ inputs.DYMOS }}
         fi
+
+    - name: 'Setup pyoptsparse'
+      id: setup_pyoptsparse
+      uses: OpenMDAO/OpenMDAO/.github/actions/install_pyoptsparse@master
+      with:
+        pyoptsparse_version: '${{ matrix.PYOPTSPARSE }}'
+        snopt_version: '7.7'
+        pyoptsparse_from: 'build_pyoptsparse'
+        SECRET_snopt_location: '${{ matrix.SNOPT_LOCATION_77 }}'
+        SSH_PRIVATE_KEY: ${{ inputs.SECRET_ssh_private_key }}
+        SSH_KNOWN_HOSTS: ${{ inputs.SECRET_ssh_known_hosts }}
 
     # - name: Setup miniconda
     #   uses: conda-incubator/setup-miniconda@v3
