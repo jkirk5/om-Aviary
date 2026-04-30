@@ -22,7 +22,8 @@ dependencies = [
 [project.optional-dependencies]
 docs = [
     "jupyter-book<2",
-    "itables"
+    "itables",
+    "tkinter",
 ]
 dev = [
     "pre-commit",

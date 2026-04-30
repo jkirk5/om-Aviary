@@ -14,10 +14,10 @@ on:
   # Allow running the workflow manually from the Actions tab
   workflow_dispatch:
 
-# concurrency:
-#   # Cancel any existing CI runs if we push to this branch
-#   group: ${{ github.workflow }}-${{ github.ref }}
-#   cancel-in-progress: true
+concurrency:
+  # Cancel any existing CI runs if we push to this branch
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
 
@@ -29,7 +29,7 @@ jobs:
     - uses: actions/checkout@v6
     - uses: actions/setup-python@v6
       with:
-        python-version: '3.11'
+        python-version: '3.13'
     - uses: pre-commit/action@v3.0.1
 
   test_ubuntu:
