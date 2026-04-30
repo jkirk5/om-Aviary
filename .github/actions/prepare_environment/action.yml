@@ -45,7 +45,7 @@ runs:
   using: "composite"
   steps:
     - name: Display run details
-      shell: bash
+      shell: bash -l {0}
       run: |
         eval "$(pixi shell-hook -e ${{ matrix.OPENMDAO_PIXI_ENVIRONMENT }} --manifest-path=${{ env.PIXI_MANIFEST }})"
         echo "============================================================="
@@ -57,7 +57,7 @@ runs:
         echo "============================================================="
 
     - name: Create SSH key
-      shell: bash
+      shell: bash -l {0}
       env:
         SSH_PRIVATE_KEY: ${{inputs.SSH_PRIVATE_KEY}}
         SSH_KNOWN_HOSTS: ${{inputs.SSH_KNOWN_HOSTS}}
@@ -76,6 +76,8 @@ runs:
         openmdao_version: '${{ matrix.OPENMDAO }}'
 
     - name: Install Dymos
+      if: inputs.DYMOS
+      shell: bash -l {0}
       run: |
         echo "============================================================="
         echo "Install Dymos"
