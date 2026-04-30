@@ -581,6 +581,7 @@ class BWBDetailedCabinLayout(om.ExplicitComponent):
         self.declare_partials('*', '*', method='cs')
 
     def compute(self, inputs, outputs):
+        verbosity = self.options[Settings.VERBOSITY]
         rear_spar_percent_chord = inputs['Rear_spar_percent_chord']
         sweep = inputs[Aircraft.BWB.PASSENGER_LEADING_EDGE_SWEEP]
         height_to_width = inputs[Aircraft.Fuselage.SIDEBODY_THICKNESS_TO_CHORD]
@@ -657,12 +658,11 @@ class BWBDetailedCabinLayout(om.ExplicitComponent):
         if num_bays > num_bays_max and num_bays_max > 0:
             num_bays = num_bays_max
 
-        # num_bays_loc = num_bays
         iter = 0
         bay_width = bay_width_nom
         while True:
             num_bays_loc = num_bays
-            # Cabin area wasted due to slanted  != side wall
+            # Cabin area wasted due to slanted != side wall
             area_waste = num_bays * tan_sweep * (bay_width / 2.0) ** 2
 
             # Aisle area for horseshoe (5'), cross (2') and rear (3') aisles
@@ -680,30 +680,30 @@ class BWBDetailedCabinLayout(om.ExplicitComponent):
             pax_compart_length = root_chord + tan_sweep * max_width / 2.0
 
             # Enforce maximum number of bays
-            num_bays_tmp = max_width / bay_width
-            if num_bays_tmp[0].real > num_bays_max and num_bays_max > 0:
+            num_bays = max_width[0] / bay_width
+            if num_bays.real > num_bays_max and num_bays_max > 0:
                 num_bays = num_bays_max
-            else:
-                num_bays = num_bays_tmp[0].real
 
             # Enforce maximum bay width
-            bay_width = max_width / num_bays
+            bay_width = max_width[0] / num_bays
+            import pdb
+
+            pdb.set_trace()
             if bay_width > bay_width_max and bay_width_max > 0.0:
                 bay_width = bay_width_max
-                num_bays_tmp = max_width / bay_width
-                if num_bays_tmp.real > num_bays_max and num_bays_max > 0:
+                num_bays = max_width[0] / bay_width
+                if num_bays.real > num_bays_max and num_bays_max > 0:
                     num_bays = num_bays_max
                     max_width = num_bays_max * bay_width
                     pax_compart_length = area_cabin / max_width + tan_sweep * max_width / 4.0
                     root_chord = pax_compart_length - tan_sweep * max_width / 2.0
-                else:
-                    num_bays = num_bays_tmp
 
             if np.abs(num_bays_loc - num_bays) < 0.00001:
                 break
             iter = iter + 1
             if iter > 100:
-                warnings.warn(f'Number of iteration exceeded 100.')
+                if verbosity > Verbosity.BRIEF:
+                    warnings.warn(f'Number of iteration in BWBDetailedCabinLayout exceeded 100.')
                 break
 
         num_bays = smooth_int_tanh(num_bays, mu=40.0)
