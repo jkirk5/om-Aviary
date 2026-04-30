@@ -107,7 +107,7 @@ runs:
         sudo apt-get install -y python3-tk
 
     - name: Checkout Aviary
-      shell: bash -l {0}
+      uses: actions/checkout@v6
 
     - name: Install Aviary
       shell: bash -l {0}
