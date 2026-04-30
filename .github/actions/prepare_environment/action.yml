@@ -99,8 +99,8 @@ runs:
         snopt_version: '7.7'
         pyoptsparse_from: 'build_pyoptsparse'
         SECRET_snopt_location: '${{ matrix.SNOPT_LOCATION_77 }}'
-        SSH_PRIVATE_KEY: ${{ inputs.SECRET_ssh_private_key }}
-        SSH_KNOWN_HOSTS: ${{ inputs.SECRET_ssh_known_hosts }}
+        SECRET_ssh_private_key: ${{ inputs.SECRET_ssh_private_key }}
+        SECRET_ssh_known_hosts: ${{ inputs.SECRET_ssh_known_hosts }}
 
     # - name: Setup miniconda
     #   uses: conda-incubator/setup-miniconda@v3
