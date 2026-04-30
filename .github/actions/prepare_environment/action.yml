@@ -101,7 +101,7 @@ runs:
         SECRET_ssh_known_hosts: ${{ inputs.SECRET_ssh_known_hosts }}
 
     - name: Install Tkinter
-      uses: actions/checkout@v6
+      shell: bash -l {0}
       run: |
         sudo apt-get update
         sudo apt-get install -y python3-tk
@@ -115,7 +115,7 @@ runs:
         echo "============================================================="
         echo "Install Aviary"
         echo "============================================================="
-        pip install -e .[all]
+        python -m pip install -e .[all]
 
     - name: Display conda environment info
       shell: bash -l {0}
