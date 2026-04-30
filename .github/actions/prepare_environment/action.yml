@@ -75,6 +75,19 @@ runs:
         openmdao_install_from: '${{ matrix.OPENMDAO_INSTALL_FROM }}'
         openmdao_version: '${{ matrix.OPENMDAO }}'
 
+    - name: Install Dymos
+      run: |
+        echo "============================================================="
+        echo "Install Dymos"
+        echo "============================================================="
+        if [[ "${{ inputs.DYMOS }}" == "dev" ]]; then
+          pip install git+https://github.com/OpenMDAO/Dymos
+        elif [[ "${{ inputs.DYMOS }}" == "latest" ]]; then
+          pip install dymos
+        else
+          pip install dymos==${{ inputs.DYMOS }}
+        fi
+
     # - name: Setup miniconda
     #   uses: conda-incubator/setup-miniconda@v3
     #   with:
