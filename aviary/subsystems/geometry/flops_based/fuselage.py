@@ -715,5 +715,3 @@ class BWBDetailedCabinLayout(om.ExplicitComponent):
         outputs[Aircraft.Fuselage.MAX_HEIGHT] = max_height
         outputs[Aircraft.Wing.ROOT_CHORD] = root_chord
         outputs['bay_width'] = bay_width
-
-        # For improvement on using int function on num_bays, see issue #1084.
