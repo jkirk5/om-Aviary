@@ -425,7 +425,7 @@ class DetailedWingBendingTest(unittest.TestCase):
     def test_intensity_factor(self):
         """
         data taken from high_wing_single_aisle.csv
-        Aircraft.Wing.LOAD_DISTRIBUTION_CONTROL = 3
+        Aircraft.Wing.LOAD_DISTRIBUTION_CONTROL = 3, 1, 1.5, 2.5
         """
         options = get_option_defaults()
         options.set_val(Aircraft.Engine.NUM_ENGINES, val=[2], units='unitless')
@@ -483,6 +483,39 @@ class DetailedWingBendingTest(unittest.TestCase):
 
         pod_inertia_factor = prob.get_val(Aircraft.Wing.ENG_POD_INERTIA_FACTOR)
         assert_near_equal(pod_inertia_factor, 0.9772998541, tolerance=1e-9)
+
+        options.set_val(Aircraft.Wing.LOAD_DISTRIBUTION_CONTROL, val=1, units='unitless')
+        setup_model_options(prob, options)
+        prob.setup(check=False, force_alloc_complex=True)
+        prob.run_model()
+
+        bending_mat_factor = prob.get_val(Aircraft.Wing.BENDING_MATERIAL_FACTOR)
+        assert_near_equal(bending_mat_factor, 1.51247369, tolerance=1e-9)
+
+        pod_inertia_factor = prob.get_val(Aircraft.Wing.ENG_POD_INERTIA_FACTOR)
+        assert_near_equal(pod_inertia_factor, 1.0, tolerance=1e-9)
+
+        options.set_val(Aircraft.Wing.LOAD_DISTRIBUTION_CONTROL, val=1.5, units='unitless')
+        setup_model_options(prob, options)
+        prob.setup(check=False, force_alloc_complex=True)
+        prob.run_model()
+
+        bending_mat_factor = prob.get_val(Aircraft.Wing.BENDING_MATERIAL_FACTOR)
+        assert_near_equal(bending_mat_factor, 1.94203494, tolerance=1e-9)
+
+        pod_inertia_factor = prob.get_val(Aircraft.Wing.ENG_POD_INERTIA_FACTOR)
+        assert_near_equal(pod_inertia_factor, 1.0, tolerance=1e-9)
+
+        options.set_val(Aircraft.Wing.LOAD_DISTRIBUTION_CONTROL, val=2.5, units='unitless')
+        setup_model_options(prob, options)
+        prob.setup(check=False, force_alloc_complex=True)
+        prob.run_model()
+
+        bending_mat_factor = prob.get_val(Aircraft.Wing.BENDING_MATERIAL_FACTOR)
+        assert_near_equal(bending_mat_factor, 2.61652282, tolerance=1e-9)
+
+        pod_inertia_factor = prob.get_val(Aircraft.Wing.ENG_POD_INERTIA_FACTOR)
+        assert_near_equal(pod_inertia_factor, 1.0, tolerance=1e-9)
 
     def test_IO(self):
         assert_match_varnames(self.prob.model)
