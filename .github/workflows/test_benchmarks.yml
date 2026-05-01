@@ -52,6 +52,7 @@ jobs:
           echo "Run Benchmarks"
           echo "============================================================="
           testflo . --timeout=900 --testmatch=bench_test*
+          exit 1
 
       - name: Checkout actions (again)
         uses: actions/checkout@v6

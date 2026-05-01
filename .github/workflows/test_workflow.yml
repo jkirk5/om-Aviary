@@ -83,7 +83,7 @@ jobs:
       - name: Run tests
         shell: bash -l {0}
         run: |
-          eval "$(pixi shell-hook -e py313 --manifest-path=${{ env.PIXI_MANIFEST }})"
+          eval "$(pixi shell-hook -e ${{ matrix.OPENMDAO_PIXI_ENVIRONMENT }} --manifest-path=${{ env.PIXI_MANIFEST }})"
           echo "============================================================="
           echo "Run Tests"
           echo "============================================================="
