@@ -46,7 +46,6 @@ runs:
     - name: Display run details
       shell: bash -l {0}
       run: |
-        eval "$(pixi shell-hook -e ${{ matrix.OPENMDAO_PIXI_ENVIRONMENT }} --manifest-path=${{ env.PIXI_MANIFEST }})"
         echo "============================================================="
         echo "Run #${GITHUB_RUN_NUMBER}"
         echo "Run ID: ${GITHUB_RUN_ID}"
@@ -78,6 +77,10 @@ runs:
       if: inputs.DYMOS
       shell: bash -l {0}
       run: |
+        echo "============================================================="
+        echo "Activating pixi environment"
+        echo "============================================================="
+        eval "$(pixi shell-hook -e py313 --manifest-path=${{ env.PIXI_MANIFEST }})"
         echo "============================================================="
         echo "Install Dymos"
         echo "============================================================="
