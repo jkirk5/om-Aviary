@@ -96,9 +96,6 @@ runs:
           pip install dymos==${{ inputs.DYMOS }}
         fi
 
-    - name: Checkout Aviary
-      uses: actions/checkout@v6
-
     - name: Install Aviary
       shell: bash -l {0}
       run: |
