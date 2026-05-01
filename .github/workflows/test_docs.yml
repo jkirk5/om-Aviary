@@ -36,15 +36,15 @@ jobs:
       - name: prepare_docs_environment
         uses: ./actions/.github/actions/prepare_environment
         with:
-            NAME: 'latest'
-            OPENMDAO_PIXI_ENVIRONMENT: 'py313'
-            OPENMDAO_INSTALL_FROM: 'pypi'
-            OPENMDAO: ''
-            SNOPT: '7.7'
-            DYMOS: 'latest'
-            SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
-            SSH_KNOWN_HOSTS: ${{secrets.SSH_KNOWN_HOSTS}}
-            SNOPT_LOCATION_77: ${{ secrets.SNOPT_LOCATION_77 }}
+          NAME: 'latest'
+          OPENMDAO_PIXI_ENVIRONMENT: 'py313'
+          OPENMDAO_INSTALL_FROM: 'pypi'
+          OPENMDAO: ''
+          SNOPT: '7.7'
+          DYMOS: 'latest'
+          SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
+          SSH_KNOWN_HOSTS: ${{secrets.SSH_KNOWN_HOSTS}}
+          SNOPT_LOCATION_77: ${{ secrets.SNOPT_LOCATION_77 }}
 
       - name: Check docs linting
         shell: bash -l {0}
