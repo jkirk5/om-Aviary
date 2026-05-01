@@ -46,7 +46,6 @@ runs:
     - name: Display run details
       shell: bash -l {0}
       run: |
-        eval "$(pixi shell-hook -e ${{ matrix.OPENMDAO_PIXI_ENVIRONMENT }} --manifest-path=${{ env.PIXI_MANIFEST }})"
         echo "============================================================="
         echo "Run #${GITHUB_RUN_NUMBER}"
         echo "Run ID: ${GITHUB_RUN_ID}"
@@ -73,15 +72,15 @@ runs:
       id: setup_pixi_environment
       uses: OpenMDAO/OpenMDAO/.github/actions/setup_openmdao_pixi@master
       with:
-        environment: '${{ matrix.OPENMDAO_PIXI_ENVIRONMENT }}'
-        openmdao_install_from: '${{ matrix.OPENMDAO_INSTALL_FROM }}'
-        openmdao_version: '${{ matrix.OPENMDAO }}'
+        environment: '${{ inputs.OPENMDAO_PIXI_ENVIRONMENT }}'
+        openmdao_install_from: '${{ inputs.OPENMDAO_INSTALL_FROM }}'
+        openmdao_version: '${{ inputs.OPENMDAO }}'
 
     - name: Install Dymos
       if: inputs.DYMOS
       shell: bash -l {0}
       run: |
-        eval "$(pixi shell-hook -e ${{ matrix.OPENMDAO_PIXI_ENVIRONMENT }} --manifest-path=${{ env.PIXI_MANIFEST }})"
+        eval "$(pixi shell-hook -e ${{ inputs.OPENMDAO_PIXI_ENVIRONMENT }} --manifest-path=${{ env.PIXI_MANIFEST }})"
         echo "============================================================="
         echo "Install Dymos"
         echo "============================================================="
@@ -96,7 +95,7 @@ runs:
     - name: Install Aviary
       shell: bash -l {0}
       run: |
-        eval "$(pixi shell-hook -e ${{ matrix.OPENMDAO_PIXI_ENVIRONMENT }} --manifest-path=${{ env.PIXI_MANIFEST }})"
+        eval "$(pixi shell-hook -e ${{ inputs.OPENMDAO_PIXI_ENVIRONMENT }} --manifest-path=${{ env.PIXI_MANIFEST }})"
         echo "============================================================="
         echo "Install Aviary"
         echo "============================================================="
@@ -106,7 +105,7 @@ runs:
       shell: bash -l {0}
       continue-on-error: true
       run: |
-        eval "$(pixi shell-hook -e ${{ matrix.OPENMDAO_PIXI_ENVIRONMENT }} --manifest-path=${{ env.PIXI_MANIFEST }})"
+        eval "$(pixi shell-hook -e ${{ inputs.OPENMDAO_PIXI_ENVIRONMENT }} --manifest-path=${{ env.PIXI_MANIFEST }})"
         if python -c "import mpi4py, petsc4py" 2>/dev/null; then
           echo "============================================================="
           echo "Check MPI and PETSc installation"
@@ -139,7 +138,7 @@ runs:
     - name: Display conda environment info
       shell: bash -l {0}
       run: |
-        eval "$(pixi shell-hook -e ${{ matrix.OPENMDAO_PIXI_ENVIRONMENT }} --manifest-path=${{ env.PIXI_MANIFEST }})"
+        eval "$(pixi shell-hook -e ${{ inputs.OPENMDAO_PIXI_ENVIRONMENT }} --manifest-path=${{ env.PIXI_MANIFEST }})"
         conda info
         conda list
         conda env export --file environment.yml
