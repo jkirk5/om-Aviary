@@ -38,8 +38,8 @@ jobs:
         with:
             NAME: 'latest'
             OPENMDAO_PIXI_ENVIRONMENT: 'py313'
-            OPENMDAO_INSTALL_FROM: 'github'
-            OPENMDAO: 'latest'
+            OPENMDAO_INSTALL_FROM: 'pypi'
+            OPENMDAO: ''
             SNOPT: '7.7'
             DYMOS: 'latest'
             SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
