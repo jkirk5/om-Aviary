@@ -457,8 +457,8 @@ class DetailedWingBendingTest(unittest.TestCase):
         prob.model.set_input_defaults(Aircraft.Design.GROSS_MASS, val=150000.0, units='lbm')
         prob.model.set_input_defaults(Aircraft.Wing.ASPECT_RATIO, val=9.40817168, units='unitless')
         prob.model.set_input_defaults(
-            Aircraft.Wing.ASPECT_RATIO_REFERENCE, val=0.01, units='unitless'
-        )
+            Aircraft.Wing.ASPECT_RATIO_REFERENCE, val=9.40817168, units='unitless'
+        )  # it was 0.01 in high_wing_single_aisle.csv
         prob.model.set_input_defaults(
             Aircraft.Wing.STRUT_BRACING_FACTOR, val=1.01, units='unitless'
         )
@@ -479,10 +479,10 @@ class DetailedWingBendingTest(unittest.TestCase):
         prob.run_model()
 
         bending_mat_factor = prob.get_val(Aircraft.Wing.BENDING_MATERIAL_FACTOR)
-        assert_near_equal(bending_mat_factor, 2762.96028422, tolerance=1e-9)
+        assert_near_equal(bending_mat_factor, 2.9367664396, tolerance=1e-9)
 
         pod_inertia_factor = prob.get_val(Aircraft.Wing.ENG_POD_INERTIA_FACTOR)
-        assert_near_equal(pod_inertia_factor, 0.97729985, tolerance=1e-9)
+        assert_near_equal(pod_inertia_factor, 0.9772998541, tolerance=1e-9)
 
     def test_IO(self):
         assert_match_varnames(self.prob.model)
