@@ -72,8 +72,8 @@ jobs:
         with:
           NAME: ${{ matrix.NAME }}
           OPENMDAO_PIXI_ENVIRONMENT: ${{ matrix.OPENMDAO_PIXI_ENVIRONMENT }}
-          OPENMDAO_INSTALL_FROM: ${{ matrix.NUMOPENMDAO_INSTALL_FROMPY }}
-          OPENMDAO: ${{ matrix.SCIOPENMDAOPY }}
+          OPENMDAO_INSTALL_FROM: ${{ matrix.OPENMDAO_INSTALL_FROM }}
+          OPENMDAO: ${{ matrix.OPENMDAO }}
           SNOPT: ${{ matrix.SNOPT }}
           DYMOS: ${{ matrix.DYMOS }}
           SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
@@ -83,6 +83,7 @@ jobs:
       - name: Run tests
         shell: bash -l {0}
         run: |
+          eval "$(pixi shell-hook -e py313 --manifest-path=${{ env.PIXI_MANIFEST }})"
           echo "============================================================="
           echo "Run Tests"
           echo "============================================================="
