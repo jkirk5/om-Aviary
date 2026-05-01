@@ -46,6 +46,7 @@ runs:
     - name: Display run details
       shell: bash -l {0}
       run: |
+        eval "$(pixi shell-hook -e ${{ matrix.OPENMDAO_PIXI_ENVIRONMENT }} --manifest-path=${{ env.PIXI_MANIFEST }})"
         echo "============================================================="
         echo "Run #${GITHUB_RUN_NUMBER}"
         echo "Run ID: ${GITHUB_RUN_ID}"
@@ -64,6 +65,12 @@ runs:
         echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
         sudo chmod 600 ~/.ssh/id_rsa
         echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+    - name: Install Tkinter
+      shell: bash -l {0}
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-tk
 
     - name: 'Setup OpenMDAO pixi Environment'
       id: setup_pixi_environment
@@ -88,12 +95,6 @@ runs:
         else
           pip install dymos==${{ inputs.DYMOS }}
         fi
-
-    - name: Install Tkinter
-      shell: bash -l {0}
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y python3-tk
 
     - name: Checkout Aviary
       uses: actions/checkout@v6
