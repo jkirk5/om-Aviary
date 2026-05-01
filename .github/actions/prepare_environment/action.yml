@@ -105,7 +105,7 @@ runs:
         echo "============================================================="
         echo "Install Aviary"
         echo "============================================================="
-        python -m pip install -e .[all]
+        pip install -e .[all]
 
     - name: Display conda environment info
       shell: bash -l {0}
