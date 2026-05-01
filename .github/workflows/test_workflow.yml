@@ -39,14 +39,13 @@ jobs:
         include:
           # oldest supported versions of openmdao/dymos
           # Note: bugfixes sometimes require incrementing the minimal version of openmdao or dymos.
-          #- NAME: oldest
-          #  PY: '3.11'
-          #  NUMPY: '2.2'
-          #  SCIPY: '1.15'
-          #  PYOPTSPARSE: 'v2.13.1'
-          #  SNOPT: '7.7'
-          #  OPENMDAO: '3.43.0'
-          #  DYMOS: '1.13.1'
+          - NAME: latest
+            OS: ubuntu-24.04
+            OPENMDAO_PIXI_ENVIRONMENT: 'py311'
+            OPENMDAO_INSTALL_FROM: 'pypi'
+            OPENMDAO: '3.43.0'
+            SNOPT: '7.7'
+            DYMOS: '1.13.1'
 
           # latest versions of openmdao/dymos
           - NAME: latest
