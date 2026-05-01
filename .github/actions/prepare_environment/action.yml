@@ -77,9 +77,6 @@ runs:
       if: inputs.DYMOS
       shell: bash -l {0}
       run: |
-        echo "============================================================="
-        echo "Activating pixi environment"
-        echo "============================================================="
         eval "$(pixi shell-hook -e py313 --manifest-path=${{ env.PIXI_MANIFEST }})"
         echo "============================================================="
         echo "Install Dymos"
@@ -104,6 +101,7 @@ runs:
     - name: Install Aviary
       shell: bash -l {0}
       run: |
+        eval "$(pixi shell-hook -e py313 --manifest-path=${{ env.PIXI_MANIFEST }})"
         echo "============================================================="
         echo "Install Aviary"
         echo "============================================================="
@@ -112,6 +110,7 @@ runs:
     - name: Display conda environment info
       shell: bash -l {0}
       run: |
+        eval "$(pixi shell-hook -e py313 --manifest-path=${{ env.PIXI_MANIFEST }})"
         conda info
         conda list
         conda env export --file environment.yml
