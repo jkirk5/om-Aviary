@@ -29,7 +29,7 @@ def load_intensity_by_factor(load_dist_factor, intn_stations):
     elif load_dist_factor == 2:
         load_intensity = np.sqrt(1.0 - intn_stations**2)
     elif load_dist_factor == 3:
-        load_intensity = np.ones(intn_stations + 1)
+        load_intensity = np.ones(len(intn_stations))
     elif 1 < load_dist_factor < 2:
         load_intensity = (load_intensity - 1.0) * np.sqrt(1.0 - intn_stations**2) + (
             2.0 - load_intensity
@@ -37,7 +37,7 @@ def load_intensity_by_factor(load_dist_factor, intn_stations):
     elif 2 < load_dist_factor < 3:
         load_intensity = (3.0 - load_intensity) * np.sqrt(1.0 - intn_stations**2) + (
             load_intensity - 2.0
-        ) * np.ones(intn_stations + 1)
+        ) * np.ones(len(intn_stations))
     else:
         raise om.AnalysisError(
             f'{load_dist_factor} is not a valid value for '
