@@ -94,9 +94,9 @@ jobs:
           testflo -n 1 --show_skipped test_bench_FwFm.py
           exit 1
 
-      #- name: Checkout actions (again)
-        #uses: actions/checkout@v6
-        #with:
-          #sparse-checkout: |
-            #.github/actions
-          #path: actions
+      - name: Checkout actions (again)
+        uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            .github/actions
+          path: actions
