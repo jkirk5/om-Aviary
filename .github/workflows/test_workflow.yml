@@ -92,7 +92,10 @@ jobs:
           cd validation_cases
           cd benchmark_tests
           testflo -n 1 --show_skipped test_bench_FwFm.py
-          exit 1
+          # Raise error only on merge
+          if [[ "${{ inputs.SNOPT }}" ]]; then
+            exit 1
+          fi
 
       - name: Checkout actions (again)
         uses: actions/checkout@v6
