@@ -795,7 +795,7 @@ class BWBDetailedWingBendingTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    # unittest.main()
-    test = DetailedWingBendingTest()
-    test.setUp()
-    test.test_intensity_factor()
+    unittest.main()
+    # test = DetailedWingBendingTest()
+    # test.setUp()
+    # test.test_intensity_factor()
