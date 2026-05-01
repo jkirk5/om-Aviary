@@ -87,15 +87,17 @@ jobs:
           echo "============================================================="
           echo "Run Tests"
           echo "============================================================="
-          #testflo . -n 1 --timeout=200 --show_skipped --coverage --coverpkg aviary
-          cd aviary
-          cd validation_cases
-          cd benchmark_tests
-          testflo -n 1 --show_skipped test_bench_FwFm.py
-          # Raise error only on merge
-          if [[ "${{ matrix.SNOPT }}" ]]; then
-            exit 1
-          fi
+          testflo . -n 1 --timeout=200 --show_skipped --coverage --coverpkg aviary
+
+          # For testing SNOPT.
+          # cd aviary
+          # cd validation_cases
+          # cd benchmark_tests
+          # testflo -n 1 --show_skipped test_bench_FwFm.py
+          # # Raise error only on merge
+          # if [[ "${{ secrets.SNOPT_LOCATION_77 }}" ]]; then
+          #   exit 1
+          # fi
 
       - name: Checkout actions (again)
         uses: actions/checkout@v6
