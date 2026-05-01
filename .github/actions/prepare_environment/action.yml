@@ -103,6 +103,7 @@ runs:
         pip install -e .[all]
 
     - name: Check MPI and PETSc
+      shell: bash -l {0}
       continue-on-error: true
       run: |
         eval "$(pixi shell-hook -e ${{ matrix.OPENMDAO_PIXI_ENVIRONMENT }} --manifest-path=${{ env.PIXI_MANIFEST }})"
