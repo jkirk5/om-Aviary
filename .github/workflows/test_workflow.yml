@@ -91,7 +91,7 @@ jobs:
           cd aviary
           cd validation_cases
           cd benchmark_tests
-          testflo -n 1 test_bench_FwFm.py
+          testflo -n 1 --show_skipped test_bench_FwFm.py
           exit 1
 
       #- name: Checkout actions (again)
