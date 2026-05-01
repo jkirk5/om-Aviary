@@ -23,6 +23,7 @@ except ImportError:
     # Trapz is deprecated in the latest numpy
     from numpy import trapezoid as trapz
 
+
 def get_screen_geometry():
     """
     Taken from: https://stackoverflow.com/questions/3129322/how-do-i-get-monitor-resolution-in-python/56913005#56913005
