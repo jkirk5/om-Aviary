@@ -88,7 +88,7 @@ runs:
           mkdir SNOPT
           echo "  > Secure copying SNOPT 7.7 over SSH"
           scp -qr ${{ inputs.SNOPT_LOCATION_77 }} SNOPT
-          python -m build_pyoptsparse.snopt_module SNOPT/src"
+          python -m build_pyoptsparse.snopt_module SNOPT/src
         elif [[ "${{ inputs.SNOPT }}" ]]; then
           echo "SNOPT version ${{ inputs.SNOPT }} was requested but source is not available"
         fi
