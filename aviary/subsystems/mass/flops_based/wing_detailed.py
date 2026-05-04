@@ -529,7 +529,6 @@ class BWBDetailedWingBendingFact(om.ExplicitComponent):
         #      wing mounted pods here
         pod_mass = inputs[Aircraft.Engine.POD_MASS]
         if np.sum(num_wing_engines) > 0:
-            # TODO: the rest is not checked.
             inertia_factor = np.zeros(num_engine_type, dtype=chord.dtype)
             eel = np.zeros(len(dy) + 1, dtype=chord.dtype)
 

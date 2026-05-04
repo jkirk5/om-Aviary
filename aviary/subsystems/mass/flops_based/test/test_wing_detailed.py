@@ -36,7 +36,7 @@ class DetailedWingBendingTest(unittest.TestCase):
     def setUp(self):
         self.prob = om.Problem()
 
-    # Skip model that doesn't use detailed wing and BWB cases.
+    # Skip models that don't use detailed wing and skip BWB cases.
     @parameterized.expand(get_flops_case_names(omit=omit_cases), name_func=print_case)
     def test_case(self, case_name):
         prob = self.prob
@@ -704,7 +704,8 @@ class BWBDetailedWingBendingTest(unittest.TestCase):
         pod_inertia_expected = 1.0
         assert_near_equal(BENDING_MATERIAL_FACTOR, BENDING_MATERIAL_FACTOR_expected, tolerance=1e-9)
         assert_near_equal(prob.get_val('calculated_wing_area'), 5399.4057051, tolerance=1e-9)
-        # current BWB data set does not check the following
+        # For BWB with non wing engines, inertia_factor_prod = 1 always.
+        # Need a different dataset with wing engines to check this one
         assert_near_equal(pod_inertia, pod_inertia_expected, tolerance=1e-9)
 
     def test_case2(self):
@@ -790,7 +791,6 @@ class BWBDetailedWingBendingTest(unittest.TestCase):
         pod_inertia_expected = 1.0
         assert_near_equal(BENDING_MATERIAL_FACTOR, BENDING_MATERIAL_FACTOR_expected, tolerance=1e-9)
         assert_near_equal(prob.get_val('calculated_wing_area'), 4151.88659141, tolerance=1e-9)
-        # current BWB data set does not check the following
         assert_near_equal(pod_inertia, pod_inertia_expected, tolerance=1e-9)
 
 
