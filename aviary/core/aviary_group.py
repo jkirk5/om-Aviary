@@ -115,13 +115,21 @@ class AviaryGroup(om.Group):
         non_sbc_vars = set()
         for sub in self.system_iter(recurse=False, typ=om.Group):
             pr2abs = sub._resolver.prom2abs_iter('input')
-            sub_inputs = [
-                (k, v[0]) for k, v in pr2abs if k.startswith('aircraft') or k.startswith('mission')
-            ]
+            if sub.pathname == 'traj':
+                sub_inputs = [
+                    (k, v[0]) for k, v in pr2abs if k.startswith('parameters:')
+                ]
+            else:
+                sub_inputs = [
+                    (k, v[0]) for k, v in pr2abs if k.startswith('aircraft') or k.startswith('mission')
+                ]
             abs2meta = sub._var_abs2meta['input']
 
             for data in sub_inputs:
                 prom_name, abs_name = data
+                if prom_name.startswith('parameters:'):
+                    # Parameters haven't been pully promoted out of traj at this point.
+                    prom_name = prom_name.lstrip('parameters:')
                 meta = abs2meta[abs_name]
                 if meta.get('shape_by_conn') is True:
                     sbc_vars.add(prom_name)
