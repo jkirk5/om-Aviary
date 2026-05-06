@@ -53,7 +53,7 @@ class FurnishingMassTestCase1(unittest.TestCase):
         assert_near_equal(self.prob[Aircraft.Furnishings.MASS], 13266.56, tol)
 
         partial_data = self.prob.check_partials(out_stream=None, method='cs')
-        assert_check_partials(partial_data, atol=8e-12, rtol=1e-12)
+        assert_check_partials(partial_data, atol=1e-12, rtol=1e-12)
 
 
 class FurnishingMassTestCase2(unittest.TestCase):
@@ -101,7 +101,7 @@ class FurnishingMassTestCase2(unittest.TestCase):
         self.prob.run_model()
 
         partial_data = self.prob.check_partials(out_stream=None, method='cs')
-        assert_check_partials(partial_data, atol=8e-12, rtol=1e-12)
+        assert_check_partials(partial_data, atol=1e-12, rtol=1e-12)
 
 
 @use_tempdirs
@@ -155,7 +155,7 @@ class FurnishingMassTestCase3(unittest.TestCase):
         assert_near_equal(self.prob[Aircraft.Furnishings.MASS], 3348.0, tol)
 
         partial_data = self.prob.check_partials(out_stream=None, method='cs')
-        assert_check_partials(partial_data, atol=8e-12, rtol=1e-12)
+        assert_check_partials(partial_data, atol=1e-12, rtol=1e-12)
 
     def test_case2(self):
         """
@@ -171,7 +171,7 @@ class FurnishingMassTestCase3(unittest.TestCase):
         assert_near_equal(self.prob[Aircraft.Furnishings.MASS], 3348.0, tol)
 
         partial_data = self.prob.check_partials(out_stream=None, method='cs')
-        assert_check_partials(partial_data, atol=8e-12, rtol=1e-12)
+        assert_check_partials(partial_data, atol=1e-12, rtol=1e-12)
 
 
 @use_tempdirs
@@ -226,7 +226,7 @@ class BWBFurnishingMassTestCase1(unittest.TestCase):
         assert_near_equal(self.prob[Aircraft.Furnishings.MASS], 11269.863, tol)
 
         partial_data = self.prob.check_partials(out_stream=None, method='cs')
-        assert_check_partials(partial_data, atol=8e-12, rtol=1e-12)
+        assert_check_partials(partial_data, atol=1e-12, rtol=1e-12)
 
     def test_case2(self):
         # case 2A
@@ -244,7 +244,7 @@ class BWBFurnishingMassTestCase1(unittest.TestCase):
         assert_near_equal(self.prob[Aircraft.Furnishings.MASS], 18839.863, tol)
 
         partial_data = self.prob.check_partials(out_stream=None, method='cs')
-        assert_check_partials(partial_data, atol=8e-12, rtol=1e-12)
+        assert_check_partials(partial_data, atol=1e-12, rtol=1e-12)
 
         # case 2B
         self.options.set_val(
@@ -261,7 +261,7 @@ class BWBFurnishingMassTestCase1(unittest.TestCase):
         # assert_near_equal(self.prob[Aircraft.Furnishings.MASS], 11269.863, tol)
 
         partial_data = self.prob.check_partials(out_stream=None, method='cs')
-        assert_check_partials(partial_data, atol=8e-12, rtol=1e-12)
+        assert_check_partials(partial_data, atol=1e-12, rtol=1e-12)
 
         # case 2C
         self.options.set_val(
@@ -278,7 +278,7 @@ class BWBFurnishingMassTestCase1(unittest.TestCase):
         assert_near_equal(self.prob[Aircraft.Furnishings.MASS], 18839.863, tol)
 
         partial_data = self.prob.check_partials(out_stream=None, method='cs')
-        assert_check_partials(partial_data, atol=8e-12, rtol=1e-12)
+        assert_check_partials(partial_data, atol=1e-12, rtol=1e-12)
 
 
 @use_tempdirs
