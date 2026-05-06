@@ -51,7 +51,6 @@ aircraft:engine:reference_mass,7400,lbm
 aircraft:engine:reference_sls_thrust,28928.1,lbf
 aircraft:engine:scale_factor,1.0,unitless
 aircraft:engine:scale_mass,True,unitless
-aircraft:engine:scale_performance,True,unitless
 aircraft:engine:scaled_sls_thrust,28928.1,lbf
 aircraft:engine:subsonic_fuel_flow_scaler,1.,unitless
 aircraft:engine:supersonic_fuel_flow_scaler,1.,unitless
@@ -148,7 +147,6 @@ aircraft:design:range,3500,NM
 aircraft:design:thrust_takeoff_per_eng,28928.1,lbf
 mission:landing:lift_coefficient_max,2.0,unitless
 aircraft:design:cruise_mach,0.785,unitless
-mission:fuel_flow_scaler,1.0,unitless
 mission:takeoff:fuel,577,lbm
 mission:takeoff:lift_coefficient_max,3.0,unitless
 mission:takeoff:lift_over_drag,17.354,unitless

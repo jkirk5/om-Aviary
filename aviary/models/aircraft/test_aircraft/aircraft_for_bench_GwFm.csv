@@ -38,7 +38,6 @@ aircraft:engine:mass_scaler,1,unitless
 aircraft:engine:num_engines,2,unitless
 aircraft:engine:pod_mass_scaler,1,unitless
 aircraft:engine:pylon_factor,1.25,unitless
-aircraft:engine:reference_diameter,5.8,ft
 aircraft:engine:reference_sls_thrust,28690,lbf
 aircraft:engine:scale_factor,1.0,unitless
 aircraft:engine:scaled_sls_thrust,28690,lbf
@@ -77,7 +76,7 @@ aircraft:hydraulics:gear_mass_coefficient,0.14,unitless
 aircraft:instruments:mass_coefficient,0.0736,unitless
 aircraft:landing_gear:fixed_gear,False,unitless
 aircraft:landing_gear:main_gear_location,0.15,unitless
-aircraft:landing_gear:main_gear_mass_coefficient,0.85,unitless
+aircraft:landing_gear:main_gear_mass_fraction,0.85,unitless
 aircraft:landing_gear:mass_coefficient,0.04,unitless
 aircraft:landing_gear:tail_hook_mass_scaler,1,unitless
 aircraft:landing_gear:total_mass_scaler,1,unitless
@@ -153,7 +152,6 @@ mission:landing:drag_coefficient_flap_increment,0.0406,unitless
 mission:landing:lift_coefficient_flap_increment,1.0293,unitless
 mission:landing:lift_coefficient_max,2.8155,unitless
 aircraft:design:cruise_mach,0.785,unitless
-mission:fuel_flow_scaler,1.0,unitless
 mission:gross_mass,175400,lbm
 mission:takeoff:airport_altitude,0,ft
 mission:takeoff:drag_coefficient_flap_increment,0.0085,unitless

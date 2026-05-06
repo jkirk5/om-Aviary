@@ -22,10 +22,10 @@ from operator import eq, ge, gt, le, lt, ne
 import numpy as np
 from openmdao.utils.units import valid_units
 
-from aviary.utils.aviary_values import AviaryValues, get_keys
+from aviary.utils.aviary_values import AviaryValues
 from aviary.utils.functions import convert_strings_to_data, get_path
 from aviary.variable_info.enums import ProblemType, Verbosity
-from aviary.variable_info.variable_meta_data import _MetaData
+from aviary.variable_info.variable_meta_data import CoreMetaData
 from aviary.variable_info.variables import Aircraft, Mission, Settings
 
 operation_dict = {
@@ -39,12 +39,12 @@ operation_dict = {
 }
 problem_types = {
     'sizing': ProblemType.SIZING,
-    'alternate': ProblemType.ALTERNATE,
-    'fallout': ProblemType.FALLOUT,
+    'off_design_min_fuel': ProblemType.OFF_DESIGN_MIN_FUEL,
+    'off_design_max_range': ProblemType.OFF_DESIGN_MAX_RANGE,
 }
 
 
-def create_vehicle(vehicle_deck='', meta_data=_MetaData, verbosity=Verbosity.BRIEF):
+def create_vehicle(vehicle_deck='', meta_data=CoreMetaData, verbosity=Verbosity.BRIEF):
     """
     Creates and initializes a vehicle with default or specified parameters. It sets up the aircraft values
     and initial guesses based on the input from the vehicle deck.
@@ -126,7 +126,9 @@ def create_vehicle(vehicle_deck='', meta_data=_MetaData, verbosity=Verbosity.BRI
         aircraft_values.set_val(Settings.VERBOSITY, Verbosity(verbosity))
     # else, if verbosity not specified anywhere, use default of BRIEF
     elif verbosity is None and Settings.VERBOSITY not in aircraft_values:
-        aircraft_values.set_val(Settings.VERBOSITY, _MetaData[Settings.VERBOSITY]['default_value'])
+        aircraft_values.set_val(
+            Settings.VERBOSITY, CoreMetaData[Settings.VERBOSITY]['default_value']
+        )
 
     return aircraft_values, initialization_guesses
 
@@ -135,7 +137,7 @@ def parse_inputs(
     vehicle_deck,
     aircraft_values: AviaryValues = None,
     initialization_guesses=None,
-    meta_data=_MetaData,
+    meta_data=CoreMetaData,
 ):
     """
     Parses the input files and updates the aircraft values and initial guesses. The function reads the
@@ -258,7 +260,7 @@ def update_GASP_options(aircraft_values: AviaryValues):
 
     if aircraft_values.get_val(Settings.VERBOSITY) >= Verbosity.VERBOSE:
         print('\nOptions')
-        for key in get_keys(aircraft_values):
+        for key in aircraft_values.keys():
             val, units = aircraft_values.get_item(key)
             print(key, val, units)
 
@@ -281,7 +283,7 @@ def update_dependent_options(aircraft_values: AviaryValues, dependent_options):
     """
     # gets the names of all the variables that affect dependent options
     for var_name, dependency in dependent_options:
-        if var_name in get_keys(aircraft_values):
+        if var_name in aircraft_values.keys():
             var_value, var_units = aircraft_values.get_item(var_name)
             # dependency is a dictionary that contains the target option, the relationship to the variable and the output values
             if dependency['relation'] in operation_dict:
@@ -359,7 +361,7 @@ def initialization_guessing(aircraft_values: AviaryValues, initialization_guesse
 
     # takeoff mass not given
     if mission_mass <= 0:
-        if problem_type == ProblemType.ALTERNATE:
+        if problem_type == ProblemType.OFF_DESIGN_MIN_FUEL:
             fuel_mass = (
                 num_pax
                 * (
@@ -378,14 +380,14 @@ def initialization_guessing(aircraft_values: AviaryValues, initialization_guesse
                 )
                 + fuel_mass
             )
-        elif problem_type == ProblemType.FALLOUT or problem_type == ProblemType.SIZING:
+        elif problem_type == ProblemType.OFF_DESIGN_MAX_RANGE or problem_type == ProblemType.SIZING:
             mission_mass = aircraft_values.get_val(Aircraft.Design.GROSS_MASS, units='lbm')
     initialization_guesses['actual_takeoff_mass'] = mission_mass
 
     if cruise_mass_final == 0:  # no guess given
         if problem_type == ProblemType.SIZING:
             cruise_mass_final = 0.8
-        elif problem_type == ProblemType.ALTERNATE:
+        elif problem_type == ProblemType.OFF_DESIGN_MIN_FUEL:
             cruise_mass_final = -1
     # estimation based on payload and fuel
     if cruise_mass_final <= 0:
@@ -546,16 +548,6 @@ dependent_options = [
             'val': 0,
             'relation': '<',
             'target': Aircraft.Design.ULF_CALCULATED_FROM_MANEUVER,
-            'result': True,
-            'alternate': False,
-        },
-    ],
-    [
-        'JENGSZ',
-        {
-            'val': 4,
-            'relation': '!=',
-            'target': Aircraft.Engine.SCALE_PERFORMANCE,
             'result': True,
             'alternate': False,
         },

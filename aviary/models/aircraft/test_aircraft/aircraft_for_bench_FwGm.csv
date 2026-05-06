@@ -17,12 +17,12 @@ aircraft:design:drag_divergence_shift,0.033,unitless
 aircraft:engine:constant_fuel_consumption,0.,lbm/h
 aircraft:engine:data_file,models/engines/turbofan_23k_1.csv,unitless
 aircraft:engine:global_throttle, True, unitless
-aircraft:engine:scale_performance,False,unitless
 aircraft:engine:mass_specific,0.21366,lbm/lbf
 aircraft:engine:fuel_flow_scaler_constant_term,0.,unitless
 aircraft:engine:fuel_flow_scaler_linear_term,0.,unitless
 aircraft:engine:geopotential_alt,False,unitless
 aircraft:engine:ignore_negative_thrust,False,unitless
+aircraft:engine:inlet_area_coefficient,0.00030975,unitless
 aircraft:engine:interpolation_method,slinear,unitless
 aircraft:engine:mass_scaler,1.15,unitless
 aircraft:engine:mass,7400,lbm
@@ -32,12 +32,10 @@ aircraft:engine:num_fuselage_engines,0,unitless
 aircraft:engine:num_wing_engines,2,unitless
 aircraft:engine:pod_mass_scaler,1,unitless
 aircraft:engine:pylon_factor,1.25,unitless
-aircraft:engine:reference_diameter,5.8,ft
 aircraft:engine:reference_mass,7400,lbm
 aircraft:engine:reference_sls_thrust,28928.1,lbf
 aircraft:engine:scale_factor,1.0,unitless
 aircraft:engine:scale_mass,True,unitless
-aircraft:engine:scale_performance,True,unitless
 aircraft:engine:scaled_sls_thrust,28928.1,lbf
 aircraft:engine:subsonic_fuel_flow_scaler,1.,unitless
 aircraft:engine:supersonic_fuel_flow_scaler,1.,unitless
@@ -52,7 +50,6 @@ aircraft:fuel:wing_fuel_fraction,0.6,unitless
 aircraft:fuselage:aisle_width,24,inch
 aircraft:fuselage:delta_diameter,4.5,ft
 aircraft:fuselage:flat_plate_area_increment,0.25,ft**2
-aircraft:fuselage:form_factor,1.25,unitless
 aircraft:fuselage:mass_coefficient,128,unitless
 aircraft:fuselage:nose_fineness,1,unitless
 aircraft:fuselage:num_aisles,1,unitless
@@ -72,7 +69,7 @@ aircraft:horizontal_tail:vertical_tail_mount_location,0.0,unitless
 aircraft:horizontal_tail:volume_coefficient,1.189,unitless
 aircraft:landing_gear:fixed_gear,False,unitless
 aircraft:landing_gear:main_gear_location,0.15,unitless
-aircraft:landing_gear:main_gear_mass_coefficient,0.85,unitless
+aircraft:landing_gear:main_gear_mass_fraction,0.85,unitless
 aircraft:landing_gear:mass_coefficient,0.04,unitless
 aircraft:landing_gear:tail_hook_mass_scaler,1,unitless
 aircraft:landing_gear:total_mass_scaler,1,unitless
@@ -146,7 +143,6 @@ mission:landing:maximum_flare_load_factor,1.15,unitless
 mission:landing:maximum_sink_rate,900,ft/min
 mission:landing:obstacle_height,50,ft
 mission:landing:touchdown_sink_rate,5,ft/s
-mission:fuel_flow_scaler,1.0,unitless
 mission:takeoff:decision_speed_increment,10,kn
 mission:takeoff:rotation_speed_increment,5,kn
 mission:taxi:duration,0.1677,h

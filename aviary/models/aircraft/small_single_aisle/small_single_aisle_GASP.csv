@@ -35,7 +35,6 @@ aircraft:engine:mass_specific,0.2153,lbm/lbf
 aircraft:engine:num_engines,2,unitless
 aircraft:engine:pod_mass_scaler,1,unitless
 aircraft:engine:pylon_factor,0.6,unitless
-aircraft:engine:reference_diameter,6.04,ft
 aircraft:engine:reference_sls_thrust,28690,lbf
 aircraft:engine:scale_factor,0.8295573370512374,unitless
 aircraft:engine:scaled_sls_thrust,23800,lbf
@@ -74,7 +73,7 @@ aircraft:hydraulics:gear_mass_coefficient,0.14,unitless
 aircraft:instruments:mass_coefficient,0.06,unitless
 aircraft:landing_gear:fixed_gear,False,unitless
 aircraft:landing_gear:main_gear_location,0.199,unitless
-aircraft:landing_gear:main_gear_mass_coefficient,0.85,unitless
+aircraft:landing_gear:main_gear_mass_fraction,0.85,unitless
 aircraft:landing_gear:mass_coefficient,0.036,unitless
 aircraft:landing_gear:tail_hook_mass_scaler,1,unitless
 aircraft:landing_gear:total_mass_scaler,1,unitless
@@ -148,7 +147,6 @@ mission:landing:maximum_flare_load_factor,1.15,unitless
 mission:landing:maximum_sink_rate,900,ft/min
 mission:landing:obstacle_height,50,ft
 mission:landing:touchdown_sink_rate,5,ft/s
-mission:fuel_flow_scaler,1,unitless
 mission:gross_mass,124780
 mission:takeoff:decision_speed_increment,10,kn
 mission:takeoff:rotation_speed_increment,5,kn

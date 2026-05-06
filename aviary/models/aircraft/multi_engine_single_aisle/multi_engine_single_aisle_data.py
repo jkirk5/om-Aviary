@@ -164,7 +164,6 @@ engine_1_inputs.set_val(Aircraft.Engine.THRUST_REVERSERS_MASS_SCALER, 0.0)
 engine_1_inputs.set_val(Aircraft.Engine.WING_LOCATIONS, 15.8300 / (117.83 / 2))
 engine_1_inputs.set_val(Aircraft.Engine.SCALE_MASS, True)
 engine_1_inputs.set_val(Aircraft.Engine.MASS_SCALER, 1.15)
-engine_1_inputs.set_val(Aircraft.Engine.SCALE_PERFORMANCE, True)
 engine_1_inputs.set_val(Aircraft.Engine.SUBSONIC_FUEL_FLOW_SCALER, 1.0)
 engine_1_inputs.set_val(Aircraft.Engine.SUPERSONIC_FUEL_FLOW_SCALER, 1.0)
 engine_1_inputs.set_val(Aircraft.Engine.FUEL_FLOW_SCALER_CONSTANT_TERM, 0.0)
@@ -178,7 +177,6 @@ engine_1_inputs.set_val(Aircraft.Engine.FLIGHT_IDLE_MAX_FRACTION, 1.0)
 engine_1_inputs.set_val(Aircraft.Engine.FLIGHT_IDLE_MIN_FRACTION, 0.08)
 engine_1_inputs.set_val(Aircraft.Engine.GEOPOTENTIAL_ALT, False)
 engine_1_inputs.set_val(Aircraft.Engine.INTERPOLATION_METHOD, 'slinear')
-engine_1_inputs.set_val(Mission.FUEL_FLOW_SCALER, 1.0)
 
 # Engine 2:
 filename = get_path('models/engines/turbofan_22k.csv')
@@ -197,7 +195,6 @@ engine_2_inputs.set_val(Aircraft.Engine.NUM_WING_ENGINES, 2)
 engine_2_inputs.set_val(Aircraft.Engine.WING_LOCATIONS, 0.289682918)
 engine_2_inputs.set_val(Aircraft.Engine.SCALE_MASS, True)
 engine_2_inputs.set_val(Aircraft.Engine.MASS_SCALER, 1.15)
-engine_2_inputs.set_val(Aircraft.Engine.SCALE_PERFORMANCE, True)
 engine_2_inputs.set_val(Aircraft.Engine.SUBSONIC_FUEL_FLOW_SCALER, 1.0)
 engine_2_inputs.set_val(Aircraft.Engine.SUPERSONIC_FUEL_FLOW_SCALER, 1.0)
 engine_2_inputs.set_val(Aircraft.Engine.FUEL_FLOW_SCALER_CONSTANT_TERM, 0.0)
@@ -211,7 +208,6 @@ engine_2_inputs.set_val(Aircraft.Engine.FLIGHT_IDLE_MAX_FRACTION, 1.0)
 engine_2_inputs.set_val(Aircraft.Engine.FLIGHT_IDLE_MIN_FRACTION, 0.08)
 engine_2_inputs.set_val(Aircraft.Engine.GEOPOTENTIAL_ALT, False)
 engine_2_inputs.set_val(Aircraft.Engine.INTERPOLATION_METHOD, 'slinear')
-engine_2_inputs.set_val(Mission.FUEL_FLOW_SCALER, 1.0)
 
 # Vertical Tail
 # ---------------------------
@@ -264,7 +260,6 @@ inputs.set_val(Aircraft.Wing.WETTED_AREA_SCALER, 1.0)
 # ---------------------------
 inputs.set_val(Aircraft.Design.CRUISE_MACH, 0.785)  # was 0.82
 inputs.set_val(Aircraft.Design.RANGE, 2960.0, 'NM')
-inputs.set_val(Mission.FUEL_FLOW_SCALER, 1.0)
 inputs.set_val(Mission.Constraints.MAX_MACH, 0.82)
 # TODO investigate the origin of these values (taken from benchmark tests)
 # TODO: where should this get connected from?

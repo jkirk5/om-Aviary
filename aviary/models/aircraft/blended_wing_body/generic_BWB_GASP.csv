@@ -88,7 +88,7 @@ aircraft:hydraulics:gear_mass_coefficient,0.135,unitless
 aircraft:instruments:mass_coefficient,0.116,unitless
 aircraft:landing_gear:fixed_gear,False,unitless
 aircraft:landing_gear:main_gear_location,0,unitless
-aircraft:landing_gear:main_gear_mass_coefficient,0.85,unitless
+aircraft:landing_gear:main_gear_mass_fraction,0.85,unitless
 aircraft:landing_gear:mass_coefficient,0.052,unitless
 aircraft:landing_gear:tail_hook_mass_scaler,1,unitless
 aircraft:landing_gear:total_mass_scaler,1,unitless
@@ -161,7 +161,6 @@ mission:landing:maximum_flare_load_factor,1.15,unitless
 mission:landing:maximum_sink_rate,900,ft/min
 mission:landing:obstacle_height,50,ft
 mission:landing:touchdown_sink_rate,5,ft/s
-mission:fuel_flow_scaler,1,unitless
 mission:takeoff:decision_speed_increment,10,kn
 mission:takeoff:rotation_speed_increment,5,kn
 mission:taxi:duration,0.1677,h

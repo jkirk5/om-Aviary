@@ -1,3 +1,4 @@
+import inspect
 import sys
 import warnings
 from importlib.util import module_from_spec, spec_from_file_location
@@ -24,6 +25,7 @@ from aviary.subsystems.propulsion.engine_model import EngineModel
 from aviary.subsystems.propulsion.propulsion_builder import CorePropulsionBuilder
 from aviary.subsystems.propulsion.utils import build_engine_deck
 from aviary.subsystems.subsystem_builder import SubsystemBuilder
+from aviary.utils.aviary_values import AviaryValues
 from aviary.utils.functions import get_path
 from aviary.utils.merge_variable_metadata import merge_meta_data
 from aviary.utils.preprocessors import preprocess_options
@@ -106,6 +108,23 @@ class AviaryGroup(om.Group):
             # Under MPI, promotion info only lives on rank 0, so broadcast.
             all_prom_inputs = self.comm.bcast(all_prom_inputs, root=0)
 
+        # Find all variables that are shape_by_conn so we don't set their shape with a stale value
+        # from the default metadata. We can only find these on the next level down because
+        # aviary_group's setup is not complete until after configure.
+        sbc_vars = []
+        for sub in self.system_iter(recurse=False, typ=om.Group):
+            pr2abs = sub._resolver.prom2abs_iter('input')
+            sub_inputs = [
+                (k, v[0]) for k, v in pr2abs if k.startswith('aircraft') or k.startswith('mission')
+            ]
+            abs2meta = sub._var_abs2meta['input']
+
+            for data in sub_inputs:
+                prom_name, abs_name = data
+                meta = abs2meta[abs_name]
+                if meta.get('shape_by_conn') is True:
+                    sbc_vars.append(prom_name)
+
         for key in aviary_metadata:
             if ':' not in key or key.startswith('dynamic:'):
                 continue
@@ -127,7 +146,12 @@ class AviaryGroup(om.Group):
                     # optional, but no default value
                     continue
 
-            self.set_input_defaults(key, val=val, units=units)
+            kwargs = {'units': units}
+            if key not in sbc_vars:
+                # Default val if var doesn't use shape_by_conn.
+                kwargs['val'] = val
+
+            self.set_input_defaults(key, **kwargs)
 
         # try to get all the possible EOMs from the Enums rather than specifically calling the names here
         # This will require some modifications to the enums
@@ -174,6 +198,7 @@ class AviaryGroup(om.Group):
         aircraft_data,
         phase_info=None,
         problem_configurator=None,
+        phase_info_modifier=None,
         verbosity=None,
     ):
         """
@@ -193,6 +218,13 @@ class AviaryGroup(om.Group):
             verbosity = Verbosity(verbosity)
         else:
             verbosity = self.verbosity  # defaults to BRIEF
+
+        # validate phase info modifier function
+        if phase_info_modifier is not None:
+            self._validate_phase_info_modifier(phase_info_modifier)
+            self.phase_info_modifier = phase_info_modifier
+        else:
+            self.phase_info_modifier = None
 
         ## LOAD INPUT FILE ###
         # Create AviaryValues object from file (or process existing AviaryValues object
@@ -260,7 +292,7 @@ class AviaryGroup(om.Group):
 
         if phase_info is None:
             phase_info = self.configurator.get_default_phase_info(self)
-            if verbosity is not None and verbosity >= Verbosity.BRIEF:
+            if verbosity > Verbosity.BRIEF:  # VERBOSE, DEBUG
                 print(
                     f'Loaded default phase_info for {self.mission_method.value.lower()} equations '
                     'of motion.'
@@ -655,19 +687,13 @@ class AviaryGroup(om.Group):
 
         return phase
 
-    def add_phases(
-        self, phase_info_parameterization=None, parallel_phases=True, verbosity=None, comm=None
-    ):
+    def add_phases(self, parallel_phases=True, verbosity=None, comm=None):
         """
         Add the mission phases to the problem trajectory based on the user-specified
         phase_info dictionary.
 
         Parameters
         ----------
-        phase_info_parameterization (function, optional): A function that takes in the
-            phase_info dictionary and aviary_inputs and returns modified phase_info.
-            Defaults to None.
-
         parallel_phases (bool, optional): If True, the top-level container of all phases
             will be a ParallelGroup, otherwise it will be a standard OpenMDAO Group.
             Defaults to True.
@@ -684,8 +710,8 @@ class AviaryGroup(om.Group):
         else:
             verbosity = self.verbosity  # defaults to BRIEF
 
-        if phase_info_parameterization is not None:
-            self.mission_info, self.post_mission_info = phase_info_parameterization(
+        if self.phase_info_modifier is not None:
+            self.mission_info, self.post_mission_info = self.phase_info_modifier(
                 self.mission_info, self.post_mission_info, self.aviary_inputs
             )
 
@@ -1290,7 +1316,7 @@ class AviaryGroup(om.Group):
         and another for the gross mass of the aircraft computed during the mission. A constraint is
         also added to ensure that the residual range is zero.
 
-        If solving an alternate problem, only a design variable for the gross mass of the aircraft
+        If solving an OFF_DESIGN_MIN_FUEL problem, only a design variable for the gross mass of the aircraft
         computed during the mission is added. A constraint is also added to ensure that the residual
         range is zero.
 
@@ -1364,7 +1390,7 @@ class AviaryGroup(om.Group):
                 if self.require_range_residual:
                     self.add_constraint(Mission.Constraints.RANGE_RESIDUAL, equals=0, ref=1000)
 
-            elif problem_type is ProblemType.ALTERNATE:
+            elif problem_type is ProblemType.OFF_DESIGN_MIN_FUEL:
                 # target range problem
                 # fixed vehicle (design GTOW) but variable actual GTOW for off-design
                 # get the design gross mass and set as the upper bound for the gross mass design variable
@@ -1379,10 +1405,12 @@ class AviaryGroup(om.Group):
 
                 self.add_constraint(Mission.Constraints.RANGE_RESIDUAL, equals=0, ref=1000)
 
-            elif problem_type is ProblemType.FALLOUT:
+            elif problem_type is ProblemType.OFF_DESIGN_MAX_RANGE:
                 # fixed vehicle gross mass aviary finds optimal trajectory and maximum range
                 if verbosity >= Verbosity.VERBOSE:
-                    print('No additional aircraft design variables added for Fallout missions')
+                    print(
+                        'No additional aircraft design variables added for OFF_DESIGN_MAX_RANGE missions'
+                    )
 
             elif problem_type is ProblemType.MULTI_MISSION:
                 self.add_design_var(
@@ -1611,3 +1639,36 @@ class AviaryGroup(om.Group):
             ],
             promotes_outputs=[('reserve_fuel', reserves_name)],
         )
+
+    def _validate_phase_info_modifier(self, phase_info_modifier):
+        """Check function for required arguments (phase_info, post_mission_info, aviary_inputs)"""
+
+        # validate phase_info_modifier function
+        sig = inspect.signature(phase_info_modifier)
+        params = sig.parameters
+        # NOTE Exact argument name matching needed to check types later (this might be
+        #      avoidable, if params is guaranteed to be in order)
+        expected_args = {'phase_info', 'post_mission_info', 'aviary_inputs'}
+        actual_args = set(params.keys())
+
+        if expected_args != actual_args:
+            raise ValueError(
+                f'Phase modifier function must match arguments: {expected_args}. Got: {actual_args}'
+            )
+
+        # Check argument types (if provided)
+        if params['phase_info'].annotation not in (dict, inspect.Parameter.empty):
+            raise TypeError(
+                "The 'phase_info' argument of phase info modifier function must be a dict (or "
+                'left unspecified).'
+            )
+        if params['post_mission_info'].annotation not in (dict, inspect.Parameter.empty):
+            raise TypeError(
+                "The 'post_mission_info' argument of phase info modifier function must be a dict "
+                '(or left unspecified).'
+            )
+        if params['aviary_inputs'].annotation not in (AviaryValues, inspect.Parameter.empty):
+            raise TypeError(
+                "The 'aviary_inputs' argument of phase info modifier function must be an "
+                'AviaryValues (or left unspecified).'
+            )
