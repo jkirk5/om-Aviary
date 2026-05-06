@@ -2,13 +2,15 @@ import unittest
 
 import openmdao.api as om
 from openmdao.utils.assert_utils import assert_check_partials, assert_near_equal
+from openmdao.utils.testing_utils import use_tempdirs
 
 from aviary.subsystems.mass.gasp_based.furnishings import BWBFurnishingMass, FurnishingMass
 from aviary.variable_info.functions import setup_model_options
 from aviary.variable_info.options import get_option_defaults
-from aviary.variable_info.variables import Aircraft, Mission
+from aviary.variable_info.variables import Aircraft
 
 
+@use_tempdirs
 class FurnishingMassTestCase1(unittest.TestCase):
     """Created based on EquipMassTestCase1"""
 
@@ -102,6 +104,7 @@ class FurnishingMassTestCase2(unittest.TestCase):
         assert_check_partials(partial_data, atol=8e-12, rtol=1e-12)
 
 
+@use_tempdirs
 class FurnishingMassTestCase3(unittest.TestCase):
     """
     Created based on GASP BWB model where SWF is DHYDRAL
@@ -171,9 +174,11 @@ class FurnishingMassTestCase3(unittest.TestCase):
         assert_check_partials(partial_data, atol=8e-12, rtol=1e-12)
 
 
+@use_tempdirs
 class BWBFurnishingMassTestCase1(unittest.TestCase):
     """
     Created based on GASP BWB model
+    GROSS_MASS > 10000.0
     """
 
     def setUp(self):
@@ -276,6 +281,7 @@ class BWBFurnishingMassTestCase1(unittest.TestCase):
         assert_check_partials(partial_data, atol=8e-12, rtol=1e-12)
 
 
+@use_tempdirs
 class BWBFurnishingMassTestCase2(unittest.TestCase):
     """
     Created based on GASP BWB model
