@@ -129,7 +129,7 @@ class AviaryGroup(om.Group):
                 prom_name, abs_name = data
                 if prom_name.startswith('parameters:'):
                     # Parameters haven't been pully promoted out of traj at this point.
-                    prom_name = prom_name.lstrip('parameters:')
+                    prom_name = prom_name.removeprefix('parameters:')
                 meta = abs2meta[abs_name]
                 if meta.get('shape_by_conn') is True:
                     sbc_vars.add(prom_name)
