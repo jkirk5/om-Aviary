@@ -81,6 +81,10 @@ jobs:
 
       - name: Run tests
         shell: bash -l {0}
+        env:
+          # MPI settings for CI (all platforms)
+          PRTE_MCA_rmaps_default_mapping_policy: ":oversubscribe"
+          OMPI_MCA_rmaps_base_oversubscribe: "1"
         run: |
           eval "$(pixi shell-hook -e ${{ matrix.OPENMDAO_PIXI_ENVIRONMENT }} --manifest-path=${{ env.PIXI_MANIFEST }})"
           echo "============================================================="
