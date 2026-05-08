@@ -107,9 +107,7 @@ class TestShapebyConn(unittest.TestCase):
         # and static in others need to have their value set.
 
         class PostComponent(om.ExplicitComponent):
-
             def setup(self):
-
                 self.add_input(Aircraft.Design.DRAG_POLAR, shape_by_conn=True, units='unitless')
                 add_aviary_input(
                     self, Aircraft.Design.LIFT_POLAR, shape_by_conn=True, units='unitless'
@@ -118,14 +116,11 @@ class TestShapebyConn(unittest.TestCase):
                 self.add_output('z')
 
         class PostSystem(om.Group):
-
             def setup(self):
-
                 self.add_subsystem('c', PostComponent(), promotes=['*'])
 
 
         class PostBuilder(SubsystemBuilder):
-
             def build_post_mission(
                 self,
                 aviary_inputs=None,
