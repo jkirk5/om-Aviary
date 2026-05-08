@@ -119,7 +119,6 @@ class TestShapebyConn(unittest.TestCase):
             def setup(self):
                 self.add_subsystem('c', PostComponent(), promotes=['*'])
 
-
         class PostBuilder(SubsystemBuilder):
             def build_post_mission(
                 self,
@@ -129,7 +128,6 @@ class TestShapebyConn(unittest.TestCase):
                 phase_mission_bus_lengths=None,
             ):
                 return PostSystem()
-
 
         polar_file = 'models/large_single_aisle_1/aerodynamics_tables/large_single_aisle_1_aero_free_reduced_alpha.csv'
 
