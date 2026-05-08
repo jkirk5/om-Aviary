@@ -116,12 +116,12 @@ class AviaryGroup(om.Group):
         for sub in self.system_iter(recurse=False, typ=om.Group):
             pr2abs = sub._resolver.prom2abs_iter('input')
             if sub.pathname == 'traj':
-                sub_inputs = [
-                    (k, v[0]) for k, v in pr2abs if k.startswith('parameters:')
-                ]
+                sub_inputs = [(k, v[0]) for k, v in pr2abs if k.startswith('parameters:')]
             else:
                 sub_inputs = [
-                    (k, v[0]) for k, v in pr2abs if k.startswith('aircraft') or k.startswith('mission')
+                    (k, v[0])
+                    for k, v in pr2abs
+                    if k.startswith('aircraft') or k.startswith('mission')
                 ]
             abs2meta = sub._var_abs2meta['input']
 

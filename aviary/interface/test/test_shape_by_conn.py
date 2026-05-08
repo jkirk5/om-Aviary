@@ -111,7 +111,9 @@ class TestShapebyConn(unittest.TestCase):
             def setup(self):
 
                 self.add_input(Aircraft.Design.DRAG_POLAR, shape_by_conn=True, units='unitless')
-                add_aviary_input(self, Aircraft.Design.LIFT_POLAR, shape_by_conn=True, units='unitless')
+                add_aviary_input(
+                    self, Aircraft.Design.LIFT_POLAR, shape_by_conn=True, units='unitless'
+                )
 
                 self.add_output('z')
 
@@ -129,7 +131,7 @@ class TestShapebyConn(unittest.TestCase):
                 aviary_inputs=None,
                 mission_info=None,
                 subsystem_options=None,
-                phase_mission_bus_lengths=None
+                phase_mission_bus_lengths=None,
             ):
                 return PostSystem()
 
