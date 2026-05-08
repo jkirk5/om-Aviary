@@ -90,7 +90,7 @@ jobs:
           echo "============================================================="
           echo "Run Tests"
           echo "============================================================="
-          testflo . -n 1 --timeout=200 --show_skipped --coverage --coverpkg aviary
+          testflo . --timeout=200 --show_skipped --coverage --coverpkg aviary
 
       - name: Checkout actions (again)
         uses: actions/checkout@v6
