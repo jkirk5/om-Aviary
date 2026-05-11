@@ -1005,7 +1005,10 @@ class AeroGeom(om.ExplicitComponent):
         # Re correction factors: fuselage, wing, nacelle, vtail, htail, strut, tip tank
         # protect against Mach 0, any other small Mach should be ok
         dtype = complex if self.under_complex_step else float
-        ffre = fwre = fvtre = fhtre = fstrtre = np.ones(self.options['num_nodes'], dtype=dtype)
+
+        # create separate numpy arrays of len num_nodes for each variable
+        ffre, fwre, fvtre, fhtre, fstrtre = np.ones((5, self.options['num_nodes']), dtype=dtype)
+        # special case, fnre is vectorized across engine types
         fnre = np.ones((num_engine_type, self.options['num_nodes']), dtype=dtype)
         if self.under_complex_step:
             good_mask = reli.real > 1

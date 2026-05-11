@@ -787,9 +787,9 @@ class AeroGeomTest(unittest.TestCase):
         assert_near_equal(prob['SA2'], [-0.13650645, -0.13650645], tol)
         assert_near_equal(prob['SA3'], [0.03398855, 0.03398855], tol)
         assert_near_equal(prob['SA4'], [0.10197432, 0.10197432], tol)
-        assert_near_equal(prob['SA5'], [0.02668924, 0.02668924], tol)
-        assert_near_equal(prob['SA6'], [6.81359097, 6.81359097], tol)
-        assert_near_equal(prob['SA7'], [0.05376603, 0.05376603], tol)
+        assert_near_equal(prob['SA5'], [0.00941526, 0.00941526], tol)
+        assert_near_equal(prob['SA6'], [2.09276756, 2.09276756], tol)
+        assert_near_equal(prob['SA7'], [0.04041756, 0.04041756], tol)
 
 
 @use_tempdirs
@@ -1932,5 +1932,6 @@ class BWBLowSpeedAeroTest3(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-    # test = AeroGeomTest()
-    # test.test_case_multiengine()
+    test = AeroGeomTest()
+    # test.test_case1()
+    test.test_case_multiengine()
