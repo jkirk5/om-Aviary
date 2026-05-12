@@ -454,7 +454,10 @@ def preprocess_crewpayload(aviary_options: AviaryValues, meta_data=CoreMetaData,
 
         # check cabin crew against flight attendants & galley crew
         if Aircraft.CrewPayload.NUM_CABIN_CREW in aviary_options:
-            cabin_crew_calc = flight_crew_count + galley_crew_count
+            flight_attendants_count = aviary_options.get_val(
+                Aircraft.CrewPayload.NUM_FLIGHT_ATTENDANTS
+            )
+            cabin_crew_calc = flight_attendants_count + galley_crew_count
             cabin_crew_provided = aviary_options.get_val(Aircraft.CrewPayload.NUM_CABIN_CREW)
             if cabin_crew_calc != cabin_crew_provided:
                 warnings.warn(
