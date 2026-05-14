@@ -11,9 +11,7 @@ class TakeoffPhaseTest(unittest.TestCase):
     """Test takeoff phase builder."""
 
     def test_case1(self):
-        takeoff_options = Takeoff(
-            airport_altitude=0,  # ft
-        )
+        takeoff_options = Takeoff(airport_altitude=0)  # ft
 
         use_detailed = False
         takeoff = takeoff_options.build_phase(use_detailed=use_detailed)
