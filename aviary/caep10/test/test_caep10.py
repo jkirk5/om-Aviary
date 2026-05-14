@@ -5,32 +5,15 @@ import openmdao.api as om
 from openmdao.utils.assert_utils import assert_near_equal
 
 from aviary.caep10.caep10_group import CAEP10EmissionsGroup
-from aviary.caep10.co2_evaluation import CO2EmissionsMetric
-from aviary.caep10.mass_points import mass_points_calc
-from aviary.caep10.reference_geometry_factor import ReferenceGeometryFactor
-from aviary.caep10.specific_air_range import SpecificAirRangeGroup
 from aviary.core.aviary_problem import AviaryProblem
-from aviary.mission.energy_state.ode.energy_state_ODE import EnergyStateODE
-from aviary.subsystems.test.subsystem_tester import TestSubsystemBuilder
-from aviary.utils.aviary_values import AviaryValues
 from aviary.utils.named_values import NamedValues
 from aviary.validation_cases.validation_tests import get_flops_inputs, get_flops_outputs
 from aviary.variable_info.functions import setup_model_options
-from aviary.variable_info.variables import Aircraft, Dynamic
+from aviary.variable_info.variables import Dynamic
 
 
 class TestCAEP10Group(unittest.TestCase):
     def test_emissions_group_HE(self):
-        inputs = NamedValues(
-            {
-                Dynamic.Mission.ALTITUDE_RATE: (np.array([0, 0, 0]), 'm/s'),
-                Dynamic.Mission.VELOCITY_RATE: (np.array([0, 0, 0]), 'm/s**2'),
-                Dynamic.Atmosphere.MACH_RATE: (np.array([0, 0, 0]), '1/s'),
-                Dynamic.Atmosphere.MACH: (np.array([0.82, 0.82, 0.82]), 'unitless'),
-                Dynamic.Mission.ALTITUDE: (np.array([9144, 9144, 9144]), 'm'),  # 9144m = 30000ft
-            }
-        )
-
         # dummy AviaryProblem just to shortcut building subsystems with correct options
         av_prob = AviaryProblem()
         av_prob.load_inputs('advanced_single_aisle_FLOPS')
@@ -55,11 +38,11 @@ class TestCAEP10Group(unittest.TestCase):
 
         prob.setup()
 
-        prob.set_val(Dynamic.Atmosphere.MACH, [0.82, 0.82, 0.82])
-        prob.set_val(Dynamic.Mission.ALTITUDE, [9144, 9144, 9144], units='m')
-        prob.set_val(Dynamic.Mission.ALTITUDE_RATE, [0, 0, 0], 'm/s')
+        # prob.set_val(Dynamic.Atmosphere.MACH, [0.82, 0.82, 0.82])
+        # prob.set_val(Dynamic.Mission.ALTITUDE, [9144, 9144, 9144], units='m')
+        # prob.set_val(Dynamic.Mission.ALTITUDE_RATE, [0, 0, 0], 'm/s')
         # prob.set_val(Dynamic.Mission.VELOCITY_RATE, [0, 0, 0], 'm/s**2')
-        prob.set_val(Dynamic.Atmosphere.MACH_RATE, [0, 0, 0], '1/s')
+        # prob.set_val(Dynamic.Atmosphere.MACH_RATE, [0, 0, 0], '1/s')
 
         for input, (val, units) in flops_inputs:
             try:
