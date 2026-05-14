@@ -63,7 +63,7 @@ def preprocess_options(
                 if verbosity >= Verbosity.BRIEF:
                     warnings.warn(
                         'Assume Aircraft.Wing.ASPECT_RATIO_REFERENCE is the same '
-                        'as Aircraft.Wing.ASPECT_RATIO.'
+                        f'as Aircraft.Wing.ASPECT_RATIO {ar}.'
                     )
 
     # TODO also move zero value behavior to fortran_to_aviary and rewrite this case to cover when variable is not provided
@@ -76,7 +76,7 @@ def preprocess_options(
                 if verbosity >= Verbosity.BRIEF:
                     warnings.warn(
                         'Assume Aircraft.Wing.THICKNESS_TO_CHORD_REFERENCE is the same '
-                        'as Aircraft.Wing.THICKNESS_TO_CHORD.'
+                        f'as Aircraft.Wing.THICKNESS_TO_CHORD {tc}.'
                     )
 
 
@@ -198,16 +198,16 @@ def preprocess_crewpayload(aviary_options: AviaryValues, meta_data=CoreMetaData,
             if verbosity >= 1:
                 warnings.warn(
                     'Information on seat class distribution for aircraft design was '
-                    'not provided - assuming that all passengers are economy class.'
+                    f'not provided - assuming that all passengers {design_pax} are economy class.'
                 )
             aviary_options.set_val(Aircraft.CrewPayload.Design.NUM_ECONOMY_CLASS, design_pax)
         else:
             if verbosity >= 1:
                 warnings.warn(
-                    'Sum of all passenger classes does not equal total number of '
-                    'passengers provided for aircraft design. Overriding '
+                    f'Sum of all passenger classes {design_sum} does not equal total number of '
+                    f'passengers provided for aircraft design {design_pax}. Overriding '
                     'Aircraft.CrewPayload.Design.NUM_PASSENGERS with the sum of '
-                    'passenger classes for design.'
+                    f'passenger classes for design {design_sum}.'
                 )
             aviary_options.set_val(Aircraft.CrewPayload.Design.NUM_PASSENGERS, design_sum)
 
@@ -218,16 +218,16 @@ def preprocess_crewpayload(aviary_options: AviaryValues, meta_data=CoreMetaData,
             if verbosity >= 1:
                 warnings.warn(
                     'Information on seat class distribution for current mission was '
-                    'not provided - assuming that all passengers are economy class.'
+                    f'not provided - assuming that all passengers {mission_pax} are economy class.'
                 )
             aviary_options.set_val(Aircraft.CrewPayload.NUM_ECONOMY_CLASS, mission_pax)
         else:
             if verbosity >= 1:
                 warnings.warn(
-                    'Sum of all passenger classes does not equal total number of '
-                    'passengers provided for current mission. Overriding '
+                    f'Sum of all passenger classes {mission_sum} does not equal total number of '
+                    f'passengers provided for current mission {mission_pax}. Overriding '
                     'Aircraft.CrewPayload.NUM_PASSENGERS with the sum of '
-                    'passenger classes for the flown mission.'
+                    f'passenger classes for the flown mission {mission_sum}.'
                 )
             aviary_options.set_val(Aircraft.CrewPayload.NUM_PASSENGERS, mission_sum)
 
@@ -245,35 +245,35 @@ def preprocess_crewpayload(aviary_options: AviaryValues, meta_data=CoreMetaData,
 
     if mass_method == LegacyCode.FLOPS:
         # First Class
-        if aviary_options.get_val(
-            Aircraft.CrewPayload.Design.NUM_FIRST_CLASS
-        ) < aviary_options.get_val(Aircraft.CrewPayload.NUM_FIRST_CLASS):
+        des_num_first = aviary_options.get_val(Aircraft.CrewPayload.Design.NUM_FIRST_CLASS)
+        num_first = aviary_options.get_val(Aircraft.CrewPayload.NUM_FIRST_CLASS)
+        if num_first > des_num_first:
             if verbosity >= 1:
                 warnings.warn(
-                    'More first class passengers are flying in this mission than there are '
-                    'available first class seats on the aircraft. Assuming these passengers '
+                    f'More first class passengers {num_first} are flying in this mission than there are '
+                    f'available first class seats on the aircraft {des_num_first}. Assuming these passengers '
                     'have the same mass as other first class passengers, but are sitting in '
                     'different seats.'
                 )
         # Business Class
-        if aviary_options.get_val(
-            Aircraft.CrewPayload.Design.NUM_BUSINESS_CLASS
-        ) < aviary_options.get_val(Aircraft.CrewPayload.NUM_BUSINESS_CLASS):
+        des_num_business = aviary_options.get_val(Aircraft.CrewPayload.Design.NUM_BUSINESS_CLASS)
+        num_business = aviary_options.get_val(Aircraft.CrewPayload.NUM_BUSINESS_CLASS)
+        if num_business > des_num_business:
             if verbosity >= 1:
                 warnings.warn(
-                    'More business class passengers are flying in this mission than there are '
-                    'available business class seats on the aircraft. Assuming these passengers '
+                    f'More business class passengers {num_business} are flying in this mission than there are '
+                    f'available business class seats on the aircraft {des_num_business}. Assuming these passengers '
                     'have the same mass as other business class passengers, but are sitting in '
                     'different seats.'
                 )
         # Economy Class
-        if aviary_options.get_val(
-            Aircraft.CrewPayload.Design.NUM_ECONOMY_CLASS
-        ) < aviary_options.get_val(Aircraft.CrewPayload.NUM_ECONOMY_CLASS):
+        des_num_econ = aviary_options.get_val(Aircraft.CrewPayload.Design.NUM_ECONOMY_CLASS)
+        num_econ = aviary_options.get_val(Aircraft.CrewPayload.NUM_ECONOMY_CLASS)
+        if num_econ > des_num_econ:
             if verbosity >= 1:
                 warnings.warn(
-                    'More economy class passengers are flying in this mission than there are '
-                    'available economy class seats on the aircraft. Assuming these passengers '
+                    f'More economy class passengers {num_econ} are flying in this mission than there are '
+                    f'available economy class seats on the aircraft {des_num_econ}. Assuming these passengers '
                     'have the same mass as other economy class passengers, but are sitting in '
                     'different seats.'
                 )
