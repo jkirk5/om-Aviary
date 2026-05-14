@@ -63,7 +63,7 @@ class Takeoff:
         # Add Inputs #
         ##############
 
-        takeoff = TakeoffGroup(num_engines=self.num_engines)
+        takeoff = TakeoffGroup()
         takeoff.set_input_defaults(Dynamic.Mission.ALTITUDE, val=self.airport_altitude, units='ft')
 
         return takeoff
