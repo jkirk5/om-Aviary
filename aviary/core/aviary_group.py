@@ -443,7 +443,6 @@ class AviaryGroup(om.Group):
         # TODO this seems like the wrong place to define the core subsystems. Maybe move to
         # load_inputs?
         ## Set Up Core Subsystems ##
-        perf = CorePerformanceBuilder('performance')
         prop = CorePropulsionBuilder('propulsion', engine_models=self.engine_models)
         mass = CoreMassBuilder('mass', code_origin=self.mass_method)
 
@@ -483,8 +482,13 @@ class AviaryGroup(om.Group):
             code_origin_to_prioritize=code_origin_to_prioritize,
         )
 
-        subsystems = self.subsystems = [prop, geom, mass, aero, perf]
+        subsystems = self.subsystems = [prop, geom, mass, aero]
         subsystems.extend(self.external_subsystems)
+
+        # Performance is a special case which needs access to all other subsystems (to evaluate
+        # "mission" performance at target conditions)
+        perf = CorePerformanceBuilder('performance', subsystems=subsystems)
+        self.subsystems.append(perf)
 
         self.ode_args = {
             'aviary_options': aviary_inputs,
