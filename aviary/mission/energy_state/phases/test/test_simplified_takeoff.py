@@ -83,7 +83,7 @@ class FinalConditionsTest(unittest.TestCase):
 
     def setUp(self):
         self.prob = om.Problem()
-        self.prob.model.add_subsystem('comp', FinalTakeoffConditions(num_engines=2), promotes=['*'])
+        self.prob.model.add_subsystem('comp', FinalTakeoffConditions(), promotes=['*'])
 
         self.prob.model.set_input_defaults('v_stall', val=100, units='m/s')  # not actual value
         self.prob.model.set_input_defaults('mass', val=181200.0, units='lbm')  # check
@@ -98,7 +98,7 @@ class FinalConditionsTest(unittest.TestCase):
             Mission.Takeoff.LIFT_COEFFICIENT_MAX, val=2.0000, units='unitless'
         )  # check
         self.prob.model.set_input_defaults(
-            Aircraft.Propulsion.TOTAL_SCALED_SLS_THRUST, val=28928.0, units='lbf'
+            Aircraft.Propulsion.TOTAL_SCALED_SLS_THRUST, val=28928.0 * 2, units='lbf'
         )  # check
         self.prob.model.set_input_defaults(
             Mission.Takeoff.LIFT_OVER_DRAG, val=17.354, units='unitless'
@@ -140,7 +140,7 @@ class FinalConditionsTest2(unittest.TestCase):
 
     def test_case1(self):
         prob = om.Problem()
-        prob.model.add_subsystem('comp', FinalTakeoffConditions(num_engines=2), promotes=['*'])
+        prob.model.add_subsystem('comp', FinalTakeoffConditions(), promotes=['*'])
         # default value v_stall = 0.1 will worsen the output
         prob.model.set_input_defaults('v_stall', val=100, units='m/s')
         # default value GROSS_MASS = 150000 will worsen the output
@@ -156,7 +156,7 @@ class TakeoffGroupTest(unittest.TestCase):
 
     def setUp(self):
         self.prob = om.Problem()
-        self.prob.model.add_subsystem('group_example', TakeoffGroup(num_engines=2), promotes=['*'])
+        self.prob.model.add_subsystem('group_example', TakeoffGroup(), promotes=['*'])
 
         self.prob.model.set_input_defaults(Mission.GROSS_MASS, val=181200.0, units='lbm')  # check
         self.prob.model.set_input_defaults(Mission.Takeoff.FUEL, val=577, units='lbm')  # check
@@ -165,7 +165,7 @@ class TakeoffGroupTest(unittest.TestCase):
             Mission.Takeoff.LIFT_COEFFICIENT_MAX, val=2.0000, units='unitless'
         )  # check
         self.prob.model.set_input_defaults(
-            Aircraft.Propulsion.TOTAL_SCALED_SLS_THRUST, val=28928.0, units='lbf'
+            Aircraft.Propulsion.TOTAL_SCALED_SLS_THRUST, val=28928.0 * 2, units='lbf'
         )  # check
         self.prob.model.set_input_defaults(
             Mission.Takeoff.LIFT_OVER_DRAG, val=17.354, units='unitless'
