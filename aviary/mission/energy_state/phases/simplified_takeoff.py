@@ -1,5 +1,4 @@
 import openmdao.api as om
-import numpy as np
 
 from aviary.constants import GRAV_ENGLISH_LBM, RHO_SEA_LEVEL_METRIC
 from aviary.subsystems.atmosphere.atmosphere import Atmosphere
@@ -338,16 +337,6 @@ class TakeoffGroup(om.Group):
                 ('Cl_max', Mission.Takeoff.LIFT_COEFFICIENT_MAX),
             ],
         )
-
-        # self.add_subsystem(
-        #     'L_over_D',
-        #     TakeoffLoverD(),
-        #     promotes_inputs=[
-        #         Aircraft.Wing.ASPECT_RATIO,
-        #         Mission.Takeoff.LIFT_COEFFICIENT_MAX,
-        #     ],
-        #     promotes_outputs=[Mission.Takeoff.LIFT_OVER_DRAG],
-        # )
 
         self.add_subsystem(
             'final_conditions',

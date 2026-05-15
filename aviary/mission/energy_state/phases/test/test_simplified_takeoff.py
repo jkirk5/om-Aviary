@@ -175,7 +175,7 @@ class TakeoffGroupTest(unittest.TestCase):
             Mission.Takeoff.CLIMBOUT_THRUST_FRACTION, val=1, units='unitless'
         )
         self.prob.model.set_input_defaults(
-            Mission.Takeoff.LIFT_OVER_DRAG, val=11.214129201, units='unitless'
+            Mission.Takeoff.LIFT_OVER_DRAG, val=17.354, units='unitless'
         )
         self.prob.model.set_input_defaults(Dynamic.Mission.ALTITUDE, val=0, units='ft')  # check
 
@@ -187,9 +187,8 @@ class TakeoffGroupTest(unittest.TestCase):
         tol = 1e-5
         assert_near_equal(self.prob['end_of_taxi_mass'], 181199, tol)
         assert_near_equal(self.prob['v_stall'], 71.90002053, tol)
-        # assert_near_equal(self.prob[Mission.Takeoff.LIFT_OVER_DRAG], 11.214129201, tol)
         assert_near_equal(
-            self.prob[Mission.Takeoff.GROUND_DISTANCE], 7189.68407525, tol
+            self.prob[Mission.Takeoff.GROUND_DISTANCE], 6637.65645404, tol
         )  # ft (not actual value)
         assert_near_equal(
             self.prob[Mission.Takeoff.FINAL_VELOCITY], 88.50175527, tol
