@@ -788,7 +788,7 @@ add_meta_data(
     historical_name={
         'GASP': None,
         'FLOPS': None,  # This is NCABCR internal to FLOPS.
-        },
+    },
     units='unitless',
     desc='Total number of cabin crew. In FLOPS this includes galley and flight attendants',
     types=int,
