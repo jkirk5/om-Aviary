@@ -137,6 +137,7 @@ class FinalTakeoffConditions(om.ExplicitComponent):
                 Aircraft.Wing.AREA,
                 Mission.Takeoff.LIFT_COEFFICIENT_MAX,
                 Aircraft.Propulsion.TOTAL_SCALED_SLS_THRUST,
+                Mission.Takeoff.CLIMBOUT_THRUST_FRACTION,
                 Mission.Takeoff.LIFT_OVER_DRAG,
             ],
         )
@@ -161,8 +162,8 @@ class FinalTakeoffConditions(om.ExplicitComponent):
         S = inputs[Aircraft.Wing.AREA]
         Cl_max = inputs[Mission.Takeoff.LIFT_COEFFICIENT_MAX]
         thrust = inputs[Aircraft.Propulsion.TOTAL_SCALED_SLS_THRUST]
-        L_over_D = inputs[Mission.Takeoff.LIFT_OVER_DRAG]
         climbout_thrust = thrust * inputs[Mission.Takeoff.CLIMBOUT_THRUST_FRACTION]
+        L_over_D = inputs[Mission.Takeoff.LIFT_OVER_DRAG]
         rho_ratio = rho / rho_SL
 
         # note: this is different from the paper, not entirely clear why other than rho
@@ -203,12 +204,14 @@ class FinalTakeoffConditions(om.ExplicitComponent):
         S = inputs[Aircraft.Wing.AREA]
         Cl_max = inputs[Mission.Takeoff.LIFT_COEFFICIENT_MAX]
         thrust = inputs[Aircraft.Propulsion.TOTAL_SCALED_SLS_THRUST]
+        thrust_fraction = inputs[Mission.Takeoff.CLIMBOUT_THRUST_FRACTION]
+        climbout_thrust = thrust * thrust_fraction
         L_over_D = inputs[Mission.Takeoff.LIFT_OVER_DRAG]
         rho_ratio = rho / rho_SL
 
         den_RD = S * Cl_max * (thrust / ramp_weight - (0.20 + 0.00550 * ramp_weight / S) / L_over_D)
         rad_Rot = ramp_weight / (S * Cl_max * rho_ratio)
-        den_Cout = 1.0 + thrust / ramp_weight - 0.90 / L_over_D
+        den_Cout = 1.0 + climbout_thrust / ramp_weight - 0.90 / L_over_D
 
         S * Cl_max * (thrust / ramp_weight - (0.20 + 0.00550 * ramp_weight / S) / L_over_D)
         S * Cl_max * (-thrust / ramp_weight**2 - (0.00550 / S) / L_over_D)
@@ -267,11 +270,14 @@ class FinalTakeoffConditions(om.ExplicitComponent):
 
         dCout_dM = (
             140 * 0.5 * (ramp_weight / S) ** (-0.5) / S / den_Cout
-            - 140 * (ramp_weight / S) ** 0.5 / (den_Cout) ** 2 * (-thrust / ramp_weight**2)
+            - 140 * (ramp_weight / S) ** 0.5 / (den_Cout) ** 2 * (-climbout_thrust / ramp_weight**2)
         ) * GRAV_ENGLISH_LBM
         dCout_dS = 140 * 0.5 * (ramp_weight / S) ** (-0.5) * (-ramp_weight) / S**2 / den_Cout
         dCout_dClMax = 0
-        dCout_dThrust = -140 * (ramp_weight / S) ** 0.5 / den_Cout**2 / ramp_weight
+        dCout_dThrust = (
+            -140 * (ramp_weight / S) ** 0.5 / den_Cout**2 * (thrust_fraction / ramp_weight)
+        )
+        dCout_dThrustFrac = -140.0 * (ramp_weight / S) ** 0.5 / den_Cout**2 * (thrust / ramp_weight)
         dCout_dLoD = -140 * (ramp_weight / S) ** 0.5 / den_Cout**2 * 0.9 / L_over_D**2
         dCout_dRho = 0
 
@@ -285,6 +291,9 @@ class FinalTakeoffConditions(om.ExplicitComponent):
         )
         J[Mission.Takeoff.GROUND_DISTANCE, Aircraft.Propulsion.TOTAL_SCALED_SLS_THRUST] = (
             dRD_dThrust + dRot_dThrust + dCout_dThrust
+        )
+        J[Mission.Takeoff.GROUND_DISTANCE, Mission.Takeoff.CLIMBOUT_THRUST_FRACTION] = (
+            0 + 0 + dCout_dThrustFrac
         )
         J[Mission.Takeoff.GROUND_DISTANCE, Mission.Takeoff.LIFT_OVER_DRAG] = (
             dRD_dLoD + dRot_dLoD + dCout_dLoD
@@ -340,6 +349,7 @@ class TakeoffGroup(om.Group):
                 Mission.Takeoff.FUEL,
                 Mission.Takeoff.LIFT_COEFFICIENT_MAX,
                 Aircraft.Propulsion.TOTAL_SCALED_SLS_THRUST,
+                Mission.Takeoff.CLIMBOUT_THRUST_FRACTION,
                 Mission.Takeoff.LIFT_OVER_DRAG,
             ],
             promotes_outputs=[

@@ -101,6 +101,9 @@ class FinalConditionsTest(unittest.TestCase):
             Aircraft.Propulsion.TOTAL_SCALED_SLS_THRUST, val=28928.0 * 2, units='lbf'
         )  # check
         self.prob.model.set_input_defaults(
+            Mission.Takeoff.CLIMBOUT_THRUST_FRACTION, val=1, units='unitless'
+        )
+        self.prob.model.set_input_defaults(
             Mission.Takeoff.LIFT_OVER_DRAG, val=17.354, units='unitless'
         )  # check
 
