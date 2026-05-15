@@ -78,32 +78,6 @@ class StallSpeedTest2(unittest.TestCase):
         assert_check_partials(partial_data, atol=1e-12, rtol=1e-12)
 
 
-# class LoverDTest(unittest.TestCase):
-#     "Test L_over_D computation in TakeoffLoverD class"
-
-#     def setUp(self):
-#         self.prob = om.Problem()
-
-#         self.prob.model.add_subsystem('comp', TakeoffLoverD(), promotes=['*'])
-
-#         self.prob.model.set_input_defaults(Aircraft.Wing.ASPECT_RATIO, val=9, units='unitless')
-#         self.prob.model.set_input_defaults(
-#             Mission.Takeoff.LIFT_COEFFICIENT_MAX, val=2, units='unitless'
-#         )
-
-#         self.prob.setup(check=False, force_alloc_complex=True)
-
-#     def test_case1(self):
-#         self.prob.run_model()
-
-#         tol = 1e-5
-
-#         assert_near_equal(self.prob[Mission.Takeoff.LIFT_OVER_DRAG], 11.214129201, tol)
-
-#         partial_data = self.prob.check_partials(out_stream=None, method='cs')
-#         assert_check_partials(partial_data, atol=1e-12, rtol=1e-12)
-
-
 class FinalConditionsTest(unittest.TestCase):
     """Test final conditions computation in FinalTakeoffConditions class."""
 
