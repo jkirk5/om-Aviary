@@ -162,7 +162,7 @@ class FinalTakeoffConditions(om.ExplicitComponent):
         Cl_max = inputs[Mission.Takeoff.LIFT_COEFFICIENT_MAX]
         thrust = inputs[Aircraft.Propulsion.TOTAL_SCALED_SLS_THRUST]
         L_over_D = inputs[Mission.Takeoff.LIFT_OVER_DRAG]
-        climbout_thrust = thrust * inputs[Mission.Takeoff.CLIMBEOUT_THRUST_FRACTION]
+        climbout_thrust = thrust * inputs[Mission.Takeoff.CLIMBOUT_THRUST_FRACTION]
         rho_ratio = rho / rho_SL
 
         # note: this is different from the paper, not entirely clear why other than rho
