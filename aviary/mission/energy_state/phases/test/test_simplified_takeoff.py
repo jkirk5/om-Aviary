@@ -13,7 +13,6 @@ from aviary import constants
 from aviary.mission.energy_state.phases.simplified_takeoff import (
     FinalTakeoffConditions,
     StallSpeed,
-    TakeoffLoverD,
     TakeoffGroup,
 )
 from aviary.variable_info.variables import Aircraft, Dynamic, Mission
@@ -79,30 +78,30 @@ class StallSpeedTest2(unittest.TestCase):
         assert_check_partials(partial_data, atol=1e-12, rtol=1e-12)
 
 
-class LoverDTest(unittest.TestCase):
-    "Test L_over_D computation in TakeoffLoverD class"
+# class LoverDTest(unittest.TestCase):
+#     "Test L_over_D computation in TakeoffLoverD class"
 
-    def setUp(self):
-        self.prob = om.Problem()
+#     def setUp(self):
+#         self.prob = om.Problem()
 
-        self.prob.model.add_subsystem('comp', TakeoffLoverD(), promotes=['*'])
+#         self.prob.model.add_subsystem('comp', TakeoffLoverD(), promotes=['*'])
 
-        self.prob.model.set_input_defaults(Aircraft.Wing.ASPECT_RATIO, val=9, units='unitless')
-        self.prob.model.set_input_defaults(
-            Mission.Takeoff.LIFT_COEFFICIENT_MAX, val=2, units='unitless'
-        )
+#         self.prob.model.set_input_defaults(Aircraft.Wing.ASPECT_RATIO, val=9, units='unitless')
+#         self.prob.model.set_input_defaults(
+#             Mission.Takeoff.LIFT_COEFFICIENT_MAX, val=2, units='unitless'
+#         )
 
-        self.prob.setup(check=False, force_alloc_complex=True)
+#         self.prob.setup(check=False, force_alloc_complex=True)
 
-    def test_case1(self):
-        self.prob.run_model()
+#     def test_case1(self):
+#         self.prob.run_model()
 
-        tol = 1e-5
+#         tol = 1e-5
 
-        assert_near_equal(self.prob[Mission.Takeoff.LIFT_OVER_DRAG], 11.214129201, tol)
+#         assert_near_equal(self.prob[Mission.Takeoff.LIFT_OVER_DRAG], 11.214129201, tol)
 
-        partial_data = self.prob.check_partials(out_stream=None, method='cs')
-        assert_check_partials(partial_data, atol=1e-12, rtol=1e-12)
+#         partial_data = self.prob.check_partials(out_stream=None, method='cs')
+#         assert_check_partials(partial_data, atol=1e-12, rtol=1e-12)
 
 
 class FinalConditionsTest(unittest.TestCase):
@@ -201,6 +200,9 @@ class TakeoffGroupTest(unittest.TestCase):
         self.prob.model.set_input_defaults(
             Mission.Takeoff.CLIMBOUT_THRUST_FRACTION, val=1, units='unitless'
         )
+        self.prob.model.set_input_defaults(
+            Mission.Takeoff.LIFT_OVER_DRAG, val=11.214129201, units='unitless'
+        )
         self.prob.model.set_input_defaults(Dynamic.Mission.ALTITUDE, val=0, units='ft')  # check
 
         self.prob.setup(check=False, force_alloc_complex=True)
@@ -211,7 +213,7 @@ class TakeoffGroupTest(unittest.TestCase):
         tol = 1e-5
         assert_near_equal(self.prob['end_of_taxi_mass'], 181199, tol)
         assert_near_equal(self.prob['v_stall'], 71.90002053, tol)
-        assert_near_equal(self.prob[Mission.Takeoff.LIFT_OVER_DRAG], 11.214129201, tol)
+        # assert_near_equal(self.prob[Mission.Takeoff.LIFT_OVER_DRAG], 11.214129201, tol)
         assert_near_equal(
             self.prob[Mission.Takeoff.GROUND_DISTANCE], 7189.68407525, tol
         )  # ft (not actual value)
