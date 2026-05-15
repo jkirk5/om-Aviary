@@ -1,4 +1,5 @@
 import openmdao.api as om
+import numpy as np
 
 from aviary.constants import GRAV_ENGLISH_LBM, RHO_SEA_LEVEL_METRIC
 from aviary.subsystems.atmosphere.atmosphere import Atmosphere
@@ -80,6 +81,58 @@ class StallSpeed(om.ExplicitComponent):
         J['v_stall', 'Cl_max'] = (
             0.5 * 4.44822**0.5 * rad ** (-0.5) * (-2 * weight) / (rho * S * Cl_max**2)
         )
+
+
+class TakeoffLoverD(om.ExplicitComponent):
+    """
+    Estimates the Takeoff Lift over Drag ratio.
+    """
+
+    def setup(self):
+        add_aviary_input(self, Aircraft.Wing.ASPECT_RATIO, val=9)
+        add_aviary_input(self, Mission.Takeoff.LIFT_COEFFICIENT_MAX, val=2)
+
+        add_aviary_output(self, Mission.Takeoff.LIFT_OVER_DRAG, val=13)
+
+    def setup_partials(self):
+        self.declare_partials(Mission.Takeoff.LIFT_OVER_DRAG, Aircraft.Wing.ASPECT_RATIO)
+        self.declare_partials(Mission.Takeoff.LIFT_OVER_DRAG, Mission.Takeoff.LIFT_COEFFICIENT_MAX)
+
+    def compute(self, inputs, outputs):
+        AR = inputs[Aircraft.Wing.ASPECT_RATIO]
+        CL_Max = inputs[Mission.Takeoff.LIFT_COEFFICIENT_MAX]
+
+        CL = 0.66 * CL_Max
+        CD = 0.015 + CL**2 / (0.6 * np.pi * AR)
+        L_over_D = CL / CD
+
+        outputs[Mission.Takeoff.LIFT_OVER_DRAG] = L_over_D
+
+    def compute_partials(self, inputs, J):
+        # Extract inputs
+        AR = inputs[Aircraft.Wing.ASPECT_RATIO]
+        CL_Max = inputs[Mission.Takeoff.LIFT_COEFFICIENT_MAX]
+
+        CL = 0.66 * CL_Max
+        CD = 0.015 + CL**2 / (0.6 * np.pi * AR)
+
+        dCL_dCLMax = 0.66
+
+        dCD_dCL = (2 * CL) / (0.6 * np.pi * AR)
+        dCD_dAR = -(CL**2) / (0.6 * np.pi * AR**2)
+
+        dLoverD_dCL = 1.0 / CD
+        dLoverD_dCD = -CL / (CD**2)
+
+        # Chain rule for L_over_D wrt AR
+        dLoverD_dAR = dLoverD_dCD * dCD_dAR
+
+        # Chain rule for L_over_D wrt CL_Max
+        dLoverD_dCLMax = (dLoverD_dCL + dLoverD_dCD * dCD_dCL) * dCL_dCLMax
+
+        # Assign to Jacobian
+        J[Mission.Takeoff.LIFT_OVER_DRAG, Aircraft.Wing.ASPECT_RATIO] = dLoverD_dAR
+        J[Mission.Takeoff.LIFT_OVER_DRAG, Mission.Takeoff.LIFT_COEFFICIENT_MAX] = dLoverD_dCLMax
 
 
 class FinalTakeoffConditions(om.ExplicitComponent):
@@ -336,6 +389,16 @@ class TakeoffGroup(om.Group):
                 ('planform_area', Aircraft.Wing.AREA),
                 ('Cl_max', Mission.Takeoff.LIFT_COEFFICIENT_MAX),
             ],
+        )
+
+        self.add_subsystem(
+            'L_over_D',
+            TakeoffLoverD(),
+            promotes_inputs=[
+                Aircraft.Wing.ASPECT_RATIO,
+                Mission.Takeoff.LIFT_COEFFICIENT_MAX,
+            ],
+            promotes_outputs=[Mission.Takeoff.LIFT_OVER_DRAG],
         )
 
         self.add_subsystem(
