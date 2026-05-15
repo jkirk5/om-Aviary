@@ -1687,20 +1687,6 @@ add_meta_data(
 )
 
 add_meta_data(
-    Aircraft.Design.THRUST_TAKEOFF_PER_ENG,
-    meta_data=_MetaData,
-    historical_name={
-        'GASP': None,
-        'FLOPS': 'AERIN.THROFF',
-        # LEAPS1 used the average thrust_takeoff of all operational engines
-        # actually on the airplane, possibly after resizing (as with FLOPS)
-    },
-    units='lbf',
-    desc='Thrust per engine, used for energy state simple takeoff calculation',
-    default_value=0.0,
-)
-
-add_meta_data(
     Aircraft.Design.THRUST_TO_WEIGHT_RATIO,
     meta_data=_MetaData,
     historical_name={
