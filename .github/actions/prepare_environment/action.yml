@@ -156,5 +156,4 @@ runs:
       shell: bash -l {0}
       run: |
         eval "$(pixi shell-hook -e ${{ inputs.OPENMDAO_PIXI_ENVIRONMENT }} --manifest-path=${{ env.PIXI_MANIFEST }})"
-        pixi info
         pixi list
