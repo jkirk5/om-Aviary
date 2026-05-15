@@ -729,6 +729,7 @@ class Mission:
         ASCENT_DURATION = 'mission:takeoff:ascent_duration'
         ASCENT_T_INITIAL = 'mission:takeoff:ascent_t_initial'
         BRAKING_FRICTION_COEFFICIENT = 'mission:takeoff:braking_friction_coefficient'
+        CLIMBOUT_THRUST_FRACTION = 'mission:takeoff:climbout_thrust_fraction'
         DECISION_SPEED_INCREMENT = 'mission:takeoff:decision_speed_increment'
         DRAG_COEFFICIENT_FLAP_INCREMENT = 'mission:takeoff:drag_coefficient_flap_increment'
         DRAG_COEFFICIENT_MIN = 'mission:takeoff:drag_coefficient_min'

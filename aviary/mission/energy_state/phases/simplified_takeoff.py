@@ -116,6 +116,7 @@ class FinalTakeoffConditions(om.ExplicitComponent):
         add_aviary_input(self, Mission.Takeoff.LIFT_COEFFICIENT_MAX, val=2)
         add_aviary_input(self, Aircraft.Propulsion.TOTAL_SCALED_SLS_THRUST, val=100_000)
         add_aviary_input(self, Mission.Takeoff.LIFT_OVER_DRAG, val=2)
+        add_aviary_input(self, Mission.Takeoff.CLIMBOUT_THRUST_FRACTION, val=1)
 
         add_aviary_output(self, Mission.Takeoff.GROUND_DISTANCE, val=0)
         add_aviary_output(self, Mission.Takeoff.FINAL_VELOCITY, val=0, units='m/s')
@@ -161,6 +162,7 @@ class FinalTakeoffConditions(om.ExplicitComponent):
         Cl_max = inputs[Mission.Takeoff.LIFT_COEFFICIENT_MAX]
         thrust = inputs[Aircraft.Propulsion.TOTAL_SCALED_SLS_THRUST]
         L_over_D = inputs[Mission.Takeoff.LIFT_OVER_DRAG]
+        climbout_thrust = thrust * inputs[Mission.Takeoff.CLIMBEOUT_THRUST_FRACTION]
         rho_ratio = rho / rho_SL
 
         # note: this is different from the paper, not entirely clear why other than rho
@@ -173,10 +175,13 @@ class FinalTakeoffConditions(om.ExplicitComponent):
 
         rotation_distance = 140.0 * (ramp_weight / (S * Cl_max * rho_ratio)) ** 0.5
 
-        # The calculation below uses all engines operating. The original FLOPS calculation uses one
-        # engine inoperative to calculate the field length (not the all-engines performance).
+        # The calculation below has been modified from the original FLOPS calculation that used one
+        # engine inoperative thrust to calculate the climbout distance. The climbout thrust fraction is now used.
+        # For a 2 engine aircraft setting thrust fraction = 0.5 results in equivalent behavior to FLOPS.
         climbout_distance = (
-            140.0 * (ramp_weight / S) ** 0.5 / (1.0 + thrust / ramp_weight - 0.90 / L_over_D)
+            140.0
+            * (ramp_weight / S) ** 0.5
+            / (1.0 + climbout_thrust / ramp_weight - 0.90 / L_over_D)
         )
 
         # The FLOPS methodology does not calculate V2. However, it assumes CL @ V2 = 0.66 * CL_max.

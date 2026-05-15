@@ -7357,6 +7357,15 @@ add_meta_data(
     units='unitless',
     desc='takeoff coefficient of friction, with brakes on',
 )
+add_meta_data(
+    Mission.Takeoff.CLIMBOUT_THRUST_FRACTION,
+    meta_data=_MetaData,
+    historical_name={'GASP': None, 'FLOPS': None},
+    units='unitless',
+    desc='Fraction of Aircraft.Propulsion.TOTAL_SCALED_SLS_THRUST to use for'
+    'climbout phase of simple takeoff calculations. For 2 engine aircraft set = 0.5 for one engine out.',
+    default_value=1,
+)
 
 add_meta_data(
     Mission.Takeoff.DECISION_SPEED_INCREMENT,
