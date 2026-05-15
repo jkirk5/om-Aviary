@@ -185,7 +185,6 @@ mission:takeoff:drag_coefficient_min,0.045,unitless
 mission:takeoff:final_altitude,35,ft
 mission:takeoff:fuel,577,lbm
 mission:takeoff:lift_coefficient_max,2,unitless
-mission:takeoff:lift_over_drag,15,unitless
 mission:takeoff:obstacle_height,35,ft
 mission:takeoff:rolling_friction_coefficient,0.0175,unitless
 mission:takeoff:spoiler_drag_coefficient,0.085,unitless
