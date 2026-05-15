@@ -785,7 +785,10 @@ add_meta_data(
 add_meta_data(
     Aircraft.CrewPayload.NUM_CABIN_CREW,
     meta_data=_MetaData,
-    historical_name={'GASP': None, 'FLOPS': 'NCABCR'},
+    historical_name={
+        'GASP': None,
+        'FLOPS': None,  # This is NCABCR internal to FLOPS.
+        },
     units='unitless',
     desc='Total number of cabin crew. In FLOPS this includes galley and flight attendants',
     types=int,
