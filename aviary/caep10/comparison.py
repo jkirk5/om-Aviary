@@ -41,21 +41,21 @@ ode = EnergyStateODE(
 mass_calc_high = om.ExecComp()
 mass_calc_high.add_expr(
     'mass_high = 0.92 * togm',
-    mass_high={'val': np.ones(1), 'units': 'kg'},
-    togm={'val': 1.0, 'units': 'kg'},
+    mass_high={'val': np.zeros(1), 'units': 'kg'},
+    togm={'val': 0.0, 'units': 'kg'},
 )
 mass_calc_low = om.ExecComp()
 mass_calc_low.add_expr(
     'mass_low = (0.45 * togm) + (0.63 * power(togm, 0.924))',
-    mass_low={'val': np.ones(1), 'units': 'kg'},
-    togm={'val': 1.0, 'units': 'kg'},
+    mass_low={'val': np.zeros(1), 'units': 'kg'},
+    togm={'val': 0.0, 'units': 'kg'},
 )
 mass_calc_mid = om.ExecComp()
 mass_calc_mid.add_expr(
     'mass_mid = (mass_high + mass_low) / 2',
-    mass_mid={'val': np.ones(1), 'units': 'kg'},
-    mass_high={'val': np.ones(1), 'units': 'kg'},
-    mass_low={'val': np.ones(1), 'units': 'kg'},
+    mass_mid={'val': np.zeros(1), 'units': 'kg'},
+    mass_high={'val': np.zeros(1), 'units': 'kg'},
+    mass_low={'val': np.zeros(1), 'units': 'kg'},
 )
 mass_calc = om.Group()
 mass_calc.add_subsystem(
@@ -125,7 +125,7 @@ setup_model_options(prob, flops_inputs)
 setup_model_options(prob, aviary_inputs)
 
 prob.setup()
-om.n2(prob, show_browser=False)
+# om.n2(prob, show_browser=False)
 for input, (val, units) in inputs.items():
     if units == 'lbm':
         val = inputs.get_val(input, 'kg')
@@ -199,21 +199,21 @@ sar_inv_av_py = calc_sar(tas_list, w_f_list)
 co2_py = calc_co2_metric(sar_inv_av_py, rgf_py)
 co2_max_py = calc_max_permitted(prob.model.get_val(Aircraft.Design.GROSS_MASS, 'lbm'))
 
-# assert_near_equal(mass_high_om, mass_high_py)
-# assert_near_equal(mass_low_om, mass_low_py)
-# assert_near_equal(mass_mid_om, mass_mid_py)
-# assert_near_equal(inv_sar_avg_om, sar_inv_av_py)
-# assert_near_equal(rgf_om, rgf_py)
-# assert_near_equal(co2_om, co2_py)
-# assert_near_equal(co2_max_om, co2_max_py)
+assert_near_equal(mass_high_om, mass_high_py)
+assert_near_equal(mass_low_om, mass_low_py)
+assert_near_equal(mass_mid_om, mass_mid_py)
+assert_near_equal(inv_sar_avg_om, sar_inv_av_py)
+assert_near_equal(rgf_om, rgf_py)
+assert_near_equal(co2_om, co2_py)
+assert_near_equal(co2_max_om, co2_max_py)
 
-print(f'mass_high: {mass_high_py}')
-print(f'mass_mid: {mass_mid_py}')
-print(f'mass_low: {mass_low_py}')
-print(f'inv sar_avg: {sar_inv_av_py}')
-print(f'rgf: {rgf_py}')
-print(f'co2: {co2_py}')
-print(f'cos_max: {co2_max_py}')
+# print(f'mass_high: {mass_high_py}')
+# print(f'mass_mid: {mass_mid_py}')
+# print(f'mass_low: {mass_low_py}')
+# print(f'inv sar_avg: {sar_inv_av_py}')
+# print(f'rgf: {rgf_py}')
+# print(f'co2: {co2_py}')
+# print(f'cos_max: {co2_max_py}')
 
-print(f'tas: {tas_list}')
-print(f'w_f: {w_f_list}')
+# print(f'tas: {tas_list}')
+# print(f'w_f: {w_f_list}')
