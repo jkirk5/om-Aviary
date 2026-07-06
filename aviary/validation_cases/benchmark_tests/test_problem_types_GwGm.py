@@ -11,7 +11,8 @@ from aviary.variable_info.enums import ProblemType, Verbosity
 
 class TwoDOFTestCase(unittest.TestCase):
     def setUp(self) -> None:
-        self.sized_mass = 171044.0
+        # This mass needs to be kept up to date with the sized mass for the GwGm benchmark.
+        self.sized_mass = 171414.17
         self.sized_range = 3675
         self.phase_info = deepcopy(phase_info)
 
@@ -28,7 +29,7 @@ class TestOffDesign(TwoDOFTestCase):
         # OFF_DESIGN_MAX_RANGE Mission
         prob_off_design_max_range = av.AviaryProblem()
         prob_off_design_max_range.load_inputs(
-            'models/aircraft/test_aircraft/aircraft_for_bench_GwGm.csv',
+            'validation_cases/validation_data/test_models/aircraft_for_bench_GwGm.csv',
             self.phase_info,
             verbosity=Verbosity.BRIEF,
         )
@@ -59,7 +60,7 @@ class TestOffDesign(TwoDOFTestCase):
         # off_design_min_fuel Mission
         prob_off_design_min_fuel = av.AviaryProblem()
         prob_off_design_min_fuel.load_inputs(
-            'models/aircraft/test_aircraft/aircraft_for_bench_GwGm.csv',
+            'validation_cases/validation_data/test_models/aircraft_for_bench_GwGm.csv',
             self.phase_info,
             verbosity=Verbosity.BRIEF,
         )
@@ -93,7 +94,7 @@ class TestOffDesign(TwoDOFTestCase):
         # off_design_max_range Mission
         prob_off_design_max_range = av.AviaryProblem()
         prob_off_design_max_range.load_inputs(
-            'models/aircraft/test_aircraft/aircraft_for_bench_GwGm.csv',
+            'validation_cases/validation_data/test_models/aircraft_for_bench_GwGm.csv',
             self.phase_info,
             verbosity=Verbosity.BRIEF,
         )
@@ -120,7 +121,7 @@ class TestOffDesign(TwoDOFTestCase):
         # off_design_min_fuel Mission
         prob_off_design_min_fuel = av.AviaryProblem()
         prob_off_design_min_fuel.load_inputs(
-            'models/aircraft/test_aircraft/aircraft_for_bench_GwGm.csv',
+            'validation_cases/validation_data/test_models/aircraft_for_bench_GwGm.csv',
             self.phase_info,
             verbosity=Verbosity.BRIEF,
         )

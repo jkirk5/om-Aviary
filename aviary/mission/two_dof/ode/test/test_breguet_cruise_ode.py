@@ -3,12 +3,13 @@ import unittest
 import numpy as np
 import openmdao.api as om
 from openmdao.utils.assert_utils import assert_check_partials, assert_near_equal
+from openmdao.utils.testing_utils import use_tempdirs
 
 from aviary.mission.two_dof.ode.breguet_cruise_ode import (
     BreguetCruiseODE,
     ElectricBreguetCruiseODE,
 )
-from aviary.mission.two_dof.ode.params import set_params_for_unit_tests
+from aviary.mission.two_dof.ode.test.params import set_params_for_unit_tests
 from aviary.subsystems.propulsion.utils import build_engine_deck
 from aviary.utils.test_utils.default_subsystems import get_default_mission_subsystems
 from aviary.variable_info.functions import setup_model_options
@@ -16,6 +17,7 @@ from aviary.variable_info.options import get_option_defaults
 from aviary.variable_info.variables import Aircraft, Dynamic
 
 
+@use_tempdirs
 class CruiseODETestCase(unittest.TestCase):
     def setUp(self):
         self.prob = om.Problem()
@@ -49,6 +51,8 @@ class CruiseODETestCase(unittest.TestCase):
         self.prob.set_val(Aircraft.VerticalTail.FORM_FACTOR, 1.25)
         self.prob.set_val(Aircraft.HorizontalTail.FORM_FACTOR, 1.25)
         self.prob.set_val(Aircraft.Fuselage.FORM_FACTOR, 1.05557953)
+        self.prob.set_val(Dynamic.Mission.ALTITUDE, val=37500 * np.ones(2), units='ft')
+        self.prob.set_val('mass', val=np.linspace(171481, 171581 - 10000, 2), units='lbm')
 
         set_params_for_unit_tests(self.prob)
 
@@ -75,6 +79,7 @@ class CruiseODETestCase(unittest.TestCase):
         assert_check_partials(partial_data, atol=1e-8, rtol=1e-8)
 
 
+@use_tempdirs
 class ElectricCruiseODETestCase(unittest.TestCase):
     """This test uses a makeup electrical engine to test electrical Breguet cruise ODE."""
 

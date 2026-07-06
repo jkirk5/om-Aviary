@@ -61,7 +61,7 @@ class SimpleEngine(om.ExplicitComponent):
             desc='Current net thrust produced (scaled)',
         )
         self.add_output(
-            Dynamic.Vehicle.Propulsion.FUEL_FLOW_RATE_NEGATIVE,
+            Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE,
             shape=nn,
             units='lbm/s',
             desc='Current fuel flow rate (scaled)',
@@ -94,7 +94,7 @@ class SimpleEngine(om.ExplicitComponent):
 
         # calculate outputs
         outputs[Dynamic.Vehicle.Propulsion.THRUST] = 10000.0 * combined_throttle
-        outputs[Dynamic.Vehicle.Propulsion.FUEL_FLOW_RATE_NEGATIVE] = -10.0 * combined_throttle
+        outputs[Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE] = -10.0 * combined_throttle
         outputs[Dynamic.Vehicle.Propulsion.TEMPERATURE_T4] = 2800.0
 
 
@@ -180,7 +180,7 @@ class CustomEngineTest(unittest.TestCase):
         # Load aircraft and options data from user
         # Allow for user overrides here
         prob.load_inputs(
-            'models/aircraft/test_aircraft/aircraft_for_bench_FwFm.csv',
+            'validation_cases/validation_data/test_models/aircraft_for_bench_FwFm.csv',
             phase_info,
         )
 
@@ -202,7 +202,7 @@ class CustomEngineTest(unittest.TestCase):
 
         # check that the different throttle initial guess has been set correctly
         initial_guesses = prob.get_val('traj.cruise.controls:different_throttle')[0]
-        assert_near_equal(float(initial_guesses), 0.05)
+        assert_near_equal(initial_guesses, 0.05)
 
         # and run mission
         dm.run_problem(prob, run_driver=True, simulate=False, make_plots=False)

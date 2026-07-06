@@ -3,6 +3,7 @@ import unittest
 import numpy as np
 import openmdao.api as om
 from openmdao.utils.assert_utils import assert_check_partials, assert_near_equal
+from openmdao.utils.testing_utils import use_tempdirs
 
 from aviary.mission.energy_state.ode.takeoff_eom import (
     Accelerations,
@@ -14,7 +15,7 @@ from aviary.mission.energy_state.ode.takeoff_eom import (
     TakeoffEOM,
     VelocityRate,
 )
-from aviary.models.aircraft.advanced_single_aisle.advanced_single_aisle_data import (
+from aviary.validation_cases.validation_data.test_data.advanced_single_aisle_data import (
     detailed_takeoff_climbing,
     detailed_takeoff_ground,
     inputs,
@@ -27,6 +28,7 @@ from aviary.variable_info.variables import Aircraft, Dynamic, Mission
 inputs.set_val(Aircraft.Engine.NUM_ENGINES, np.array([2]))
 
 
+@use_tempdirs
 class TakeoffEOMTest(unittest.TestCase):
     """Test detailed takeoff equation of motion."""
 

@@ -1,6 +1,6 @@
 import openmdao.api as om
 
-from aviary.variable_info.functions import add_aviary_input, add_aviary_option
+from aviary.variable_info.functions import add_aviary_input, add_aviary_option, add_aviary_output
 from aviary.variable_info.variables import Dynamic, Mission
 
 
@@ -11,8 +11,9 @@ class TaxiFuelComponent(om.ExplicitComponent):
         add_aviary_option(self, Mission.Taxi.DURATION, units='s')
 
     def setup(self):
-        self.add_input(
-            Dynamic.Vehicle.Propulsion.FUEL_FLOW_RATE_NEGATIVE_TOTAL,
+        add_aviary_input(
+            self,
+            Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
             val=1.0,
             units='lbm/s',
             desc='fuel flow rate',
@@ -25,7 +26,8 @@ class TaxiFuelComponent(om.ExplicitComponent):
             units='lbm',
             desc='taxi_fuel_consumed',
         )
-        self.add_output(
+        add_aviary_output(
+            self,
             Dynamic.Vehicle.MASS,
             val=175000.0,
             units='lbm',
@@ -35,11 +37,11 @@ class TaxiFuelComponent(om.ExplicitComponent):
     def setup_partials(self):
         self.declare_partials(
             'taxi_fuel_consumed',
-            [Dynamic.Vehicle.Propulsion.FUEL_FLOW_RATE_NEGATIVE_TOTAL],
+            [Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL],
         )
         self.declare_partials(
             Dynamic.Vehicle.MASS,
-            Dynamic.Vehicle.Propulsion.FUEL_FLOW_RATE_NEGATIVE_TOTAL,
+            Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
         )
         self.declare_partials(Dynamic.Vehicle.MASS, Mission.GROSS_MASS, val=1)
 
@@ -54,10 +56,10 @@ class TaxiFuelComponent(om.ExplicitComponent):
 
         J[
             'taxi_fuel_consumed',
-            Dynamic.Vehicle.Propulsion.FUEL_FLOW_RATE_NEGATIVE_TOTAL,
+            Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
         ] = -dt_taxi
 
         J[
             Dynamic.Vehicle.MASS,
-            Dynamic.Vehicle.Propulsion.FUEL_FLOW_RATE_NEGATIVE_TOTAL,
+            Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
         ] = dt_taxi

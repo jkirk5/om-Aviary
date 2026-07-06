@@ -69,7 +69,7 @@ class TestBatteryMission(unittest.TestCase):
         prob = av.AviaryProblem(verbosity=0)
 
         prob.load_inputs(
-            'models/aircraft/test_aircraft/aircraft_for_bench_FwFm_with_electric.csv',
+            'validation_cases/validation_data/test_models/aircraft_for_bench_FwFm_with_electric.csv',
             phase_info,
         )
         prob.load_external_subsystems([BatteryBuilder()])
@@ -102,7 +102,7 @@ class TestBatteryMission(unittest.TestCase):
         )
         expected_scalar_values = {
             cumulative_energy_var: (38.46817379, 'kW*h'),
-            av.Mission.FUEL: (1249.64666191, 'lbm'),
+            av.Mission.FUEL_MASS: (1249.64666191, 'lbm'),
         }
 
         for var_name, (expected, units) in expected_scalar_values.items():
@@ -174,7 +174,6 @@ class TestBatteryMission(unittest.TestCase):
                 actual = prob.get_val(var_name).ravel()
                 assert_near_equal(actual, expected, 1e-6)
 
-    @unittest.skip('Not converging in CI for unknown reasons - requires additional investigation')
     @require_pyoptsparse(optimizer='SNOPT')
     def test_subsystems_in_a_mission_2dof(self):
         """
@@ -186,7 +185,7 @@ class TestBatteryMission(unittest.TestCase):
         prob = av.AviaryProblem(verbosity=0)
 
         prob.load_inputs(
-            'models/aircraft/test_aircraft/aircraft_for_bench_GwGm.csv',
+            'validation_cases/validation_data/test_models/aircraft_for_bench_GwGm.csv',
             phase_info,
         )
         prob.load_external_subsystems([BatteryBuilder()])

@@ -111,19 +111,32 @@ class AviaryGroup(om.Group):
         # Find all variables that are shape_by_conn so we don't set their shape with a stale value
         # from the default metadata. We can only find these on the next level down because
         # aviary_group's setup is not complete until after configure.
-        sbc_vars = []
+        sbc_vars = set()
+        non_sbc_vars = set()
         for sub in self.system_iter(recurse=False, typ=om.Group):
             pr2abs = sub._resolver.prom2abs_iter('input')
-            sub_inputs = [
-                (k, v[0]) for k, v in pr2abs if k.startswith('aircraft') or k.startswith('mission')
-            ]
+            if sub.pathname == 'traj':
+                sub_inputs = [(k, v[0]) for k, v in pr2abs if k.startswith('parameters:')]
+            else:
+                sub_inputs = [
+                    (k, v[0])
+                    for k, v in pr2abs
+                    if k.startswith('aircraft') or k.startswith('mission')
+                ]
             abs2meta = sub._var_abs2meta['input']
 
             for data in sub_inputs:
                 prom_name, abs_name = data
+                if prom_name.startswith('parameters:'):
+                    # Parameters haven't been pully promoted out of traj at this point.
+                    prom_name = prom_name.removeprefix('parameters:')
                 meta = abs2meta[abs_name]
                 if meta.get('shape_by_conn') is True:
-                    sbc_vars.append(prom_name)
+                    sbc_vars.add(prom_name)
+                else:
+                    non_sbc_vars.add(prom_name)
+
+        sbc_only_vars = sbc_vars - non_sbc_vars
 
         for key in aviary_metadata:
             if ':' not in key or key.startswith('dynamic:'):
@@ -147,7 +160,7 @@ class AviaryGroup(om.Group):
                     continue
 
             kwargs = {'units': units}
-            if key not in sbc_vars:
+            if key not in sbc_only_vars:
                 # Default val if var doesn't use shape_by_conn.
                 kwargs['val'] = val
 
@@ -282,7 +295,7 @@ class AviaryGroup(om.Group):
         ## LOAD PHASE_INFO ###
         # if phase info is a file, load it
         if isinstance(phase_info, str) or isinstance(phase_info, Path):
-            phase_info_path = get_path(phase_info)
+            phase_info_path = get_path(phase_info, verbosity)
             spec = spec_from_file_location('phase_info_file', str(phase_info_path))
             phase_info_file = module_from_spec(spec)
             sys.modules['phase_info_file'] = phase_info_file
@@ -622,7 +635,7 @@ class AviaryGroup(om.Group):
                 ('gross_mass', Mission.GROSS_MASS),
                 ('zero_fuel_mass', Mission.ZERO_FUEL_MASS),
             ],
-            promotes_outputs=[('total_fuel_mass', Mission.TOTAL_FUEL)],
+            promotes_outputs=[('total_fuel_mass', Mission.TOTAL_FUEL_MASS)],
         )
 
     def _add_premission_external_subsystem_masses(self):
@@ -689,7 +702,7 @@ class AviaryGroup(om.Group):
         # TODO: Should some of this stuff be moved into the phase builder?
         self.configurator.set_phase_options(self, phase_name, phase_idx, phase, full_options, comm)
 
-        return phase
+        return phase, phase_object
 
     def add_phases(self, parallel_phases=True, verbosity=None, comm=None):
         """
@@ -741,10 +754,12 @@ class AviaryGroup(om.Group):
         for phase_idx, phase_name in enumerate(mission_info):
             # Create and add phases.
             # This also expands mission_info to include all keys.
-            phase = traj.add_phase(phase_name, self._get_phase(phase_name, phase_idx, comm))
+            phase, builder = self._get_phase(phase_name, phase_idx, comm)
+            traj.add_phase(phase_name, phase)
 
             phase_info = mission_info[phase_name]
-            external_parameters[phase_name] = {}
+            external_parameters[phase_name] = builder.get_parameters()
+
             user_options = phase_info.get('user_options', {})
             all_subsystem_options = phase_info.get('subsystem_options', {})
 
@@ -889,7 +904,7 @@ class AviaryGroup(om.Group):
                 fuel_burned={'units': 'lbm'},
             ),
             promotes_inputs=[('initial_mass', Mission.GROSS_MASS)],
-            promotes_outputs=[('fuel_burned', Mission.FUEL)],
+            promotes_outputs=[('fuel_burned', Mission.FUEL_MASS)],
         )
 
         self.connect(
@@ -910,7 +925,7 @@ class AviaryGroup(om.Group):
             post_mission.add_subsystem(
                 'reserve_fuel_burned',
                 ecomp,
-                promotes=[('reserve_fuel_burned', Mission.RESERVE_FUEL)],
+                promotes=[('reserve_fuel_burned', Mission.RESERVE_FUEL_MASS)],
             )
 
             # timeseries has to be used because Breguet cruise phases don't have
@@ -933,16 +948,16 @@ class AviaryGroup(om.Group):
         post_mission.add_subsystem(
             'total_fuel_mass_con',
             om.ExecComp(
-                'total_fuel_mass_constraint = total_fuel_mass - mission_fuel_burned - reserve_fuel',
+                'total_fuel_mass_constraint = total_fuel_mass - mission_fuel_burned - reserve_fuel_mass',
                 total_fuel_mass_constraint={'units': 'lbm'},
                 total_fuel_mass={'units': 'lbm'},
                 mission_fuel_burned={'units': 'lbm'},
-                reserve_fuel={'units': 'lbm'},
+                reserve_fuel_mass={'units': 'lbm'},
             ),
             promotes_inputs=[
-                ('total_fuel_mass', Mission.TOTAL_FUEL),
-                ('mission_fuel_burned', Mission.FUEL),
-                ('reserve_fuel', Mission.TOTAL_RESERVE_FUEL),
+                ('total_fuel_mass', Mission.TOTAL_FUEL_MASS),
+                ('mission_fuel_burned', Mission.FUEL_MASS),
+                ('reserve_fuel_mass', Mission.TOTAL_RESERVE_FUEL_MASS),
             ],
             promotes_outputs=[('total_fuel_mass_constraint', Mission.Constraints.MASS_RESIDUAL)],
         )
@@ -1043,9 +1058,11 @@ class AviaryGroup(om.Group):
             promotes_inputs=[
                 ('total_fuel_capacity', Aircraft.Fuel.TOTAL_CAPACITY),
                 ('unusable_fuel', Aircraft.Fuel.UNUSABLE_FUEL_MASS),
-                ('overall_fuel', Mission.TOTAL_FUEL),
+                ('overall_fuel', Mission.TOTAL_FUEL_MASS),
             ],
-            promotes_outputs=[('excess_fuel_capacity', Mission.Constraints.EXCESS_FUEL_CAPACITY)],
+            promotes_outputs=[
+                ('excess_fuel_capacity', Mission.Constraints.EXCESS_FUEL_MASS_CAPACITY)
+            ],
         )
 
         # determine if the user wants the excess_fuel_capacity constraint active and if so add it to the problem
@@ -1065,15 +1082,15 @@ class AviaryGroup(om.Group):
 
         if not ignore_capacity_constraint:
             self.add_constraint(
-                Mission.Constraints.EXCESS_FUEL_CAPACITY, lower=0, ref=1.0e5, units='lbm'
+                Mission.Constraints.EXCESS_FUEL_MASS_CAPACITY, lower=0, ref=1.0e5, units='lbm'
             )
         else:
             if verbosity >= Verbosity.BRIEF:
                 warnings.warn(
                     'Aircraft.Fuel.IGNORE_FUEL_CAPACITY_CONSTRAINT = True, therefore '
-                    'EXCESS_FUEL_CAPACITY constraint was not added to the Aviary problem. The '
+                    'EXCESS_FUEL_MASS_CAPACITY constraint was not added to the Aviary problem. The '
                     'aircraft may not have enough space for fuel, so check the value of '
-                    'Mission.Constraints.EXCESS_FUEL_CAPACITY for details.'
+                    'Mission.Constraints.EXCESS_FUEL_MASS_CAPACITY for details.'
                 )
 
         post_mission.add_subsystem(
@@ -1085,10 +1102,10 @@ class AviaryGroup(om.Group):
                 fuel_burned_taxi_in={'units': 'lbm'},
             ),
             promotes_inputs=[
-                ('mission_fuel_burned', Mission.FUEL),
-                ('fuel_burned_taxi_in', Mission.Taxi.FUEL_TAXI_IN),
+                ('mission_fuel_burned', Mission.FUEL_MASS),
+                ('fuel_burned_taxi_in', Mission.Taxi.FUEL_MASS_TAXI_IN),
             ],
-            promotes_outputs=[('block_fuel', Mission.BLOCK_FUEL)],
+            promotes_outputs=[('block_fuel', Mission.BLOCK_FUEL_MASS)],
         )
 
     def link_phases(self, verbosity=None, comm=None):
@@ -1116,7 +1133,7 @@ class AviaryGroup(om.Group):
         # easier for users to access Mission.FINAL_MASS, Mission.FINAL_TIME,
         # and Mission.RANGE.
         self.connect(
-            f'traj.{final_phase}.states:mass',
+            f'traj.{final_phase}.timeseries.mass',
             'state_output.mass_in',
             src_indices=[-1],
         )
@@ -1142,10 +1159,17 @@ class AviaryGroup(om.Group):
 
         lists_to_link = []
         for idx, phase_name in enumerate(self.mission_info):
+            phase_info = self.mission_info[phase_name]
+            all_subsystem_options = phase_info.get('subsystem_options', {})
+
             lists_to_link.append([])
-            for external_subsystem in self.external_subsystems:
+            for subsys in self.external_subsystems:
                 lists_to_link[idx].extend(
-                    external_subsystem.get_linked_variables(aviary_inputs=self.aviary_inputs)
+                    subsys.get_linked_variables(
+                        aviary_inputs=self.aviary_inputs,
+                        user_options=self.mission_info[phase_name]['user_options'],
+                        subsystem_options=all_subsystem_options.get(subsys.name, {}),
+                    )
                 )
 
         # get unique variable names from lists_to_link
@@ -1481,6 +1505,7 @@ class AviaryGroup(om.Group):
         # any mission that does not have any dymos phases, there is nothing to set.
         if not hasattr(self, 'traj'):
             return
+
         # `self.verbosity` is "true" verbosity for entire run. `verbosity` is verbosity
         # override for just this method
         if verbosity is not None:
@@ -1493,7 +1518,7 @@ class AviaryGroup(om.Group):
         if parent_prob is not None and parent_prefix != '':
             target_prob = parent_prob
 
-        traj = self.traj
+        traj = target_prob.traj
 
         # Determine which phases to loop over, fetching them from the trajectory
         phase_items = traj._phases.items()
@@ -1501,12 +1526,6 @@ class AviaryGroup(om.Group):
         # Loop over each phase and set initial guesses for the state and control
         # variables
         for idx, (phase_name, phase) in enumerate(phase_items):
-            # TODO: This will be uncommented when an openmdao bug is fixed.
-            # We are using a workaround for now.
-            # if not phase._is_local:
-            #     # Don't set anything if phase is not on this proc.
-            #     continue
-
             if self.mission_method is SOLVED_2DOF:
                 self.phase_objects[idx].apply_initial_guesses(self, 'traj', phase)
 
@@ -1521,14 +1540,14 @@ class AviaryGroup(om.Group):
                 guesses = {}
 
             # Add subsystem guesses
-            self._add_subsystem_guesses(phase_name, phase, target_prob, parent_prefix)
+            self._add_subsystem_guesses(phase_name, phase)
 
             # Set initial guesses for states, controls and time for each phase.
             self.configurator.set_phase_initial_guesses(
                 self, phase_name, phase, guesses, target_prob, parent_prefix
             )
 
-    def _add_subsystem_guesses(self, phase_name, phase, target_prob, parent_prefix):
+    def _add_subsystem_guesses(self, phase_name, phase):
         """
         Adds the initial guesses for each subsystem of a given phase to the problem. This method
         first fetches all subsystems associated with the given phase. It then loops over each
@@ -1564,26 +1583,20 @@ class AviaryGroup(om.Group):
 
             # Loop over each guess
             for key, val_dict in initial_guesses.items():
+                # Process the guess variable (handles array interpolation)
+                val = process_guess_var(val_dict['val'], key, phase)
+                units = val_dict.get('units', None)
+
                 # Identify the type of the guess (state or control)
                 var_type = val_dict['type']
                 if 'state' in var_type:
-                    path_string = 'states'
+                    phase.set_state_val(key, vals=val, units=units)
+
                 elif 'control' in var_type:
-                    path_string = 'controls'
-
-                # Process the guess variable (handles array interpolation)
-                # val['val'] = self.process_guess_var(val['val'], key, phase)
-                val = process_guess_var(val_dict['val'], key, phase)
-
-                # Set the initial guess in the problem
-                target_prob.set_val(
-                    parent_prefix + f'traj.{phase_name}.{path_string}:{key}',
-                    val,
-                    units=val_dict.get('units', None),
-                )
+                    phase.set_control_val(key, vals=val, units=units)
 
     def add_fuel_reserve_component(
-        self, post_mission=True, reserves_name=Mission.TOTAL_RESERVE_FUEL
+        self, post_mission=True, reserves_name=Mission.TOTAL_RESERVE_FUEL_MASS
     ):
         if post_mission:
             reserve_calc_location = self.post_mission
@@ -1594,7 +1607,7 @@ class AviaryGroup(om.Group):
             Mission.RESERVE_FUEL_MARGIN, units='unitless'
         )
         if reserve_fuel_margin != 0:
-            # Originally tried to reference Mission.FUEL for fuel burn but in some tests this led to errors
+            # Originally tried to reference Mission.FUEL_MASS for fuel burn but in some tests this led to errors
             reserve_fuel_frac = om.ExecComp(
                 'reserve_fuel_margin_mass = reserve_fuel_margin / 100 * (initial_mass - final_mass)',
                 reserve_fuel_margin_mass={'units': 'lbm'},
@@ -1622,26 +1635,26 @@ class AviaryGroup(om.Group):
                 src_indices=[-1],
             )
 
-        reserve_fuel_additional = self.aviary_inputs.get_val(
-            Mission.RESERVE_FUEL_ADDITIONAL, units='lbm'
+        reserve_fuel_mass_additional = self.aviary_inputs.get_val(
+            Mission.RESERVE_FUEL_MASS_ADDITIONAL, units='lbm'
         )
-        reserve_fuel = om.ExecComp(
-            'reserve_fuel = reserve_fuel_margin_mass + reserve_fuel_additional + reserve_fuel_burned',
-            reserve_fuel={'units': 'lbm', 'shape': 1},
+        reserve_fuel_mass = om.ExecComp(
+            'reserve_fuel_mass = reserve_fuel_margin_mass + reserve_fuel_mass_additional + reserve_fuel_burned',
+            reserve_fuel_mass={'units': 'lbm', 'shape': 1},
             reserve_fuel_margin_mass={'units': 'lbm', 'val': 0},
-            reserve_fuel_additional={'units': 'lbm', 'val': reserve_fuel_additional},
+            reserve_fuel_mass_additional={'units': 'lbm', 'val': reserve_fuel_mass_additional},
             reserve_fuel_burned={'units': 'lbm', 'val': 0},
         )
 
         reserve_calc_location.add_subsystem(
-            'reserve_fuel',
-            reserve_fuel,
+            'reserve_fuel_mass',
+            reserve_fuel_mass,
             promotes_inputs=[
                 'reserve_fuel_margin_mass',
-                ('reserve_fuel_additional', Mission.RESERVE_FUEL_ADDITIONAL),
-                ('reserve_fuel_burned', Mission.RESERVE_FUEL),
+                ('reserve_fuel_mass_additional', Mission.RESERVE_FUEL_MASS_ADDITIONAL),
+                ('reserve_fuel_burned', Mission.RESERVE_FUEL_MASS),
             ],
-            promotes_outputs=[('reserve_fuel', reserves_name)],
+            promotes_outputs=[('reserve_fuel_mass', reserves_name)],
         )
 
     def _validate_phase_info_modifier(self, phase_info_modifier):

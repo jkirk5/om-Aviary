@@ -6,7 +6,9 @@ from openmdao.utils.testing_utils import use_tempdirs
 
 from aviary.models.missions.two_dof_default import phase_info as ph_in_gasp
 from aviary.core.aviary_problem import AviaryProblem
-from aviary.models.aircraft.test_aircraft.GwFm_phase_info import phase_info as ph_in_flops
+from aviary.validation_cases.validation_data.test_models.GwFm_phase_info import (
+    phase_info as ph_in_flops,
+)
 from aviary.variable_info.variables import Aircraft, Mission
 
 
@@ -44,7 +46,7 @@ class ReserveTest(unittest.TestCase):
         )
 
         td_mass = prob.model.get_val(Mission.FINAL_MASS, units='lbm')
-        reserve = prob.model.get_val(Mission.TOTAL_RESERVE_FUEL, units='lbm')
+        reserve = prob.model.get_val(Mission.TOTAL_RESERVE_FUEL_MASS, units='lbm')
         assert_near_equal(reserve, reserve_percentage / 100 * (140000.0 - td_mass), 1e-3)
 
 

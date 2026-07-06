@@ -17,10 +17,10 @@ from aviary.subsystems.subsystem_builder import SubsystemBuilder
 from aviary.utils.csv_data_file import read_data_file
 from aviary.utils.named_values import NamedValues
 from aviary.variable_info.enums import LegacyCode
-from aviary.variable_info.variables import Aircraft
+from aviary.variable_info.variables import Aircraft, Dynamic
 
 # The drag-polar-generating component reads this in, instead of computing the polars.
-polar_file = 'models/large_single_aisle_1/large_single_aisle_1_aero_free_reduced_alpha.csv'
+polar_file = 'models/large_single_aisle_1/aerodynamics_tables/large_single_aisle_1_aero_free_reduced_alpha.csv'
 
 phase_info = deepcopy(phase_info)
 
@@ -50,7 +50,7 @@ class TestSolvedAero(unittest.TestCase):
         prob = AviaryProblem()
 
         prob.load_inputs(
-            'subsystems/aerodynamics/flops_based/test/data/high_wing_single_aisle.csv',
+            'validation_cases/validation_data/test_models/high_wing_single_aisle.csv',
             local_phase_info,
         )
         prob.model.aero_method = LegacyCode.GASP
@@ -63,8 +63,8 @@ class TestSolvedAero(unittest.TestCase):
 
         prob.run_model()
 
-        CL_base = prob.get_val('traj.cruise.rhs_all.aerodynamics.CL')
-        CD_base = prob.get_val('traj.cruise.rhs_all.aerodynamics.CD')
+        CL_base = prob.get_val(f'traj.cruise.rhs_all.{Dynamic.Vehicle.LIFT_COEFFICIENT}')
+        CD_base = prob.get_val(f'traj.cruise.rhs_all.{Dynamic.Vehicle.DRAG_COEFFICIENT}')
 
         return CL_base, CD_base
 
@@ -92,7 +92,7 @@ class TestSolvedAero(unittest.TestCase):
         prob = AviaryProblem()
 
         prob.load_inputs(
-            'subsystems/aerodynamics/flops_based/test/data/high_wing_single_aisle.csv',
+            'validation_cases/validation_data/test_models/high_wing_single_aisle.csv',
             ph_in,
         )
 
@@ -111,8 +111,8 @@ class TestSolvedAero(unittest.TestCase):
 
         prob.run_model()
 
-        CL_pass = prob.get_val('traj.cruise.rhs_all.aerodynamics.CL')
-        CD_pass = prob.get_val('traj.cruise.rhs_all.aerodynamics.CD')
+        CL_pass = prob.get_val(f'traj.cruise.rhs_all.{Dynamic.Vehicle.LIFT_COEFFICIENT}')
+        CD_pass = prob.get_val(f'traj.cruise.rhs_all.{Dynamic.Vehicle.DRAG_COEFFICIENT}')
 
         assert_near_equal(CL_pass, CL_base, 1e-6)
         assert_near_equal(CD_pass, CD_base, 1e-6)
@@ -123,8 +123,8 @@ class TestSolvedAero(unittest.TestCase):
 
         prob.run_model()
 
-        CL_pass = prob.get_val('traj.cruise.rhs_all.aerodynamics.CL')
-        CD_pass = prob.get_val('traj.cruise.rhs_all.aerodynamics.CD')
+        CL_pass = prob.get_val(f'traj.cruise.rhs_all.{Dynamic.Vehicle.LIFT_COEFFICIENT}')
+        CD_pass = prob.get_val(f'traj.cruise.rhs_all.{Dynamic.Vehicle.DRAG_COEFFICIENT}')
 
         assert_near_equal(CL_pass, CL_base, 1e-6)
         assert_near_equal(CD_pass, 2.0 * CD_base, 1e-6)
@@ -138,7 +138,7 @@ class TestSolvedAero(unittest.TestCase):
         prob = AviaryProblem()
 
         prob.load_inputs(
-            'subsystems/aerodynamics/flops_based/test/data/high_wing_single_aisle.csv',
+            'validation_cases/validation_data/test_models/high_wing_single_aisle.csv',
             local_phase_info,
         )
         prob.model.aero_method = LegacyCode.GASP
@@ -165,7 +165,7 @@ class TestSolvedAero(unittest.TestCase):
 
         prob = AviaryProblem()
 
-        csv_path = 'subsystems/aerodynamics/flops_based/test/data/high_wing_single_aisle.csv'
+        csv_path = 'validation_cases/validation_data/test_models/high_wing_single_aisle.csv'
         prob.load_inputs(csv_path, local_phase_info)
         prob.model.aero_method = LegacyCode.GASP
 
@@ -177,8 +177,8 @@ class TestSolvedAero(unittest.TestCase):
 
         prob.run_model()
 
-        CL_base = prob.get_val('traj.cruise.rhs_all.aerodynamics.CL')
-        CD_base = prob.get_val('traj.cruise.rhs_all.aerodynamics.CD')
+        CL_base = prob.get_val(f'traj.cruise.rhs_all.{Dynamic.Vehicle.LIFT_COEFFICIENT}')
+        CD_base = prob.get_val(f'traj.cruise.rhs_all.{Dynamic.Vehicle.DRAG_COEFFICIENT}')
 
         # Lift and Drag polars passed from external component in pre-mission.
 
@@ -238,8 +238,8 @@ class TestSolvedAero(unittest.TestCase):
 
         prob.run_model()
 
-        CL_pass = prob.get_val('traj.cruise.rhs_all.aerodynamics.CL')
-        CD_pass = prob.get_val('traj.cruise.rhs_all.aerodynamics.CD')
+        CL_pass = prob.get_val(f'traj.cruise.rhs_all.{Dynamic.Vehicle.LIFT_COEFFICIENT}')
+        CD_pass = prob.get_val(f'traj.cruise.rhs_all.{Dynamic.Vehicle.DRAG_COEFFICIENT}')
 
         assert_near_equal(CL_pass, CL_base, 1e-6)
         assert_near_equal(CD_pass, CD_base, 1e-6)

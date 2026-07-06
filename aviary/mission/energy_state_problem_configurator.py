@@ -113,7 +113,6 @@ class EnergyStateProblemConfigurator(ProblemConfiguratorBase):
         """
         takeoff_options = Takeoff(
             airport_altitude=0.0,  # ft
-            num_engines=aviary_group.aviary_inputs.get_val(Aircraft.Engine.NUM_ENGINES),
         )
 
         # Build and add takeoff subsystem
@@ -385,8 +384,8 @@ class EnergyStateProblemConfigurator(ProblemConfiguratorBase):
                 ),
                 promotes_inputs=[
                     ('gross_mass', Mission.GROSS_MASS),
-                    ('taxi_out_fuel_burn', Mission.Taxi.FUEL_TAXI_OUT),
-                    ('takeoff_fuel_burn', Mission.Takeoff.FUEL),
+                    ('taxi_out_fuel_burn', Mission.Taxi.FUEL_MASS_TAXI_OUT),
+                    ('takeoff_fuel_burn', Mission.Takeoff.FUEL_MASS),
                 ],
                 promotes_outputs=[('takeoff_mass', Mission.Takeoff.FINAL_MASS)],
             )
@@ -511,7 +510,7 @@ class EnergyStateProblemConfigurator(ProblemConfiguratorBase):
         aviary_group.connect(
             f'traj.{last_regular_phase}.control_values:altitude',
             Mission.Landing.INITIAL_ALTITUDE,
-            src_indices=[0],
+            src_indices=[-1],
         )
 
     def set_phase_initial_guesses(

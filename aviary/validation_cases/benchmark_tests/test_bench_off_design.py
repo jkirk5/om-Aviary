@@ -22,7 +22,8 @@ class TestEnergyStateOffDesign(unittest.TestCase):
         copy_energy_phase_info['post_mission']['target_range'] = (2500.0, 'nmi')
 
         prob.load_inputs(
-            'models/aircraft/test_aircraft/aircraft_for_bench_FwFm.csv', copy_energy_phase_info
+            'validation_cases/validation_data/test_models/aircraft_for_bench_FwFm.csv',
+            copy_energy_phase_info,
         )
 
         # define passengers of every seat class so we can change their values later
@@ -54,7 +55,7 @@ class TestEnergyStateOffDesign(unittest.TestCase):
         prob_var_list = [
             Aircraft.Design.RANGE,
             Mission.RANGE,
-            Mission.TOTAL_FUEL,
+            Mission.TOTAL_FUEL_MASS,
             Mission.OPERATING_MASS,
             Aircraft.CrewPayload.CARGO_MASS,
             Aircraft.CrewPayload.TOTAL_PAYLOAD_MASS,
@@ -113,7 +114,7 @@ class TestEnergyStateOffDesign(unittest.TestCase):
         )
         assert_near_equal(prob_off_design_max_range.get_val(Mission.RANGE), 2377.4, tolerance=1e-3)
         assert_near_equal(
-            prob_off_design_max_range.get_val(Mission.TOTAL_FUEL, 'lbm'),
+            prob_off_design_max_range.get_val(Mission.TOTAL_FUEL_MASS, 'lbm'),
             28976.71270599,
             tolerance=1e-5,
         )
@@ -203,7 +204,7 @@ class TestEnergyStateOffDesign(unittest.TestCase):
         )
         assert_near_equal(prob_off_design_min_fuel.get_val(Mission.RANGE), 1800, tolerance=1e-6)
         assert_near_equal(
-            prob_off_design_min_fuel.get_val(Mission.TOTAL_FUEL, 'lbm'),
+            prob_off_design_min_fuel.get_val(Mission.TOTAL_FUEL_MASS, 'lbm'),
             24245.7724282,
             tolerance=1e-5,
         )
@@ -278,7 +279,8 @@ class Test2DOFOffDesign(unittest.TestCase):
         copy_twodof_phase_info = deepcopy(twodof_phase_info)
 
         prob.load_inputs(
-            'models/aircraft/test_aircraft/aircraft_for_bench_GwGm.csv', copy_twodof_phase_info
+            'validation_cases/validation_data/test_models/aircraft_for_bench_GwGm.csv',
+            copy_twodof_phase_info,
         )
 
         prob.aviary_inputs.set_val(Aircraft.Design.GROSS_MASS, val=150000, units='lbm')
@@ -305,7 +307,7 @@ class Test2DOFOffDesign(unittest.TestCase):
         # compares provided problem with design problem
         prob_var_list = [
             Mission.RANGE,
-            Mission.TOTAL_FUEL,
+            Mission.TOTAL_FUEL_MASS,
             Mission.OPERATING_MASS,
             Aircraft.CrewPayload.CARGO_MASS,
             Aircraft.CrewPayload.TOTAL_PAYLOAD_MASS,
@@ -363,7 +365,7 @@ class Test2DOFOffDesign(unittest.TestCase):
             prob_off_design_max_range.get_val(Mission.RANGE), 4013.45700631, tolerance=1e-4
         )
         assert_near_equal(
-            prob_off_design_max_range.get_val(Mission.TOTAL_FUEL, 'lbm'),
+            prob_off_design_max_range.get_val(Mission.TOTAL_FUEL_MASS, 'lbm'),
             40019.62660076,
             tolerance=1e-5,
         )
@@ -439,7 +441,7 @@ class Test2DOFOffDesign(unittest.TestCase):
         )
         assert_near_equal(prob_off_design_min_fuel.get_val(Mission.RANGE), 1800, tolerance=1e-6)
         assert_near_equal(
-            prob_off_design_min_fuel.get_val(Mission.TOTAL_FUEL, 'lbm'),
+            prob_off_design_min_fuel.get_val(Mission.TOTAL_FUEL_MASS, 'lbm'),
             21452.85145652,
             tolerance=1e-6,
         )
@@ -504,7 +506,7 @@ class PayloadRangeTest(unittest.TestCase):
         )
 
         (aviary_inputs, initialization_guesses) = av.create_vehicle(
-            'models/aircraft/test_aircraft/aircraft_for_bench_FwFm.csv'
+            'validation_cases/validation_data/test_models/aircraft_for_bench_FwFm.csv'
         )
         aviary_inputs.set_val(Settings.PAYLOAD_RANGE, True)
         prob.load_inputs(aviary_inputs, phase_info)
