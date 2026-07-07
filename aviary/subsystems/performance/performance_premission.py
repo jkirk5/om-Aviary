@@ -8,9 +8,10 @@ from aviary.variable_info.variables import Aircraft, Mission
 class DesignMetrics(om.ExplicitComponent):
     """Calculates the thrust-to-weight ratio and wing loading of the aircraft."""
 
-    def setup(self):
+    def initialize(self):
         self.options.declare('subsystems')
 
+    def setup(self):
         add_aviary_input(self, Aircraft.Propulsion.TOTAL_SCALED_SLS_THRUST, units='lbf')
         add_aviary_input(self, Aircraft.Design.GROSS_MASS, units='lbm')
         add_aviary_input(self, Aircraft.Wing.AREA, units='ft**2')

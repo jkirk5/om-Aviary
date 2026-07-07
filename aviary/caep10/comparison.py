@@ -110,7 +110,7 @@ prob.model.add_subsystem('sar_group', SpecificAirRangeGroup(), promotes=['*'])
 for i in range(0, 3):
     prob.model.connect(Dynamic.Mission.VELOCITY, f'tas_{i + 1}', src_indices=om.slicer[i])
     prob.model.connect(
-        Dynamic.Vehicle.Propulsion.FUEL_FLOW_RATE_NEGATIVE_TOTAL,
+        Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
         f'w_f_{i + 1}',
         src_indices=om.slicer[i],
     )
@@ -154,7 +154,7 @@ om.n2(prob, show_browser=False)
 
 # cruise data (inputs to original method)
 tas_list = prob.get_val(Dynamic.Mission.VELOCITY, 'knot')
-w_f_list = -1 * prob.get_val(Dynamic.Vehicle.Propulsion.FUEL_FLOW_RATE_NEGATIVE_TOTAL, 'lbm/h')
+w_f_list = -1 * prob.get_val(Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL, 'lbm/h')
 mtom_kg = prob.get_val(Aircraft.Design.GROSS_MASS, 'kg')
 
 # OM outputs

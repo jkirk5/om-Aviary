@@ -75,7 +75,7 @@ class TestCAEP10Group(unittest.TestCase):
             'CO2_emissions_factor': (0.65702148, 'kg/km'),
             'CO2_emissions_factor_maximum': (0.75808449, 'kg/km'),
             Dynamic.Mission.VELOCITY: ([483.28790309, 483.28790309, 483.28790309], 'knot'),
-            Dynamic.Vehicle.Propulsion.FUEL_FLOW_RATE_NEGATIVE_TOTAL: (
+            Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL: (
                 [-4147.75386454, -3997.43969914, -3909.25937424],
                 'lbm/h',
             ),
