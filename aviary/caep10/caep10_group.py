@@ -1,5 +1,7 @@
 import dymos as dm
+import numpy as np
 import openmdao.api as om
+from openmdao.components.interp_util.interp import InterpND
 
 from aviary.caep10.co2_evaluation import CO2EmissionsMetric
 from aviary.caep10.mass_points import mass_points_calc
@@ -10,32 +12,76 @@ from aviary.mission.two_dof_problem_configurator import TwoDOFProblemConfigurato
 from aviary.utils.aviary_values import AviaryValues
 from aviary.variable_info.enums import EquationsOfMotion
 from aviary.variable_info.functions import setup_model_options, setup_trajectory_params
-from aviary.variable_info.variables import Aircraft, Dynamic, Mission, Settings
 from aviary.variable_info.variable_meta_data import CoreMetaData
+from aviary.variable_info.variables import Aircraft, Dynamic, Mission, Settings
 
 mission_info = {
-    'cruise': {
+    'pre_mission': {'include_takeoff': False, 'optimize_mass': True},
+    'climb': {
+        'subsystem_options': {'aerodynamics': {'method': 'computed'}},
         'user_options': {
-            'num_segments': 1,
+            'num_segments': 5,
             'order': 3,
-            # Mach: single constant value over the phase, picked by optimizer
-            'mach_optimize': True,
-            'mach_polynomial_order': 0,
-            'mach_bounds': ((0.5, 1.0), 'unitless'),
-            # Altitude: single constant value over the phase, picked by optimizer
-            'altitude_optimize': True,
-            'altitude_polynomial_order': 0,
-            'altitude_bounds': ((10000, 50000), 'ft'),
-            'mass_ref': (150000, 'lbm'),
-            'throttle_enforcement': 'boundary_constraint',
-            'time_initial_bounds': ((0, 0), 'min'),
-            'time_duration_bounds': ((0, 1000), 'min'),
+            'mach_optimize': False,
+            'mach_initial': (0.2, 'unitless'),
+            'mach_final': (0.72, 'unitless'),
+            'mach_bounds': ((0.18, 0.74), 'unitless'),
+            'mach_polynomial_order': 3,
+            'altitude_optimize': False,
+            'altitude_initial': (0.0, 'ft'),
+            'altitude_final': (32000.0, 'ft'),
+            'altitude_bounds': ((0.0, 34000.0), 'ft'),
+            'altitude_polynomial_order': 3,
+            'throttle_enforcement': 'path_constraint',
+            'time_initial': (0.0, 'min'),
+            'time_duration_bounds': ((64.0, 192.0), 'min'),
         },
-        'initial_guesses': {
-            'altitude': ([30000.0, 30000.0], 'ft'),
-            'mach': ([0.8, 0.8], 'unitless'),
+    },
+    'cruise': {
+        'subsystem_options': {'aerodynamics': {'method': 'computed'}},
+        'user_options': {
+            'num_segments': 5,
+            'order': 3,
+            'mach_optimize': False,
+            'mach_initial': (0.72, 'unitless'),
+            'mach_final': (0.72, 'unitless'),
+            'mach_bounds': ((0.7, 0.74), 'unitless'),
+            'mach_polynomial_order': 3,
+            'altitude_optimize': False,
+            'altitude_initial': (32000.0, 'ft'),
+            'altitude_final': (34000.0, 'ft'),
+            'altitude_bounds': ((23000.0, 38000.0), 'ft'),
+            'altitude_polynomial_order': 3,
+            'throttle_enforcement': 'path_constraint',
+            'time_initial_bounds': ((64.0, 192.0), 'min'),
+            'time_duration_bounds': ((56.5, 300.0), 'min'),
         },
-    }
+    },
+    'descent': {
+        'subsystem_options': {'aerodynamics': {'method': 'computed'}},
+        'user_options': {
+            'num_segments': 5,
+            'order': 3,
+            'mach_optimize': False,
+            'mach_initial': (0.72, 'unitless'),
+            'mach_final': (0.36, 'unitless'),
+            'mach_bounds': ((0.34, 0.74), 'unitless'),
+            'mach_polynomial_order': 3,
+            'altitude_optimize': False,
+            'altitude_initial': (34000.0, 'ft'),
+            'altitude_final': (500.0, 'ft'),
+            'altitude_bounds': ((0.0, 38000.0), 'ft'),
+            'altitude_polynomial_order': 3,
+            'throttle_enforcement': 'path_constraint',
+            'time_initial_bounds': ((120.5, 361.5), 'min'),
+            'time_duration_bounds': ((29.0, 87.0), 'min'),
+        },
+    },
+    'post_mission': {
+        'include_landing': False,
+        'constrain_range': True,
+        'target_range': (1906, 'nmi'),
+    },
 }
 
 
@@ -154,7 +200,8 @@ class CAEP10EmissionsGroup(om.Group):
 
         ode_opt.set_solver_print(0)
 
-        ode_opt.model.add_objective(Mission.Objectives.RANGE, ref=-1)
+        # ode_opt.model.add_objective(Mission.Objectives.RANGE, ref=-1)
+        # ode_opt.model.add_objective(Mission.RANGE, ref=-1)
         # We don't have access to the original problem's optimizer here, so we must pick one
         # Check for which optimizers are available
         try:
@@ -202,23 +249,49 @@ class CAEP10EmissionsGroup(om.Group):
                 problem=ode_opt,
                 inputs=['*'],
                 outputs=[
-                    Dynamic.Vehicle.Propulsion.FUEL_FLOW_RATE_NEGATIVE_TOTAL,
-                    Dynamic.Mission.VELOCITY,
+                    '*'
+                    # f'traj.cruise.timeseries.{Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL}',
+                    # f'traj.cruise.timeseries.{Dynamic.Mission.VELOCITY}',
+                    # f'traj.cruise.timeseries.{Dynamic.Vehicle.MASS}',
                 ],
             ),
             promotes_inputs=['*'],
-            promotes_outputs=[
-                Dynamic.Vehicle.Propulsion.FUEL_FLOW_RATE_NEGATIVE_TOTAL,
-                Dynamic.Mission.VELOCITY,
-            ],
+            # promotes_outputs=[
+            #     Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
+            #     Dynamic.Mission.VELOCITY,
+            # ],
         )
         setup_model_options(ode_opt, aviary_inputs)
+
+        self.add_subsystem(
+            'mass_interp',
+            MassInterp(),
+            # promotes_inputs=[],
+            promotes_outputs=[
+                Dynamic.Mission.VELOCITY,
+                Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
+            ],
+        )
+
+        self.connect(
+            f'cruise_perf.traj:cruise:timeseries:{Dynamic.Vehicle.MASS}',
+            f'mass_interp.{Dynamic.Vehicle.MASS}_training',
+        )
+        self.connect(
+            f'cruise_perf.traj:cruise:timeseries:{Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL}',
+            f'mass_interp.{Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL}_training',
+        )
+        self.connect(
+            f'cruise_perf.traj:cruise:timeseries:{Dynamic.Mission.VELOCITY}',
+            f'mass_interp.{Dynamic.Mission.VELOCITY}_training',
+        )
+        self.connect(Dynamic.Vehicle.MASS, f'mass_interp.{Dynamic.Vehicle.MASS}_points')
 
         self.add_subsystem('sar_group', SpecificAirRangeGroup(), promotes=['*'])
         for i in range(0, 3):
             self.connect(Dynamic.Mission.VELOCITY, f'tas_{i + 1}', src_indices=om.slicer[i])
             self.connect(
-                Dynamic.Vehicle.Propulsion.FUEL_FLOW_RATE_NEGATIVE_TOTAL,
+                Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
                 f'w_f_{i + 1}',
                 src_indices=om.slicer[i],
             )
@@ -253,3 +326,41 @@ class CustomSubmodelComp(om.SubmodelComp):
         sub.set_val(Dynamic.Atmosphere.MACH_RATE, [0, 0, 0], '1/s')
 
         sub.final_setup()
+
+
+class MassInterp(om.ExplicitComponent):
+    def setup(self):
+        nn = 20
+        self.add_input(Dynamic.Vehicle.MASS + '_training', units='lbm', shape=nn)
+        self.add_input(Dynamic.Mission.VELOCITY + '_training', units='knot', shape=nn)
+        self.add_input(
+            Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL + '_training',
+            units='lbm/h',
+            shape=nn,
+        )
+
+        self.add_input(Dynamic.Vehicle.MASS + '_points', val=np.zeros(3), units='lbm')
+
+        self.add_output(Dynamic.Mission.VELOCITY, val=np.zeros(3), units='knot')
+        self.add_output(
+            Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
+            val=np.zeros(3),
+            units='lbm/h',
+        )
+
+    def compute(self, inputs, outputs):
+        mass_train = inputs[Dynamic.Vehicle.MASS + '_training']
+        velocity_train = inputs[Dynamic.Mission.VELOCITY + '_training']
+        fuel_flow_train = inputs[
+            Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL + '_training'
+        ]
+
+        mass_points = inputs[Dynamic.Vehicle.MASS + '_points']
+
+        interp_velocity = InterpND(method='lagrange3', points=mass_train, values=velocity_train)
+        interp_fuel_flow = InterpND(method='lagrange3', points=mass_train, values=fuel_flow_train)
+
+        outputs[Dynamic.Mission.VELOCITY] = interp_velocity.interpolate(mass_points.T)
+        outputs[Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL] = (
+            interp_fuel_flow.interpolate(mass_points.T)
+        )

@@ -38,6 +38,10 @@ class TestCAEP10Group(unittest.TestCase):
 
         prob.setup()
 
+        om.n2(prob, outfile='problem.html', show_browser=False)
+        om.n2(
+            prob.model.emissions.cruise_perf.problem, outfile='subproblem.html', show_browser=False
+        )
         # prob.set_val(Dynamic.Atmosphere.MACH, [0.82, 0.82, 0.82])
         # prob.set_val(Dynamic.Mission.ALTITUDE, [9144, 9144, 9144], units='m')
         # prob.set_val(Dynamic.Mission.ALTITUDE_RATE, [0, 0, 0], 'm/s')
