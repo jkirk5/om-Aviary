@@ -40,12 +40,12 @@ class FlightODE(TwoDOFODE):
         user_options = self.options['user_options']
         input_speed_type = self.options['input_speed_type']
 
-        if input_speed_type is SpeedType.EAS:
-            speed_inputs = ['EAS']
-            speed_outputs = ['mach', Dynamic.Mission.VELOCITY]
-        elif input_speed_type is SpeedType.MACH:
-            speed_inputs = ['mach']
-            speed_outputs = ['EAS', Dynamic.Mission.VELOCITY]
+        # if input_speed_type is SpeedType.EAS:
+        #     speed_inputs = ['EAS']
+        #     speed_outputs = ['mach', Dynamic.Mission.VELOCITY]
+        # elif input_speed_type is SpeedType.MACH:
+        #     speed_inputs = ['mach']
+        #     speed_outputs = ['EAS', Dynamic.Mission.VELOCITY]
 
         self.add_subsystem(
             name='atmosphere',
@@ -226,8 +226,8 @@ class FlightODE(TwoDOFODE):
         self.set_input_defaults(Dynamic.Mission.ALTITUDE, val=np.ones(nn), units='ft')
         self.set_input_defaults(Dynamic.Vehicle.MASS, val=np.ones(nn), units='lbm')
         self.set_input_defaults(Dynamic.Atmosphere.MACH, val=np.ones(nn), units='unitless')
-        self.set_input_defaults(
-            Dynamic.Vehicle.Propulsion.THROTTLE, val=np.ones(nn), units='unitless'
-        )
+        # self.set_input_defaults(
+        #     Dynamic.Vehicle.Propulsion.THROTTLE, val=np.ones(nn), units='unitless'
+        # )
 
         self.set_input_defaults(Aircraft.Wing.AREA, val=1.0, units='ft**2')

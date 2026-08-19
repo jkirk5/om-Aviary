@@ -6,7 +6,6 @@ from aviary.utils.functions import promote_aircraft_and_mission_vars
 from aviary.variable_info.variable_meta_data import CoreMetaData
 
 
-#
 class ExternalSubsystemGroup(om.Group):
     """
     Create a lightly modified version of an OM group to add external subsystems to the
