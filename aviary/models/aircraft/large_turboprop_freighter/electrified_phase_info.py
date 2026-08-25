@@ -17,7 +17,7 @@ energy_phase_info = {
             'no_descent': True,
             'mass_ref': (154000, 'lbm'),
             'throttle_enforcement': 'control',
-            'throttle_bounds': ((0.3, 1), 'unitless'),
+            'throttle_bounds': ((0.4, 1), 'unitless'),
             'time_initial_bounds': ((0.0, 0.0), 'min'),
             'time_duration_bounds': ((24.0, 128.0), 'min'),
         },
@@ -47,7 +47,7 @@ energy_phase_info = {
         'initial_guesses': {
             'altitude': ([21_000, 21_000.0], 'ft'),
             'mach': ([0.475, 0.475], 'unitless'),
-            'throttle': ([1, 1], 'unitless'),
+            'throttle': ([1.0, 1.0], 'unitless'),
         },
     },
     'descent': {
@@ -66,7 +66,7 @@ energy_phase_info = {
             'mass_ref': (154000, 'lbm'),
             'no_climb': True,
             'throttle_enforcement': 'control',
-            'throttle_bounds': ((0.3, 0.6), 'unitless'),
+            'throttle_bounds': ((0.15, 0.5), 'unitless'),
             'time_initial_bounds': ((80, 1056.5), 'min'),
             'time_duration_bounds': ((29.0, 128.0), 'min'),
         },

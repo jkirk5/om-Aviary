@@ -28,9 +28,9 @@ class LargeElectricTurbopropFreighterBenchmark(unittest.TestCase):
         elif mission_method == '2DOF':
             phase_info = deepcopy(two_dof_phase_info)
 
-        del phase_info['climb']
+        # del phase_info['climb']
         # del phase_info['cruise']
-        del phase_info['descent']
+        # del phase_info['descent']
 
         # Build problem
         prob = AviaryProblem(verbosity=0)
