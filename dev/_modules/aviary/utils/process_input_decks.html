@@ -36,8 +36,8 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=3683e473" />
     <link rel="stylesheet" type="text/css" href="../../../_static/version_switcher.css?v=516df71e" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=3683e473" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
@@ -297,6 +297,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../examples/intro.html">Examples Outline</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../examples/simple_mission.html">Running a Simple Mission</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../examples/custom_optimization.html">Running a Custom Optimization</a></li>
+
 <li class="toctree-l1"><a class="reference internal" href="../../../examples/reserve_mission.html">Running a Reserve Mission</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../examples_unreviewed/more_advanced_example.html">Optimizing the Mission Profile of a Conventional Aircraft</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../examples/off_design_missions.html">Off-Design Missions</a></li>
@@ -1064,26 +1065,6 @@
             <span class="s1">&#39;val&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
             <span class="s1">&#39;relation&#39;</span><span class="p">:</span> <span class="s1">&#39;&lt;&#39;</span><span class="p">,</span>
             <span class="s1">&#39;target&#39;</span><span class="p">:</span> <span class="n">Aircraft</span><span class="o">.</span><span class="n">Design</span><span class="o">.</span><span class="n">ULF_CALCULATED_FROM_MANEUVER</span><span class="p">,</span>
-            <span class="s1">&#39;result&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-            <span class="s1">&#39;alternate&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="p">},</span>
-    <span class="p">],</span>
-    <span class="p">[</span>
-        <span class="n">Aircraft</span><span class="o">.</span><span class="n">HorizontalTail</span><span class="o">.</span><span class="n">VOLUME_COEFFICIENT</span><span class="p">,</span>
-        <span class="p">{</span>
-            <span class="s1">&#39;val&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-            <span class="s1">&#39;relation&#39;</span><span class="p">:</span> <span class="s1">&#39;==&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;target&#39;</span><span class="p">:</span> <span class="n">Aircraft</span><span class="o">.</span><span class="n">Design</span><span class="o">.</span><span class="n">COMPUTE_HTAIL_VOLUME_COEFF</span><span class="p">,</span>
-            <span class="s1">&#39;result&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-            <span class="s1">&#39;alternate&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="p">},</span>
-    <span class="p">],</span>
-    <span class="p">[</span>
-        <span class="n">Aircraft</span><span class="o">.</span><span class="n">VerticalTail</span><span class="o">.</span><span class="n">VOLUME_COEFFICIENT</span><span class="p">,</span>
-        <span class="p">{</span>
-            <span class="s1">&#39;val&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-            <span class="s1">&#39;relation&#39;</span><span class="p">:</span> <span class="s1">&#39;==&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;target&#39;</span><span class="p">:</span> <span class="n">Aircraft</span><span class="o">.</span><span class="n">Design</span><span class="o">.</span><span class="n">COMPUTE_VTAIL_VOLUME_COEFF</span><span class="p">,</span>
             <span class="s1">&#39;result&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
             <span class="s1">&#39;alternate&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
         <span class="p">},</span>

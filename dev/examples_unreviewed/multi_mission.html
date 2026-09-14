@@ -37,8 +37,8 @@
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=3683e473" />
     <link rel="stylesheet" type="text/css" href="../_static/version_switcher.css?v=516df71e" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=3683e473" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
@@ -302,6 +302,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../examples/intro.html">Examples Outline</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/simple_mission.html">Running a Simple Mission</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/custom_optimization.html">Running a Custom Optimization</a></li>
+
 <li class="toctree-l1"><a class="reference internal" href="../examples/reserve_mission.html">Running a Reserve Mission</a></li>
 <li class="toctree-l1"><a class="reference internal" href="more_advanced_example.html">Optimizing the Mission Profile of a Conventional Aircraft</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/off_design_missions.html">Off-Design Missions</a></li>
@@ -775,13 +776,6 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[1788209852.042858] [runnervmgx7h7:4517 :0]        ib_iface.c:1269 UCX  ERROR mana_0: iface 0x55904aacd690 failed to create UD QP TX wr:256 sge:6 inl:64 resp:0 RX wr:4096 sge:1 resp:0 failed: Operation not supported
-[1788209852.043156] [runnervmgx7h7:4517 :0]      ucp_worker.c:1412 UCX  ERROR uct_iface_open(ud_verbs/mana_0:1) failed: Input/output error
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[runnervmgx7h7:04517] pml_ucx.c:313  Error: Failed to create UCP worker
-</pre></div>
-</div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Total number of variables............................:      192
                      variables with only lower bounds:      182
                 variables with lower and upper bounds:       10
@@ -796,12 +790,12 @@ Total number of inequality constraints...............:      124
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Number of Iterations....: 44
 
                                    (scaled)                 (unscaled)
-Objective...............:   2.1871834676333926e+01    2.5517140455722911e+04
-Dual infeasibility......:   1.1100780027597505e-09    1.2950910032197089e-06
-Constraint violation....:   2.4130184723465674e-10    2.4130184723465674e-10
+Objective...............:   2.1871834676333844e+01    2.5517140455722816e+04
+Dual infeasibility......:   1.1100782525599294e-09    1.2950912946532507e-06
+Constraint violation....:   2.4130485349911681e-10    2.4130485349911681e-10
 Variable bound violation:   0.0000000000000000e+00    0.0000000000000000e+00
-Complementarity.........:   3.1624119734190133e-08    3.6894806356555152e-05
-Overall NLP error.......:   3.1624119734190133e-08    3.6894806356555152e-05
+Complementarity.........:   3.1624119734175668e-08    3.6894806356538279e-05
+Overall NLP error.......:   3.1624119734175668e-08    3.6894806356538279e-05
 
 
 Number of objective function evaluations             = 107
@@ -811,7 +805,7 @@ Number of inequality constraint evaluations          = 107
 Number of equality constraint Jacobian evaluations   = 48
 Number of inequality constraint Jacobian evaluations = 48
 Number of Lagrangian Hessian evaluations             = 0
-Total seconds in IPOPT                               = 48.982
+Total seconds in IPOPT                               = 36.313
 
 EXIT: Optimal Solution Found.
 
@@ -835,7 +829,7 @@ Optimization Problem -- Optimization using pyOpt_sparse
 
    Constraints (i - inequality, e - equality)
       Index  Name                                                          Type          Lower           Value           Upper    Status  Lagrange Multiplier (N/A)
-        186  mission1.gross_mass_resid                                        i   0.000000E+00    1.122580E-07    1.000000E+30         l    9.00000E+100
+        186  mission1.gross_mass_resid                                        i   0.000000E+00    1.122580E-07    1.000000E+20         l    9.00000E+100
 </pre></div>
 </div>
 <div class="output text_html">
@@ -1057,12 +1051,12 @@ Total number of inequality constraints...............:      124
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Number of Iterations....: 44
 
                                    (scaled)                 (unscaled)
-Objective...............:   2.1871834676333748e+01    2.5517140455722703e+04
-Dual infeasibility......:   1.1100754978190512e-09    1.2950880807888929e-06
-Constraint violation....:   2.4130339992069663e-10    2.4130339992069663e-10
+Objective...............:   2.1871834676333901e+01    2.5517140455722882e+04
+Dual infeasibility......:   1.1101248333547080e-09    1.2951456389138258e-06
+Constraint violation....:   2.4130483698118009e-10    2.4130483698118009e-10
 Variable bound violation:   0.0000000000000000e+00    0.0000000000000000e+00
-Complementarity.........:   3.1624119734190822e-08    3.6894806356555959e-05
-Overall NLP error.......:   3.1624119734190822e-08    3.6894806356555959e-05
+Complementarity.........:   3.1624119734184277e-08    3.6894806356548322e-05
+Overall NLP error.......:   3.1624119734184277e-08    3.6894806356548322e-05
 
 
 Number of objective function evaluations             = 107
@@ -1072,12 +1066,12 @@ Number of inequality constraint evaluations          = 107
 Number of equality constraint Jacobian evaluations   = 48
 Number of inequality constraint Jacobian evaluations = 48
 Number of Lagrangian Hessian evaluations             = 0
-Total seconds in IPOPT                               = 49.037
+Total seconds in IPOPT                               = 35.692
 
 EXIT: Optimal Solution Found.
-
-
-Optimization Problem -- Optimization using pyOpt_sparse
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Optimization Problem -- Optimization using pyOpt_sparse
 ================================================================================
     Objective Function: _objfunc
 
@@ -1096,7 +1090,7 @@ Optimization Problem -- Optimization using pyOpt_sparse
 
    Constraints (i - inequality, e - equality)
       Index  Name                                                          Type          Lower           Value           Upper    Status  Lagrange Multiplier (N/A)
-        186  mission1.gross_mass_resid                                        i   0.000000E+00    1.122580E-07    1.000000E+30         l    9.00000E+100
+        186  mission1.gross_mass_resid                                        i   0.000000E+00    1.122580E-07    1.000000E+20         l    9.00000E+100
 </pre></div>
 </div>
 <div class="output text_html">

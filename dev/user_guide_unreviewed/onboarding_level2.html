@@ -37,8 +37,8 @@
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=3683e473" />
     <link rel="stylesheet" type="text/css" href="../_static/version_switcher.css?v=516df71e" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=3683e473" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
@@ -302,6 +302,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../examples/intro.html">Examples Outline</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/simple_mission.html">Running a Simple Mission</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/custom_optimization.html">Running a Custom Optimization</a></li>
+
 <li class="toctree-l1"><a class="reference internal" href="../examples/reserve_mission.html">Running a Reserve Mission</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples_unreviewed/more_advanced_example.html">Optimizing the Mission Profile of a Conventional Aircraft</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/off_design_missions.html">Off-Design Missions</a></li>
@@ -718,13 +719,6 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[1788210220.099779] [runnervmgx7h7:5163 :0]        ib_iface.c:1269 UCX  ERROR mana_0: iface 0x556d43146fc0 failed to create UD QP TX wr:256 sge:6 inl:64 resp:0 RX wr:4096 sge:1 resp:0 failed: Operation not supported
-[1788210220.100072] [runnervmgx7h7:5163 :0]      ucp_worker.c:1412 UCX  ERROR uct_iface_open(ud_verbs/mana_0:1) failed: Input/output error
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[runnervmgx7h7:05163] pml_ucx.c:313  Error: Failed to create UCP worker
-</pre></div>
-</div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>req_fuel_mass &gt; max_wingfuel_mass, adding a body tank
 </pre></div>
 </div>
@@ -742,7 +736,7 @@ Total number of inequality constraints...............:       34
 Number of Iterations....: 0
 
                                    (scaled)                 (unscaled)
-Objective...............:   5.1722886909008077e+00    5.1722886909008077e+00
+Objective...............:   5.1722886909006149e+00    5.1722886909006149e+00
 Dual infeasibility......:   1.6500000000000000e+01    1.6500000000000000e+01
 Constraint violation....:   8.8081681383747128e+00    8.8081681383747128e+00
 Variable bound violation:   0.0000000000000000e+00    0.0000000000000000e+00
@@ -757,7 +751,7 @@ Number of inequality constraint evaluations          = 1
 Number of equality constraint Jacobian evaluations   = 1
 Number of inequality constraint Jacobian evaluations = 1
 Number of Lagrangian Hessian evaluations             = 0
-Total seconds in IPOPT                               = 1.383
+Total seconds in IPOPT                               = 1.569
 
 EXIT: Maximum Number of Iterations Exceeded.
 
@@ -975,7 +969,7 @@ Optimization Problem -- Optimization using pyOpt_sparse
         218  traj.rotation.collocation_constraint.defects:distance                          e   0.000000E+00    1.251386E+00    0.000000E+00         E    9.00000E+100
         219  traj.rotation.collocation_constraint.defects:distance                          e   0.000000E+00    1.914830E-01    0.000000E+00         E    9.00000E+100
         220  traj.rotation.collocation_constraint.defects:distance                          e   0.000000E+00   -1.615733E-01    0.000000E+00         E    9.00000E+100
-        221  mission:constraints:excess_fuel_mass_capacity                                  i   0.000000E+00    2.910383E-16    1.000000E+30         l    9.00000E+100
+        221  mission:constraints:excess_fuel_mass_capacity                                  i   0.000000E+00    2.182787E-16    1.000000E+20         l    9.00000E+100
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Warning: 
@@ -1473,7 +1467,7 @@ There is a special objective type: <code class="docutils literal notranslate"><s
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Mission.Objectives.FUEL [5.17228869]
-Mission.TOTAL_FUEL [43389.55357573]
+Mission.TOTAL_FUEL [43389.55357567]
 Mission.GROSS_MASS (takeoff_mass) [175400.]
 Mission.FINAL_MASS [136000.]
 
@@ -1507,9 +1501,7 @@ done
   warnings.warn(&quot;matplotlib not found, plotting disabled.&quot;)
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[1788210255.853351] [runnervmgx7h7:5203 :0]        ib_iface.c:1269 UCX  ERROR mana_0: iface 0x5576ffe5e4e0 failed to create UD QP TX wr:256 sge:6 inl:64 resp:0 RX wr:4096 sge:1 resp:0 failed: Operation not supported
-[1788210255.853677] [runnervmgx7h7:5203 :0]      ucp_worker.c:1412 UCX  ERROR uct_iface_open(ud_verbs/mana_0:1) failed: Input/output error
-[runnervmgx7h7:05203] pml_ucx.c:313  Error: Failed to create UCP worker
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/home/runner/work/om-Aviary/om-Aviary/.openmdao-pixi/.pixi/envs/py313/lib/python3.13/site-packages/openmdao/core/constants.py:16: OMDeprecationWarning:The INF_BOUND sentinel in OpenMDAO is deprecated. Infinite bounds should now be specified using None or +/-np.inf.
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Total number of variables............................:       96
@@ -1527,7 +1519,7 @@ Number of Iterations....: 0
 
                                    (scaled)                 (unscaled)
 Objective...............:   3.9800875570924603e+00    3.9800875570924603e+00
-Dual infeasibility......:   7.8792026331676346e-01    7.8792026331676346e-01
+Dual infeasibility......:   7.8792026331682263e-01    7.8792026331682263e-01
 Constraint violation....:   1.9006004373650107e+00    1.9006004373650107e+00
 Variable bound violation:   0.0000000000000000e+00    0.0000000000000000e+00
 Complementarity.........:   7.9560101797999998e+00    7.9560101797999998e+00
@@ -1541,12 +1533,12 @@ Number of inequality constraint evaluations          = 1
 Number of equality constraint Jacobian evaluations   = 1
 Number of inequality constraint Jacobian evaluations = 1
 Number of Lagrangian Hessian evaluations             = 0
-Total seconds in IPOPT                               = 0.808
+Total seconds in IPOPT                               = 0.799
 
 EXIT: Maximum Number of Iterations Exceeded.
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Optimization Problem -- Optimization using pyOpt_sparse
+
+
+Optimization Problem -- Optimization using pyOpt_sparse
 ================================================================================
     Objective Function: _objfunc
 
@@ -1735,7 +1727,7 @@ Aviary run failed. See the dashboard for more details.
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/home/runner/work/om-Aviary/om-Aviary/.openmdao-pixi/.pixi/envs/py313/lib/python3.13/site-packages/openmdao/core/total_jac.py:1907: DerivativesWarning:The following design variables have no impact on the constraints or objective at the current design point:
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/home/runner/work/om-Aviary/om-Aviary/.openmdao-pixi/.pixi/envs/py313/lib/python3.13/site-packages/openmdao/core/total_jac.py:1953: DerivativesWarning:The following design variables have no impact on the constraints or objective at the current design point:
   traj.cruise.t_initial, inds=[0]
 </pre></div>
 </div>
