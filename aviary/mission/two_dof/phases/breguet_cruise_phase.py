@@ -11,6 +11,21 @@ from aviary.variable_info.variables import Aircraft, Dynamic
 
 class BreguetCruisePhaseOptions(AviaryOptionsDictionary):
     def declare_options(self):
+        self.declare(
+            name='num_segments',
+            types=int,
+            default=None,
+            desc='The number of segments in transcription creation in Dymos. ',
+        )
+
+        self.declare(
+            name='order',
+            types=int,
+            default=None,
+            desc='The order of polynomials for interpolation in the transcription '
+            'created in Dymos.',
+        )
+
         self.declare(name='alt_cruise', default=0.0, units='ft', desc='Cruise altitude.')
 
         self.declare(name='mach_cruise', default=0.0, desc='Cruise Mach number.')
@@ -124,15 +139,14 @@ class BreguetCruisePhase(PhaseBuilder):
         subsystems=None,
         meta_data=None,
     ):
+        is_analytic = True
         for sub in subsystems:
             states = sub.get_states(
                 user_options=user_options,
                 subsystem_options=subsystem_options,
             )
             if len(states) > 0:
-                raise AttributeError(
-                    'The Breguet Cruise phase does not support dynamic variables in its subsystems.'
-                )
+                is_analytic = False
 
         super().__init__(
             name=name,
@@ -143,7 +157,7 @@ class BreguetCruisePhase(PhaseBuilder):
             transcription=transcription,
             subsystems=subsystems,
             meta_data=meta_data,
-            is_analytic_phase=True,
+            is_analytic_phase=is_analytic,
         )
 
     def build_phase(self, aviary_options: AviaryValues = None):
