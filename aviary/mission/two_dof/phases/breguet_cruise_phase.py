@@ -30,6 +30,14 @@ class BreguetCruisePhaseOptions(AviaryOptionsDictionary):
 
         self.declare(name='mach_cruise', default=0.0, desc='Cruise Mach number.')
 
+        # This phase only integrates time if there are states added by the subsystems.
+        defaults = {
+            'time_initial_bounds': (0, 3600),
+            'time_duration_bounds': (0, 36000),
+            'initial_time_direct_link': True,
+        }
+        self.add_time_options(units='s', defaults=defaults)
+
         self.declare(
             'reserve',
             types=bool,
@@ -46,39 +54,6 @@ class BreguetCruisePhaseOptions(AviaryOptionsDictionary):
             desc='The total distance traveled by the aircraft from takeoff to landing '
             'for the primary mission, not including reserve missions. This value must '
             'be positive.',
-        )
-
-        self.declare(
-            'time_duration',
-            default=None,
-            units='s',
-            desc='The amount of time taken by this phase added as a constraint.',
-        )
-
-        self.declare(
-            name='time_duration_bounds',
-            default=(0, 3600),
-            units='s',
-            desc='Lower and upper bounds on the phase duration, in the form of a nested tuple: '
-            'i.e. ((20, 36), "min") This constrains the duration to be between 20 and 36 min.',
-        )
-
-        self.declare(
-            'time_initial_bounds',
-            types=tuple,
-            default=(0.0, 100.0),
-            units='s',
-            desc='Lower and upper bounds on the starting time for this phase relative to the '
-            'starting time of the mission, i.e., ((25, 45), "min") constrians this phase to '
-            'start between 25 and 45 minutes after the start of the mission.',
-        )
-
-        self.declare(
-            name='time_initial_direct_link',
-            default=True,
-            types=bool,
-            desc='When True, directly link the initial time parameter to the previous '
-            'phase. When False, use a constraint.',
         )
 
         self.declare(
