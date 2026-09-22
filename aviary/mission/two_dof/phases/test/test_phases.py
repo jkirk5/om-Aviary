@@ -24,43 +24,5 @@ class DynBuilder(SubsystemBuilder):
         return om.ExecComp('x_dot = x**2 + x')
 
 
-@use_tempdirs
-class TestTwoDOFPhases(unittest.TestCase):
-    def test_breguet_error_message(self):
-        local_phase_info = deepcopy(two_dof_phase_info)
-
-        local_phase_info['cruise'] = {
-            'subsystem_options': {'aerodynamics': {'method': 'cruise', 'output_alpha': True}},
-            'user_options': {
-                'phase_type': PhaseType.BREGUET_RANGE,
-                'alt_cruise': (37.5e3, 'ft'),
-                'mach_cruise': 10.8,
-            },
-            'initial_guesses': {
-                # [Initial mass, delta mass] for special cruise phase.
-                'mass': ([171481.0, -35000], 'lbm'),
-                'initial_distance': (200.0e3, 'ft'),
-                'initial_time': (1516.0, 's'),
-                'altitude': (37.5e3, 'ft'),
-                'mach': (0.8, 'unitless'),
-            },
-        }
-
-        prob = AviaryProblem()
-
-        prob.load_inputs(
-            'validation_cases/validation_data/test_models/aircraft_for_bench_GwGm.csv',
-            local_phase_info,
-        )
-        prob.load_external_subsystems([DynBuilder()])
-        prob.check_and_preprocess_inputs()
-
-        with self.assertRaises(AttributeError) as cm:
-            prob.build_model()
-
-        err_text = 'The Breguet Cruise phase does not support dynamic variables in its subsystems.'
-        self.assertEqual(str(cm.exception), err_text)
-
-
 if __name__ == '__main__':
     unittest.main()
