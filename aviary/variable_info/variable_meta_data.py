@@ -7725,7 +7725,7 @@ add_meta_data(
     meta_data=_MetaData,
     historical_name={'GASP': None, 'FLOPS': None},
     units='lbm',
-    desc='Fuel burned to taxi from the gate to the runway. Only used in energy-state EOM. Not used in 2DOF EOM.',
+    desc='Fuel burned to taxi from the gate to the runway.',
     option=False,
     default_value=0.0,
 )
