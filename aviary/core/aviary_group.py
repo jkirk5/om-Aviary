@@ -1504,7 +1504,7 @@ class AviaryGroup(om.Group):
 
             # Set initial guesses for states, controls and time for each phase.
             self.configurator.set_phase_initial_guesses(
-                self, phase_name, phase, guesses, target_prob, parent_prefix
+                self, phase_name, idx, phase, guesses, target_prob, parent_prefix
             )
 
     def _add_subsystem_guesses(self, phase_name, phase):

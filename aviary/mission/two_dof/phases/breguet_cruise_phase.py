@@ -38,6 +38,13 @@ class BreguetCruisePhaseOptions(AviaryOptionsDictionary):
         }
         self.add_time_options(units='s', defaults=defaults)
 
+        # This phase only integrates mass if there are states added by the subsystems.
+        defaults = {
+            'mass_bounds': (0.0, None),
+            'mass_direct_link': False,
+        }
+        self.add_state_options('mass', units='lbm', defaults=defaults)
+
         self.declare(
             'reserve',
             types=bool,
@@ -76,7 +83,7 @@ class BreguetCruisePhaseOptions(AviaryOptionsDictionary):
             name='mass_direct_link',
             default=False,
             types=bool,
-            desc='Because mass is output, this should always be false..',
+            desc='Because mass is output, this should always be false.',
         )
 
 
@@ -151,6 +158,14 @@ class BreguetCruisePhase(PhaseBuilder):
         dymos.Phase
         """
         phase = super().build_phase(aviary_options)
+        analytic = self.is_analytic_phase
+
+        if not analytic:
+            self.add_state(
+                'mass',
+                Dynamic.Vehicle.MASS,
+                Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
+            )
 
         # Custom configurations for the climb phase
         user_options = self.user_options
@@ -160,12 +175,27 @@ class BreguetCruisePhase(PhaseBuilder):
 
         phase = self.add_subsystem_variables_to_phase(phase, aviary_options)
 
+        if analytic:
+            # The Breguet Range Cruise phase integrates over mass instead of time.
+            # We rely on mass being monotonically non-increasing across the phase.
+            # TODO: Remove hardcoded bounds where possible.
+            phase.set_time_options(
+                name='mass',
+                fix_initial=False,
+                fix_duration=False,
+                units='lbm',
+                targets='mass',
+                initial_bounds=(0.0, 1.0e7),
+                initial_ref=100.0e3,
+                duration_bounds=(-1.0e7, -1),
+                duration_ref=50000,
+            )
+
         phase.add_parameter(Dynamic.Mission.ALTITUDE, opt=False, val=alt_cruise, units=alt_units)
         phase.add_parameter(Dynamic.Atmosphere.MACH, opt=False, val=mach_cruise)
         phase.add_parameter('initial_distance', opt=False, val=0.0, units='NM', static_target=True)
         phase.add_parameter('initial_time', opt=False, val=0.0, units='s', static_target=True)
 
-        phase.add_timeseries_output(Dynamic.Mission.DISTANCE, units='nmi')
         phase.add_timeseries_output(Dynamic.Mission.DISTANCE, units='nmi')
         phase.add_timeseries_output(Dynamic.Vehicle.DRAG, units='lbf')
         phase.add_timeseries_output(Dynamic.Vehicle.LIFT, units='lbf')
@@ -183,6 +213,12 @@ class BreguetCruisePhase(PhaseBuilder):
             Dynamic.Vehicle.MASS,
         ]
         return linked_vars
+
+    def _extra_ode_init_kwargs(self):
+        """Return extra kwargs required for initializing the ODE."""
+        return {
+            'is_analytic_phase': self.is_analytic_phase,
+        }
 
 
 BreguetCruisePhase._add_initial_guess_meta_data(

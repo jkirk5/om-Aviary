@@ -218,6 +218,7 @@ class PhaseBuilder(ABC):
         )
 
         # overrides should add state, controls, etc.
+        self.phase = phase
         return phase
 
     def make_default_transcription(self):

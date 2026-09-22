@@ -146,7 +146,7 @@ class SimpleCruisePhase(PhaseBuilder):
         -------
         dymos.Phase
         """
-        phase = self.phase = super().build_phase(aviary_options)
+        phase = super().build_phase(aviary_options)
 
         # Custom configurations for the climb phase
         user_options = self.user_options
