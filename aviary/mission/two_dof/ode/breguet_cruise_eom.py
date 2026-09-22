@@ -106,7 +106,9 @@ class RangeComp(om.ExplicitComponent):
         self.declare_partials('cruise_time', 'cruise_time_initial', val=1.0)
 
         self.declare_partials('cruise_range', 'TAS_cruise')
-        self.declare_partials('cruise_time', 'TAS_cruise', val=0.0)
+
+        # This is 0. It is more efficient not to declare it.
+        # self.declare_partials('cruise_time', 'TAS_cruise', val=0.0)
 
         # Allocated memory so we don't have to repeatedly do it in compute_partials
         # Note: since these are only used in compute_partials we don't have to worry about them supporting

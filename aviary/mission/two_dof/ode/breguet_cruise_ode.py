@@ -15,15 +15,6 @@ from aviary.variable_info.variables import Dynamic
 class BreguetCruiseODE(TwoDOFODE):
     """The GASP based cruise ODE."""
 
-    def initialize(self):
-        super().initialize()
-
-        self.options.declare(
-            'is_analytic_phase',
-            default=True,
-            types=bool,
-            desc='When True, configure this ODE as analytic.')
-
     def setup(self):
         nn = self.options['num_nodes']
 

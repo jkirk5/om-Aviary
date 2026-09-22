@@ -877,7 +877,7 @@ class AviaryGroup(om.Group):
 
         # If a target distance (or time) has been specified for this phase distance (or time) is
         # measured from the start of this phase to the end of this phase
-        for phase_name in self.mission_info:
+        for idx, phase_name in enumerate(self.mission_info):
             user_options = self.mission_info[phase_name]['user_options']
 
             target_distance = user_options.get('target_distance', (None, 'nmi'))
@@ -912,9 +912,9 @@ class AviaryGroup(om.Group):
             # this is only used for analytic phases with a target duration
             time_duration = user_options.get('time_duration', (None, 'min'))
             time_duration = wrapped_convert_units(time_duration, 'min')
-            integrates_mass = user_options['phase_type'] is PhaseType.BREGUET_RANGE
+            is_analytic = self.phase_objects[idx].is_analytic_phase
 
-            if integrates_mass and time_duration is not None:
+            if is_analytic and time_duration is not None:
                 post_mission.add_subsystem(
                     f'{phase_name}_duration_constraint',
                     om.ExecComp(
@@ -1071,7 +1071,6 @@ class AviaryGroup(om.Group):
                 kwargs = {}
                 if not connect:
                     kwargs = self._find_scaling(var, phase1, phase_info1, phase2, phase_info2, opt2)
-                    print(phase1, phase2, var, kwargs)
 
                 self.traj.link_phases(
                     phases=[phase1, phase2],

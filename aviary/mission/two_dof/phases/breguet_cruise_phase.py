@@ -206,19 +206,17 @@ class BreguetCruisePhase(PhaseBuilder):
 
     def get_linked_variables(self, aviary_inputs=None, user_options=None, subsystem_options=None):
         linked_vars = [
-            'initial_time',
             'initial_distance',
             Dynamic.Mission.ALTITUDE,
             Dynamic.Atmosphere.MACH,
             Dynamic.Vehicle.MASS,
         ]
-        return linked_vars
+        if self.is_analytic_phase:
+            linked_vars.append('initial_time')
+        else:
+            linked_vars.append('time')
 
-    def _extra_ode_init_kwargs(self):
-        """Return extra kwargs required for initializing the ODE."""
-        return {
-            'is_analytic_phase': self.is_analytic_phase,
-        }
+        return linked_vars
 
 
 BreguetCruisePhase._add_initial_guess_meta_data(

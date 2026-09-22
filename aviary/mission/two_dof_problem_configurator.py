@@ -446,7 +446,9 @@ class TwoDOFProblemConfigurator(ProblemConfiguratorBase):
         """
         phase_type = aviary_group.mission_info[phase_name]['user_options']['phase_type']
 
-        # Breguet cruise integrates mass, so initial guesses are different.
+        # Breguet cruise has a reduced set of state or controls.
+        # If it is analytic, it integrates mass instead of time.
+        # Initial guesses are different.
         if phase_type is PhaseType.BREGUET_RANGE:
             for guess_key, guess_data in guesses.items():
                 val, units = guess_data
