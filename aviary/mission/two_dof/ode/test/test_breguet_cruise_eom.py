@@ -62,7 +62,11 @@ class TestBreguetPartials(unittest.TestCase):
 
         self.prob.model.set_input_defaults(
             'TAS_cruise',
-            458.8,
+            458.8
+            + 50
+            * np.random.rand(
+                nn,
+            ),
             units='kn',
         )
         self.prob.model.set_input_defaults(
@@ -118,7 +122,11 @@ class TestBreguetPartials2(unittest.TestCase):
         prob.model.add_subsystem('range_comp', RangeComp(num_nodes=nn), promotes=['*'])
         prob.model.set_input_defaults(
             'TAS_cruise',
-            458.8,
+            458.8
+            + 50
+            * np.random.rand(
+                nn,
+            ),
             units='kn',
         )
         prob.model.set_input_defaults('mass', np.linspace(171481, 171481 - 10000, nn), units='lbm')
@@ -168,10 +176,11 @@ class TestBreguetResults2(unittest.TestCase):
             Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL, units='lbm/h'
         )
 
+        v_avg = (V[:-1] + V[1:]) / 2
         fuel_flow_avg = (fuel_flow[:-1] + fuel_flow[1:]) / 2
 
         # Range should be equal to the product of initial speed in the segment and change in time
-        assert_near_equal(np.diff(r), V * np.diff(t), tolerance=1.0e-5)
+        assert_near_equal(np.diff(r), v_avg * np.diff(t), tolerance=1.0e-5)
 
         # time should satisfy: dt = -dW / fuel_flow
         assert_near_equal(np.diff(t), -np.diff(W) / fuel_flow_avg, tolerance=1.0e-6)
