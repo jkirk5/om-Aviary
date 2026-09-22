@@ -59,17 +59,12 @@ class BreguetCruiseODE(TwoDOFODE):
                 ('cruise_time_initial', 'initial_time'),
                 'mass',
                 Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
+                ('TAS_cruise', Dynamic.Mission.VELOCITY),
             ],
             promotes_outputs=[
                 ('cruise_range', Dynamic.Mission.DISTANCE),
                 ('cruise_time', 'time'),
             ],
-        )
-        # Velocity is constant, so just connect to the first node.
-        self.promotes(
-            'breguet_eom',
-            inputs=[('TAS_cruise', Dynamic.Mission.VELOCITY)],
-            src_indices=0,
         )
 
         self.add_subsystem(
