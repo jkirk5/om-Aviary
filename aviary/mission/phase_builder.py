@@ -93,6 +93,7 @@ class PhaseBuilder(ABC):
         'is_analytic_phase',
         'num_nodes',
         'meta_data',
+        'phase',
     )
 
     _initial_guesses_meta_data_ = _require_new_initial_guesses_meta_data_class_attr_()
@@ -218,6 +219,7 @@ class PhaseBuilder(ABC):
         )
 
         # overrides should add state, controls, etc.
+        self.phase = phase
         return phase
 
     def make_default_transcription(self):

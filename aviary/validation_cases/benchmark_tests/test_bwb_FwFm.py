@@ -22,7 +22,7 @@ phase_info = {
             'altitude_bounds': ((500.0, 35000.0), 'ft'),
             'no_descent': True,
             'mass_ref': (875000, 'lbm'),
-            'throttle_enforcement': 'boundary_constraint',
+            'throttle_enforcement': 'path_constraint',
             'time_initial_bounds': ((0.0, 0.0), 'min'),
             'time_duration_bounds': ((24.0, 120.0), 'min'),
         },
@@ -43,7 +43,7 @@ phase_info = {
             'altitude_bounds': ((35000.0, 43000.0), 'ft'),
             'mass_ref': (875000, 'lbm'),
             'distance_ref': (7750, 'nmi'),
-            'throttle_enforcement': 'path_constraint',
+            'throttle_enforcement': 'boundary_constraint',
             'time_initial_bounds': ((24.0, 180.0), 'min'),
             'time_duration_bounds': ((9.0, 19.0), 'h'),
         },
@@ -67,7 +67,7 @@ phase_info = {
             'mass_ref': (875000, 'lbm'),
             'distance_ref': (7750, 'nmi'),
             'no_climb': True,
-            'throttle_enforcement': 'boundary_constraint',
+            'throttle_enforcement': 'path_constraint',
             'time_initial_bounds': ((10, 19.0), 'h'),
             'time_duration_bounds': ((0.15, 1.0), 'h'),
         },
@@ -109,19 +109,19 @@ class BWBProblemPhaseTestCase(unittest.TestCase):
         # There are no truth values for these.
         assert_near_equal(
             prob.get_val(Aircraft.Design.GROSS_MASS, units='lbm'),
-            787036.9,
+            789103.4,
             tolerance=rtol,
         )
 
         assert_near_equal(
             prob.get_val(Mission.OPERATING_MASS, units='lbm'),
-            449095.9,
+            449326.9,
             tolerance=rtol,
         )
 
         assert_near_equal(
             prob.get_val(Mission.TOTAL_FUEL_MASS, units='lbm'),
-            240128.9,
+            241964.4,
             tolerance=rtol,
         )
 

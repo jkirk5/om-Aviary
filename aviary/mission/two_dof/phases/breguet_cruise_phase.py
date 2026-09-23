@@ -11,9 +11,39 @@ from aviary.variable_info.variables import Aircraft, Dynamic
 
 class BreguetCruisePhaseOptions(AviaryOptionsDictionary):
     def declare_options(self):
+        self.declare(
+            name='num_segments',
+            types=int,
+            default=None,
+            desc='The number of segments in transcription creation in Dymos. ',
+        )
+
+        self.declare(
+            name='order',
+            types=int,
+            default=None,
+            desc='The order of polynomials for interpolation in the transcription '
+            'created in Dymos.',
+        )
+
         self.declare(name='alt_cruise', default=0.0, units='ft', desc='Cruise altitude.')
 
         self.declare(name='mach_cruise', default=0.0, desc='Cruise Mach number.')
+
+        # This phase only integrates time if there are states added by the subsystems.
+        defaults = {
+            'time_initial_bounds': (0, 3600),
+            'time_duration_bounds': (0, 36000),
+            'initial_time_direct_link': True,
+        }
+        self.add_time_options(units='s', defaults=defaults)
+
+        # This phase only integrates mass if there are states added by the subsystems.
+        defaults = {
+            'mass_bounds': (0.0, None),
+            'mass_direct_link': False,
+        }
+        self.add_state_options('mass', units='lbm', defaults=defaults)
 
         self.declare(
             'reserve',
@@ -31,39 +61,6 @@ class BreguetCruisePhaseOptions(AviaryOptionsDictionary):
             desc='The total distance traveled by the aircraft from takeoff to landing '
             'for the primary mission, not including reserve missions. This value must '
             'be positive.',
-        )
-
-        self.declare(
-            'time_duration',
-            default=None,
-            units='s',
-            desc='The amount of time taken by this phase added as a constraint.',
-        )
-
-        self.declare(
-            name='time_duration_bounds',
-            default=(0, 3600),
-            units='s',
-            desc='Lower and upper bounds on the phase duration, in the form of a nested tuple: '
-            'i.e. ((20, 36), "min") This constrains the duration to be between 20 and 36 min.',
-        )
-
-        self.declare(
-            'time_initial_bounds',
-            types=tuple,
-            default=(0.0, 100.0),
-            units='s',
-            desc='Lower and upper bounds on the starting time for this phase relative to the '
-            'starting time of the mission, i.e., ((25, 45), "min") constrians this phase to '
-            'start between 25 and 45 minutes after the start of the mission.',
-        )
-
-        self.declare(
-            name='time_initial_direct_link',
-            default=True,
-            types=bool,
-            desc='When True, directly link the initial time parameter to the previous '
-            'phase. When False, use a constraint.',
         )
 
         self.declare(
@@ -86,7 +83,7 @@ class BreguetCruisePhaseOptions(AviaryOptionsDictionary):
             name='mass_direct_link',
             default=False,
             types=bool,
-            desc='Because mass is output, this should always be false..',
+            desc='Because mass is output, this should always be false.',
         )
 
 
@@ -124,15 +121,14 @@ class BreguetCruisePhase(PhaseBuilder):
         subsystems=None,
         meta_data=None,
     ):
+        is_analytic = True
         for sub in subsystems:
             states = sub.get_states(
                 user_options=user_options,
                 subsystem_options=subsystem_options,
             )
             if len(states) > 0:
-                raise AttributeError(
-                    'The Breguet Cruise phase does not support dynamic variables in its subsystems.'
-                )
+                is_analytic = False
 
         super().__init__(
             name=name,
@@ -143,7 +139,7 @@ class BreguetCruisePhase(PhaseBuilder):
             transcription=transcription,
             subsystems=subsystems,
             meta_data=meta_data,
-            is_analytic_phase=True,
+            is_analytic_phase=is_analytic,
         )
 
     def build_phase(self, aviary_options: AviaryValues = None):
@@ -162,6 +158,14 @@ class BreguetCruisePhase(PhaseBuilder):
         dymos.Phase
         """
         phase = super().build_phase(aviary_options)
+        analytic = self.is_analytic_phase
+
+        if not analytic:
+            self.add_state(
+                'mass',
+                Dynamic.Vehicle.MASS,
+                Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
+            )
 
         # Custom configurations for the climb phase
         user_options = self.user_options
@@ -171,12 +175,27 @@ class BreguetCruisePhase(PhaseBuilder):
 
         phase = self.add_subsystem_variables_to_phase(phase, aviary_options)
 
+        if analytic:
+            # The Breguet Range Cruise phase integrates over mass instead of time.
+            # We rely on mass being monotonically non-increasing across the phase.
+            # TODO: Remove hardcoded bounds where possible.
+            phase.set_time_options(
+                name='mass',
+                fix_initial=False,
+                fix_duration=False,
+                units='lbm',
+                targets='mass',
+                initial_bounds=(0.0, 1.0e7),
+                initial_ref=100.0e3,
+                duration_bounds=(-1.0e7, -1),
+                duration_ref=50000,
+            )
+
         phase.add_parameter(Dynamic.Mission.ALTITUDE, opt=False, val=alt_cruise, units=alt_units)
         phase.add_parameter(Dynamic.Atmosphere.MACH, opt=False, val=mach_cruise)
         phase.add_parameter('initial_distance', opt=False, val=0.0, units='NM', static_target=True)
         phase.add_parameter('initial_time', opt=False, val=0.0, units='s', static_target=True)
 
-        phase.add_timeseries_output(Dynamic.Mission.DISTANCE, units='nmi')
         phase.add_timeseries_output(Dynamic.Mission.DISTANCE, units='nmi')
         phase.add_timeseries_output(Dynamic.Vehicle.DRAG, units='lbf')
         phase.add_timeseries_output(Dynamic.Vehicle.LIFT, units='lbf')
@@ -187,12 +206,16 @@ class BreguetCruisePhase(PhaseBuilder):
 
     def get_linked_variables(self, aviary_inputs=None, user_options=None, subsystem_options=None):
         linked_vars = [
-            'initial_time',
             'initial_distance',
             Dynamic.Mission.ALTITUDE,
             Dynamic.Atmosphere.MACH,
             Dynamic.Vehicle.MASS,
         ]
+        if self.is_analytic_phase:
+            linked_vars.append('initial_time')
+        else:
+            linked_vars.append('time')
+
         return linked_vars
 
 
