@@ -981,7 +981,7 @@ class AviaryGroup(om.Group):
         # If we are under mpi, and traj.phases is running in parallel, then let the optimizer handle
         # the linkage constraints.  Note that we can technically parallelize connected phases, but
         # it requires a solver that we would like to avoid.
-        connect_directly = True
+        connect_directly = False # True
         if comm.size > 1 and self.traj.options['parallel_phases']:
             connect_directly = False
 
@@ -1089,6 +1089,11 @@ class AviaryGroup(om.Group):
                     vars=[var],
                     **kwargs,
                 )
+
+                if not connect and var in builder.phase.state_options:
+                    # Under MPI, phase connections need to be severed. Make sure the input
+                    # isn't fixed so that the linkage constraint can be satisfied.
+                    builder.phase.set_state_options(var, fix_initial=False)
 
             # Target analytic phases may take a single start input that needs to connect
             # Sort because of MPI
