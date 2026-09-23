@@ -987,6 +987,7 @@ class AviaryGroup(om.Group):
 
         # Assemble all linkable variables in the phases.
         link_vars_dict = {}
+        vars_from_sub_builders = {}
         for builder in self.phase_objects:
             phase_name = builder.name
             phase_info = self.mission_info[phase_name]
@@ -999,6 +1000,8 @@ class AviaryGroup(om.Group):
                     user_options=self.mission_info[phase_name]['user_options'],
                     subsystem_options=all_subsystem_options.get(subsys.name, {}),
                 )
+                for var in sub_vars:
+                    vars_from_sub_builders[var] = subsys
                 link_vars = link_vars.union(sub_vars)
 
             phase_vars = builder.get_linked_variables()
@@ -1070,7 +1073,15 @@ class AviaryGroup(om.Group):
 
                 kwargs = {}
                 if not connect:
-                    kwargs = self._find_scaling(var, phase1, phase_info1, phase2, phase_info2, opt2)
+                    kwargs = self._find_scaling(
+                        var,
+                        phase1,
+                        phase_info1,
+                        phase2,
+                        phase_info2,
+                        opt2,
+                        vars_from_sub_builders,
+                    )
 
                 self.traj.link_phases(
                     phases=[phase1, phase2],
@@ -1095,7 +1106,13 @@ class AviaryGroup(om.Group):
                 kwargs = {}
                 if not connect:
                     kwargs = self._find_scaling(
-                        source, phase1, phase_info1, phase2, phase_info2, opt2
+                        source,
+                        phase1,
+                        phase_info1,
+                        phase2,
+                        phase_info2,
+                        opt2,
+                        vars_from_sub_builders,
                     )
 
                 self.traj.add_linkage_constraint(
@@ -1122,7 +1139,13 @@ class AviaryGroup(om.Group):
                 kwargs = {}
                 if not connect:
                     kwargs = self._find_scaling(
-                        target, phase1, phase_info1, phase2, phase_info2, opt2
+                        target,
+                        phase1,
+                        phase_info1,
+                        phase2,
+                        phase_info2,
+                        opt2,
+                        vars_from_sub_builders,
                     )
 
                 self.traj.link_phases(
@@ -1136,7 +1159,9 @@ class AviaryGroup(om.Group):
 
         self.configurator.check_trajectory(self)
 
-    def _find_scaling(self, var, phase1, phase_info1, phase2, phase_info2, opt2):
+    def _find_scaling(
+        self, var, phase1, phase_info1, phase2, phase_info2, opt2, vars_from_sub_builders
+    ):
         """
         Returns a dictionary of scaling keyword arguments for a dymos linkage constraint.
         """
@@ -1160,12 +1185,25 @@ class AviaryGroup(om.Group):
             if ref is None:
                 ref, units = phase_info1.get(f'{var}_duration_ref', (None, None))
         else:
-            # First, pull from the scaling from upstream phase.
-            ref, units = phase_info1.get(f'{var}_ref', (None, None))
-            ref0 = phase_info1.get(f'{var}_ref0', (None, None))[0]
-            if ref is None:
-                ref, units = phase_info2.get(f'{var}_ref', (None, None))
-                ref0 = phase_info2.get(f'{var}_ref0', (None, None))[0]
+            if var in vars_from_sub_builders:
+                # User-declared states or controls may have some scaling info.
+                builder = vars_from_sub_builders[var]
+                states = builder.get_states(
+                    aviary_inputs=self.aviary_inputs,
+                    user_options=phase_info1,
+                    subsystem_options=phase_info1.get('subsystem_options', {}),
+                )
+                info = states[var]
+                ref = info.get('ref', None)
+                ref0 = info.get('ref0', None)
+                units = info.get('units', None)
+            else:
+                # First, pull from the scaling from upstream phase.
+                ref, units = phase_info1.get(f'{var}_ref', (None, None))
+                ref0 = phase_info1.get(f'{var}_ref0', (None, None))[0]
+                if ref is None:
+                    ref, units = phase_info2.get(f'{var}_ref', (None, None))
+                    ref0 = phase_info2.get(f'{var}_ref0', (None, None))[0]
 
         kwargs = {}
         if ref is not None:

@@ -93,6 +93,7 @@ class PhaseBuilder(ABC):
         'is_analytic_phase',
         'num_nodes',
         'meta_data',
+        'phase',
     )
 
     _initial_guesses_meta_data_ = _require_new_initial_guesses_meta_data_class_attr_()

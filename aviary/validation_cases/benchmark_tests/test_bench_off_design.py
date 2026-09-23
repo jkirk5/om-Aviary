@@ -109,7 +109,7 @@ class TestEnergyStateOffDesign(unittest.TestCase):
         )
 
         expected_values = {
-            Mission.RANGE: (2406.74846166, 'unitless', 1e-3),
+            Mission.RANGE: (2406.74846166, 'nmi', 1e-3),
             Mission.TOTAL_FUEL_MASS: (29252.33210511, 'lbm', 1e-5),
             Aircraft.CrewPayload.CARGO_MASS: (5000, 'lbm', 1e-5),
             Aircraft.CrewPayload.TOTAL_PAYLOAD_MASS: (23225, 'lbm', 1e-5),
@@ -124,7 +124,7 @@ class TestEnergyStateOffDesign(unittest.TestCase):
 
         # Variables that should match design problem
         design_match_values = {
-            Aircraft.Design.RANGE: ('unitless', 1e-12),
+            Aircraft.Design.RANGE: ('nmi', 1e-12),
             Mission.OPERATING_MASS: ('lbm', 1e-5),
             Aircraft.Design.EMPTY_MASS: ('lbm', 1e-12),
             Aircraft.Design.GROSS_MASS: ('lbm', 1e-12),
@@ -173,7 +173,7 @@ class TestEnergyStateOffDesign(unittest.TestCase):
         )
 
         expected_values = {
-            Mission.RANGE: (1800, 'unitless', 1e-6),
+            Mission.RANGE: (1800, 'nmi', 1e-6),
             Mission.TOTAL_FUEL_MASS: (24216.80682191, 'lbm', 1e-5),
             Aircraft.CrewPayload.CARGO_MASS: (2500, 'lbm', 1e-12),
             Aircraft.CrewPayload.TOTAL_PAYLOAD_MASS: (36250, 'lbm', 1e-5),
@@ -188,7 +188,7 @@ class TestEnergyStateOffDesign(unittest.TestCase):
 
         # Variables that should match design problem
         design_match_values = {
-            Aircraft.Design.RANGE: ('unitless', 1e-12),
+            Aircraft.Design.RANGE: ('nmi', 1e-12),
             Mission.OPERATING_MASS: ('lbm', 1e-5),
             Aircraft.Design.EMPTY_MASS: ('lbm', 1e-12),
             Aircraft.Design.GROSS_MASS: ('lbm', 1e-12),
@@ -309,7 +309,7 @@ class Test2DOFOffDesign(unittest.TestCase):
         )
 
         expected_values = {
-            Mission.RANGE: (4013.45700631, 'unitless', 1e-4),
+            Mission.RANGE: (4013.45700631, 'nmi', 1e-4),
             Mission.TOTAL_FUEL_MASS: (40019.62660076, 'lbm', 1e-5),
             Mission.OPERATING_MASS: (94980.37339924, 'lbm', 1e-5),
             Aircraft.CrewPayload.CARGO_MASS: (5000, 'lbm', 1e-5),
@@ -377,7 +377,7 @@ class Test2DOFOffDesign(unittest.TestCase):
         )
 
         expected_values = {
-            Mission.RANGE: (1800, 'unitless', 1e-6),
+            Mission.RANGE: (1800, 'nmi', 1e-6),
             Mission.TOTAL_FUEL_MASS: (21452.85145652, 'lbm', 1e-6),
             Mission.OPERATING_MASS: (94980.37339924, 'lbm', 1e-6),
             Aircraft.CrewPayload.CARGO_MASS: (2100, 'lbm', 1e-12),
@@ -476,7 +476,7 @@ class PayloadRangeTest(unittest.TestCase):
 
         # verify TOGW for each payload range problem
         expected_togw = {
-            'max_fuel_pyld_range_prob': (166539.46027154, 1e-8),
+            'max_fuel_pyld_range_prob': (166539.45851134, 1e-8),
             'ferry_range_prob': (142010.12881933, 1e-8),
         }
 
@@ -494,7 +494,7 @@ if __name__ == '__main__':
     test = Test2DOFOffDesign()
     # test = TestEnergyStateOffDesign()
     test.setUp()
-    test.test_off_design_min_fuel_mission_match()
+    test.test_off_design_max_range_mission_changed()
 
     # test = PayloadRangeTest()
     # test.test_payload_range()
