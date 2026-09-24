@@ -1593,7 +1593,10 @@ class WingGroup(om.Group):
 
             choose_fold_location = self.options[Aircraft.Wing.CHOOSE_FOLD_LOCATION]
             if not choose_fold_location:
-                check_fold_location_definition(choose_fold_location, has_strut)
+                if not choose_fold_location and not has_strut:
+                    raise RuntimeError(
+                        'The option CHOOSE_FOLD_LOCATION can only be False if the option HAS_STRUT is True.'
+                    )
                 self.promotes('strut', outputs=['strut_y'])
                 self.promotes('fold_area', inputs=['strut_y'])
                 self.promotes('fold_vol', inputs=['strut_y'])

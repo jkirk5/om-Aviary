@@ -5,14 +5,11 @@ import openmdao.api as om
 from openmdao.utils.assert_utils import assert_check_partials, assert_near_equal
 from openmdao.utils.testing_utils import use_tempdirs
 
-from aviary.constants import GRAV_ENGLISH_LBM
-from aviary.mission.two_dof.ode.test.params import set_params_for_unit_tests
-from aviary.mission.solved_two_dof.ode.unsteady_control_iter_group import (
-    UnsteadyControlIterGroup,
-)
+from aviary.mission.solved_two_dof.ode.unsteady_control_iter_group import UnsteadyControlIterGroup
 from aviary.mission.solved_two_dof.ode.unsteady_solved_flight_conditions import (
     UnsteadySolvedFlightConditions,
 )
+from aviary.mission.two_dof.ode.test.params import set_params_for_unit_tests
 from aviary.subsystems.aerodynamics.aerodynamics_builder import CoreAerodynamicsBuilder
 from aviary.utils.aviary_values import AviaryValues
 from aviary.variable_info.enums import LegacyCode, SpeedType
@@ -91,7 +88,7 @@ class TestUnsteadyAlphaThrustIterGroup(unittest.TestCase):
         gamma = (
             0 if ground_roll else p.model.get_val(Dynamic.Mission.FLIGHT_PATH_ANGLE, units='deg')
         )
-        weight = p.model.get_val('mass', units='lbm') * GRAV_ENGLISH_LBM
+        weight = p.model.get_val('mass', units='lbm')
         iwing = p.model.get_val(Aircraft.Wing.INCIDENCE, units='deg')
         alpha = (
             iwing if ground_roll else p.model.get_val(Dynamic.Vehicle.ANGLE_OF_ATTACK, units='deg')
