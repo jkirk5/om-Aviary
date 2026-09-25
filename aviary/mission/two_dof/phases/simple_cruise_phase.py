@@ -56,6 +56,15 @@ class SimpleCruisePhaseOptions(AviaryOptionsDictionary):
         )
 
         self.declare(
+            name='constraints',
+            types=dict,
+            default={},
+            desc="Add in custom constraints i.e. 'flight_path_angle': {'equals': -3., "
+            "'loc': 'initial', 'units': 'deg', 'type': 'boundary',}. For more details see "
+            '_add_user_defined_constraints().',
+        )
+
+        self.declare(
             name='target_distance',
             default=None,
             units='m',
@@ -175,6 +184,8 @@ class SimpleCruisePhase(PhaseBuilder):
 
         # Custom configurations for the climb phase
         user_options = self.user_options
+        throttle_enforcement = user_options['throttle_enforcement']
+        constraints = user_options['constraints']
 
         # Add states
         self.add_state(
@@ -182,6 +193,33 @@ class SimpleCruisePhase(PhaseBuilder):
             Dynamic.Vehicle.MASS,
             Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
         )
+
+        # Add constraints
+        if Dynamic.Vehicle.Propulsion.THROTTLE not in constraints:
+            if throttle_enforcement == 'boundary_constraint':
+                phase.add_boundary_constraint(
+                    Dynamic.Vehicle.Propulsion.THROTTLE,
+                    loc='initial',
+                    lower=0.0,
+                    upper=1.0,
+                    units='unitless',
+                )
+                phase.add_boundary_constraint(
+                    Dynamic.Vehicle.Propulsion.THROTTLE,
+                    loc='final',
+                    lower=0.0,
+                    upper=1.0,
+                    units='unitless',
+                )
+            elif throttle_enforcement == 'path_constraint':
+                phase.add_path_constraint(
+                    Dynamic.Vehicle.Propulsion.THROTTLE,
+                    lower=0.0,
+                    upper=1.0,
+                    units='unitless',
+                )
+
+        self._add_user_defined_constraints(phase, constraints)
 
         # These are constant.
         mach_cruise = user_options.get_val('mach_cruise')

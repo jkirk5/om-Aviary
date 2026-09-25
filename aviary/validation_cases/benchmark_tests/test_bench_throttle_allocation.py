@@ -60,6 +60,7 @@ class ThrottleAllocationEnergyTestcase(unittest.TestCase):
 
         test_phase_info['climb']['user_options']['throttle_allocation'] = method
         test_phase_info['cruise']['user_options']['throttle_allocation'] = method
+        test_phase_info['cruise']['user_options']['throttle_enforcement'] = 'path_constraint'
         test_phase_info['descent']['user_options']['throttle_allocation'] = method
 
         engine1 = build_engine_deck(engine_1_inputs)
