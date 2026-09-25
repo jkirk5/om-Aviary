@@ -1,14 +1,15 @@
 import warnings
+
 import numpy as np
 import openmdao.api as om
 from openmdao.utils import cs_safe as cs
 
-from aviary.constants import GRAV_ENGLISH_LBM
 from aviary.subsystems.aerodynamics.gasp_based.common import AeroForces, CLFromLift, TanhRampComp
-from aviary.utils.math_utils import sigmoidX, smooth_min, d_smooth_min
+from aviary.utils.math_utils import d_smooth_min, sigmoidX, smooth_min
+from aviary.utils.utils import mass_to_force_english
 from aviary.variable_info.enums import AircraftTypes, Verbosity
 from aviary.variable_info.functions import add_aviary_input, add_aviary_option, add_aviary_output
-from aviary.variable_info.variables import Aircraft, Dynamic, Settings
+from aviary.variable_info.variables import Aircraft, Dynamic, Mission, Settings
 
 #
 # data from EAERO
@@ -66,6 +67,9 @@ asigma = np.array(
 # autopep8: off
 # fmt: off
 
+# TODO either make all components here natively use radians or make these built-in Aviary math utils
+# If having components report inputs/outputs in deg is desirable for readability, use these functions
+# on the input/output calls only and not mid-calculation
 def deg2rad(d):
     """Complex step safe deg2rad."""
     return d * np.pi / 180.0
@@ -318,7 +322,6 @@ class Xlifts(om.ExplicitComponent):
 
         self.declare_partials('lift_ratio', '*', method='cs')
         self.declare_partials('lift_ratio', Dynamic.Atmosphere.MACH, rows=ar, cols=ar, method='cs')
-        self.declare_partials('lift_curve_slope', '*', method='cs')
         self.declare_partials(
             'lift_curve_slope',
             [
@@ -855,7 +858,6 @@ class AeroGeom(om.ExplicitComponent):
             Aircraft.Strut.FUSELAGE_INTERFERENCE_FACTOR,
             Aircraft.Design.DRAG_COEFFICIENT_INCREMENT,
             Aircraft.Fuselage.FLAT_PLATE_AREA_INCREMENT,
-            Aircraft.Wing.TAPER_RATIO,
             Aircraft.Strut.AREA_RATIO,
             Aircraft.Wing.AVERAGE_CHORD,
             Aircraft.HorizontalTail.AVERAGE_CHORD,
@@ -1193,6 +1195,7 @@ class DragCoef(om.ExplicitComponent):
 
     def initialize(self):
         self.options.declare('num_nodes', default=1, types=int)
+        add_aviary_option(self, Mission.GRAVITY, units='ft/s**2')
 
     def setup(self):
         nn = self.options['num_nodes']
@@ -1277,7 +1280,21 @@ class DragCoef(om.ExplicitComponent):
         self.declare_partials('*', '*', dependent=False)
         ar = np.arange(self.options['num_nodes'])
 
-        self.declare_partials('CD_base', ['*'], method='cs')
+        self.declare_partials(
+            'CD_base',
+            [
+                'flap_defl',
+                Aircraft.Wing.HEIGHT,
+                'airport_alt',
+                Aircraft.Wing.FLAP_CHORD_RATIO,
+                'dCL_flaps_model',
+                'dCL_flaps_coef',
+                'CDI_factor',
+                Aircraft.Wing.AVERAGE_CHORD,
+                Aircraft.Wing.SPAN,
+            ],
+            method='cs',
+        )
         self.declare_partials(
             'CD_base',
             [Dynamic.Mission.ALTITUDE, Dynamic.Vehicle.LIFT_COEFFICIENT, 'cf', 'SA5', 'SA6', 'SA7'],
@@ -1285,9 +1302,6 @@ class DragCoef(om.ExplicitComponent):
             cols=ar,
             method='cs',
         )
-        # self.declare_partials(
-        #     "CD_base", [Aircraft.Design.GROSS_MASS, "dCD_flaps_model", "wing_area"], val=0
-        # )
 
         self.declare_partials('dCD_flaps_full', ['dCD_flaps_model'], val=1)
 
@@ -1298,6 +1312,8 @@ class DragCoef(om.ExplicitComponent):
         )
 
     def compute(self, inputs, outputs):
+        gravity = self.options[Mission.GRAVITY]
+
         alt = inputs[Dynamic.Mission.ALTITUDE]
         CL = inputs[Dynamic.Vehicle.LIFT_COEFFICIENT]
         gross_mass_initial = inputs[Aircraft.Design.GROSS_MASS]
@@ -1316,7 +1332,8 @@ class DragCoef(om.ExplicitComponent):
         SA5 = inputs['SA5']
         SA6 = inputs['SA6']
         SA7 = inputs['SA7']
-        gross_wt_initial = gross_mass_initial * GRAV_ENGLISH_LBM
+
+        gross_wt_initial = mass_to_force_english((gross_mass_initial, 'lbm'), gravity)
 
         # profile drag
         cd0 = SA5 + SA6 * cf
@@ -1598,36 +1615,53 @@ class LiftCoeff(om.ExplicitComponent):
         self.declare_partials('*', '*', dependent=False)
         ar = np.arange(self.options['num_nodes'])
 
-        dynvars = [
-            Dynamic.Vehicle.ANGLE_OF_ATTACK,
-            'lift_curve_slope',
-            'lift_ratio',
-            'kclge',
-        ]
-
-        self.declare_partials('CL_base', ['*'])
-        self.declare_partials('CL_base', dynvars, rows=ar, cols=ar)
+        self.declare_partials(
+            'CL_base',
+            [Aircraft.Wing.ZERO_LIFT_ANGLE],
+        )
+        self.declare_partials(
+            'CL_base',
+            [Dynamic.Vehicle.ANGLE_OF_ATTACK, 'lift_curve_slope', 'lift_ratio', 'kclge'],
+            rows=ar,
+            cols=ar,
+        )
 
         self.declare_partials('dCL_flaps_full', ['dCL_flaps_model'])
         self.declare_partials('dCL_flaps_full', ['lift_ratio'], rows=ar, cols=ar)
 
-        self.declare_partials('alpha_stall', ['*'])
-        self.declare_partials('alpha_stall', dynvars, rows=ar, cols=ar)
+        self.declare_partials(
+            'alpha_stall',
+            ['CL_max_flaps', 'dCL_flaps_model', Aircraft.Wing.ZERO_LIFT_ANGLE],
+        )
+        self.declare_partials('alpha_stall', ['lift_curve_slope', 'kclge'], rows=ar, cols=ar)
 
         self.declare_partials('CL_max', ['CL_max_flaps'])
         self.declare_partials('CL_max', ['lift_ratio'], rows=ar, cols=ar)
 
-        self.declare_partials('CL_full_flaps', ['*'])
-        self.declare_partials('CL_full_flaps', dynvars, rows=ar, cols=ar)
-        self.declare_partials('CL_full_flaps', ['dCL_flaps_model'])
-        self.declare_partials('CL_full_flaps', ['lift_ratio'], rows=ar, cols=ar)
+        self.declare_partials(
+            'CL_full_flaps',
+            [Aircraft.Wing.ZERO_LIFT_ANGLE, 'dCL_flaps_model'],
+        )
+        self.declare_partials(
+            'CL_full_flaps',
+            [Dynamic.Vehicle.ANGLE_OF_ATTACK, 'lift_curve_slope', 'lift_ratio', 'kclge'],
+            rows=ar,
+            cols=ar,
+        )
 
-        self.declare_partials(Dynamic.Vehicle.LIFT_COEFFICIENT, ['*'])
-        self.declare_partials(Dynamic.Vehicle.LIFT_COEFFICIENT, dynvars, rows=ar, cols=ar)
-        self.declare_partials(Dynamic.Vehicle.LIFT_COEFFICIENT, ['dCL_flaps_model'])
         self.declare_partials(
             Dynamic.Vehicle.LIFT_COEFFICIENT,
-            ['lift_ratio', 'flap_factor'],
+            [Aircraft.Wing.ZERO_LIFT_ANGLE, 'dCL_flaps_model'],
+        )
+        self.declare_partials(
+            Dynamic.Vehicle.LIFT_COEFFICIENT,
+            [
+                Dynamic.Vehicle.ANGLE_OF_ATTACK,
+                'lift_curve_slope',
+                'kclge',
+                'lift_ratio',
+                'flap_factor',
+            ],
             rows=ar,
             cols=ar,
         )
@@ -2292,8 +2326,6 @@ class BWBLiftCoeffClean(om.ExplicitComponent):
             [
                 Aircraft.Design.LIFT_COEFFICIENT_MAX_FLAPS_UP,
                 Aircraft.Wing.ZERO_LIFT_ANGLE,
-                Aircraft.Wing.AREA,
-                Aircraft.Wing.EXPOSED_AREA,
             ],
         )
 

@@ -1,10 +1,9 @@
 import openmdao.api as om
 
-from aviary.constants import GRAV_ENGLISH_LBM
 from aviary.subsystems.mass.flops_based.distributed_prop import distributed_engine_count_factor
 from aviary.variable_info.enums import Verbosity
 from aviary.variable_info.functions import add_aviary_input, add_aviary_option, add_aviary_output
-from aviary.variable_info.variables import Aircraft, Mission, Settings
+from aviary.variable_info.variables import Aircraft, Settings
 
 
 class TransportFuselageMass(om.ExplicitComponent):
@@ -49,7 +48,6 @@ class TransportFuselageMass(om.ExplicitComponent):
             * (1.0 + 0.05 * num_fuse_eng_fact)
             * mil_factor
             * num_fuse
-            / GRAV_ENGLISH_LBM
         )
 
     def compute_partials(self, inputs, J):
@@ -69,13 +67,13 @@ class TransportFuselageMass(om.ExplicitComponent):
         addtl_factor = (1.0 + 0.05 * num_fuse_eng_fact) * mil_factor * num_fuse
 
         J[Aircraft.Fuselage.MASS, Aircraft.Fuselage.MASS_SCALER] = (
-            1.35 * avg_diameter_exp * length_exp * addtl_factor / GRAV_ENGLISH_LBM
+            1.35 * avg_diameter_exp * length_exp * addtl_factor
         )
         J[Aircraft.Fuselage.MASS, Aircraft.Fuselage.LENGTH] = (
-            scaler * 1.728 * avg_diameter_exp * length**0.28 * addtl_factor / GRAV_ENGLISH_LBM
+            scaler * 1.728 * avg_diameter_exp * length**0.28 * addtl_factor
         )
         J[Aircraft.Fuselage.MASS, Aircraft.Fuselage.REF_DIAMETER] = (
-            scaler * 1.728 * length_exp * height_width_exp * addtl_factor / GRAV_ENGLISH_LBM
+            scaler * 1.728 * length_exp * height_width_exp * addtl_factor
         )
 
 
@@ -104,11 +102,7 @@ class AltFuselageMass(om.ExplicitComponent):
         fuse_width = inputs[Aircraft.Fuselage.MAX_WIDTH]
 
         outputs[Aircraft.Fuselage.MASS] = (
-            3.939
-            * fuse_wetted_area
-            / (fuse_height / fuse_width) ** 0.221
-            * mass_scaler
-            / GRAV_ENGLISH_LBM
+            3.939 * fuse_wetted_area / (fuse_height / fuse_width) ** 0.221 * mass_scaler
         )
 
     def compute_partials(self, inputs, J):
@@ -121,29 +115,17 @@ class AltFuselageMass(om.ExplicitComponent):
         total_fact = fuse_height_fact / fuse_width_fact
 
         J[Aircraft.Fuselage.MASS, Aircraft.Fuselage.MASS_SCALER] = (
-            3.939 * fuse_wetted_area / total_fact / GRAV_ENGLISH_LBM
+            3.939 * fuse_wetted_area / total_fact
         )
 
-        J[Aircraft.Fuselage.MASS, Aircraft.Fuselage.WETTED_AREA] = (
-            3.939 / total_fact * mass_scaler / GRAV_ENGLISH_LBM
-        )
+        J[Aircraft.Fuselage.MASS, Aircraft.Fuselage.WETTED_AREA] = 3.939 / total_fact * mass_scaler
 
         J[Aircraft.Fuselage.MASS, Aircraft.Fuselage.MAX_HEIGHT] = (
-            -0.870519
-            * fuse_wetted_area
-            * fuse_width_fact
-            * fuse_height**-1.221
-            * mass_scaler
-            / GRAV_ENGLISH_LBM
+            -0.870519 * fuse_wetted_area * fuse_width_fact * fuse_height**-1.221 * mass_scaler
         )
 
         J[Aircraft.Fuselage.MASS, Aircraft.Fuselage.MAX_WIDTH] = (
-            0.870519
-            * fuse_wetted_area
-            * fuse_width**-0.779
-            / fuse_height_fact
-            * mass_scaler
-            / GRAV_ENGLISH_LBM
+            0.870519 * fuse_wetted_area * fuse_width**-0.779 / fuse_height_fact * mass_scaler
         )
 
 
@@ -169,7 +151,7 @@ class BWBFuselageMass(om.ExplicitComponent):
 
     def compute(self, inputs, outputs):
         verbosity = self.options[Settings.VERBOSITY]
-        gross_weight = inputs[Aircraft.Design.GROSS_MASS] * GRAV_ENGLISH_LBM
+        gross_weight = inputs[Aircraft.Design.GROSS_MASS]
         cabin_area = inputs[Aircraft.Fuselage.CABIN_AREA]
         mass_scaler = inputs[Aircraft.Fuselage.MASS_SCALER]
 
@@ -180,13 +162,13 @@ class BWBFuselageMass(om.ExplicitComponent):
         outputs[Aircraft.Fuselage.MASS] = mass_scaler * 1.8 * gross_weight**0.167 * cabin_area**1.06
 
     def compute_partials(self, inputs, J):
-        gross_weight = inputs[Aircraft.Design.GROSS_MASS] * GRAV_ENGLISH_LBM
+        gross_weight = inputs[Aircraft.Design.GROSS_MASS]
         cabin_area = inputs[Aircraft.Fuselage.CABIN_AREA]
         mass_scaler = inputs[Aircraft.Fuselage.MASS_SCALER]
 
         J[Aircraft.Fuselage.MASS, Aircraft.Design.GROSS_MASS] = (
             mass_scaler * 0.167 * 1.8 * gross_weight**-0.833 * cabin_area**1.06
-        ) * GRAV_ENGLISH_LBM
+        )
         J[Aircraft.Fuselage.MASS, Aircraft.Fuselage.CABIN_AREA] = (
             mass_scaler * 1.06 * 1.8 * gross_weight**0.167 * cabin_area**0.06
         )
@@ -196,7 +178,7 @@ class BWBFuselageMass(om.ExplicitComponent):
 
 
 class BWBAftBodyMass(om.ExplicitComponent):
-    """Mass of aft body for BWB aircraft"""
+    """Mass of aft body for BWB aircraft."""
 
     def initialize(self):
         add_aviary_option(self, Settings.VERBOSITY)
@@ -245,7 +227,7 @@ class BWBAftBodyMass(om.ExplicitComponent):
     def compute(self, inputs, outputs):
         verbosity = self.options[Settings.VERBOSITY]
         num_fuse_eng = self.options[Aircraft.Engine.NUM_FUSELAGE_ENGINES]
-        gross_weight = inputs[Aircraft.Design.GROSS_MASS] * GRAV_ENGLISH_LBM
+        gross_weight = inputs[Aircraft.Design.GROSS_MASS]
         fuse_area = inputs[Aircraft.Fuselage.PLANFORM_AREA]
         cabin_area = inputs[Aircraft.Fuselage.CABIN_AREA]
         length = inputs[Aircraft.Fuselage.LENGTH]
@@ -278,12 +260,12 @@ class BWBAftBodyMass(om.ExplicitComponent):
             * (0.5 + aftbody_tr)
         )
         aftbody_weight_adjusted = aftbody_weight * (1.0 - 0.17 * comp_frac)
-        outputs[Aircraft.Fuselage.AFTBODY_MASS] = aftbody_weight / GRAV_ENGLISH_LBM
-        outputs[Aircraft.Wing.BWB_AFTBODY_MASS] = aftbody_weight_adjusted / GRAV_ENGLISH_LBM
+        outputs[Aircraft.Fuselage.AFTBODY_MASS] = aftbody_weight
+        outputs[Aircraft.Wing.BWB_AFTBODY_MASS] = aftbody_weight_adjusted
 
     def compute_partials(self, inputs, J):
         num_fuse_eng = self.options[Aircraft.Engine.NUM_FUSELAGE_ENGINES]
-        gross_weight = inputs[Aircraft.Design.GROSS_MASS] * GRAV_ENGLISH_LBM
+        gross_weight = inputs[Aircraft.Design.GROSS_MASS]
         fuse_area = inputs[Aircraft.Fuselage.PLANFORM_AREA]
         cabin_area = inputs[Aircraft.Fuselage.CABIN_AREA]
         length = inputs[Aircraft.Fuselage.LENGTH]
@@ -318,13 +300,13 @@ class BWBAftBodyMass(om.ExplicitComponent):
         )
         J[Aircraft.Fuselage.AFTBODY_MASS, Aircraft.Fuselage.PLANFORM_AREA] = (
             (1.0 + 0.05 * num_fuse_eng) * 0.53 * gross_weight**0.2 * (0.5 + aftbody_tr)
-        ) / GRAV_ENGLISH_LBM
+        )
         J[Aircraft.Wing.BWB_AFTBODY_MASS, Aircraft.Fuselage.PLANFORM_AREA] = (
             J[Aircraft.Fuselage.AFTBODY_MASS, Aircraft.Fuselage.PLANFORM_AREA] * fac
         )
         J[Aircraft.Fuselage.AFTBODY_MASS, Aircraft.Fuselage.CABIN_AREA] = (
             -(1.0 + 0.05 * num_fuse_eng) * 0.53 * gross_weight**0.2 * (0.5 + aftbody_tr)
-        ) / GRAV_ENGLISH_LBM
+        )
         J[Aircraft.Wing.BWB_AFTBODY_MASS, Aircraft.Fuselage.CABIN_AREA] = (
             J[Aircraft.Fuselage.AFTBODY_MASS, Aircraft.Fuselage.CABIN_AREA] * fac
         )
@@ -337,7 +319,7 @@ class BWBAftBodyMass(om.ExplicitComponent):
             * aftbody_area
             * gross_weight**0.2
             * daftbody_tr_droot_chord
-        ) / GRAV_ENGLISH_LBM
+        )
         J[Aircraft.Wing.BWB_AFTBODY_MASS, Aircraft.Wing.ROOT_CHORD] = (
             J[Aircraft.Fuselage.AFTBODY_MASS, Aircraft.Wing.ROOT_CHORD] * fac
         )
@@ -350,7 +332,7 @@ class BWBAftBodyMass(om.ExplicitComponent):
             * aftbody_area
             * gross_weight**0.2
             * daftbody_tr_dlength
-        ) / GRAV_ENGLISH_LBM
+        )
         J[Aircraft.Wing.BWB_AFTBODY_MASS, Aircraft.Fuselage.LENGTH] = (
             J[Aircraft.Fuselage.AFTBODY_MASS, Aircraft.Fuselage.LENGTH] * fac
         )
@@ -363,7 +345,7 @@ class BWBAftBodyMass(om.ExplicitComponent):
             * aftbody_area
             * gross_weight**0.2
             * daftbody_tr_drspc
-        ) / GRAV_ENGLISH_LBM
+        )
         J[Aircraft.Wing.BWB_AFTBODY_MASS, Aircraft.BWB.REAR_SPAR_PERCENT_CHORD_ROOT] = (
             J[Aircraft.Fuselage.AFTBODY_MASS, Aircraft.BWB.REAR_SPAR_PERCENT_CHORD_ROOT] * fac
         )
@@ -376,10 +358,8 @@ class BWBAftBodyMass(om.ExplicitComponent):
             * aftbody_area
             * gross_weight**0.2
             * daftbody_tr_drspcc
-        ) / GRAV_ENGLISH_LBM
+        )
         J[Aircraft.Wing.BWB_AFTBODY_MASS, Aircraft.BWB.REAR_SPAR_PERCENT_CHORD_CENTERLINE] = (
             J[Aircraft.Fuselage.AFTBODY_MASS, Aircraft.BWB.REAR_SPAR_PERCENT_CHORD_CENTERLINE] * fac
         )
-        J[Aircraft.Wing.BWB_AFTBODY_MASS, Aircraft.Wing.COMPOSITE_FRACTION] = (
-            -0.17 * aftbody_weight
-        ) / GRAV_ENGLISH_LBM
+        J[Aircraft.Wing.BWB_AFTBODY_MASS, Aircraft.Wing.COMPOSITE_FRACTION] = -0.17 * aftbody_weight

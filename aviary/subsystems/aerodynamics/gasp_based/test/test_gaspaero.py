@@ -1516,14 +1516,27 @@ class BWBCruiseAeroTest(unittest.TestCase):
 
 
 @use_tempdirs
-class BWBLowSpeedAeroTest1(unittest.TestCase):
-    def setUp(self):
-        self.options = options = get_option_defaults()
+class BWBLowSpeedAeroTest(unittest.TestCase):
+    """Tests for LowSpeedAero (BWB) across gear/flap configurations."""
+
+    def _make_prob(
+        self,
+        altitude,
+        zero_lift_angle,
+        flap_defl,
+        CL_max_flaps,
+        dCL_flaps_model,
+        dCD_flaps_model,
+        retract_gear,
+        retract_flaps,
+    ):
+        options = get_option_defaults()
         options.set_val(Aircraft.Design.TYPE, val='BWB', units='unitless')
         options.set_val(Aircraft.Engine.NUM_ENGINES, np.array([2]))
         options.set_val(Aircraft.Wing.HAS_STRUT, False)
+        options.set_val('output_alpha', False)
 
-        self.prob = prob = om.Problem()
+        prob = om.Problem()
 
         # BWBAeroSetup/WingTailRatios
         prob.model.set_input_defaults(Aircraft.Wing.AREA, 2142.85718, units='ft**2')
@@ -1595,16 +1608,16 @@ class BWBLowSpeedAeroTest1(unittest.TestCase):
         prob.model.set_input_defaults(Aircraft.Strut.CHORD, 0.0, units='ft')
 
         # GroundEffect/mission inputs
-        prob.model.set_input_defaults(Dynamic.Vehicle.ANGLE_OF_ATTACK, [-2.0, -2.0], units='deg')
-        prob.model.set_input_defaults(Dynamic.Mission.ALTITUDE, [0.0, 0.0], units='ft')
+        prob.model.set_input_defaults(Dynamic.Mission.ALTITUDE, [altitude, altitude], units='ft')
         # GroundEffect/user inputs
-        prob.model.set_input_defaults(Aircraft.Wing.ZERO_LIFT_ANGLE, -1.2, units='deg')
+        prob.model.set_input_defaults(Aircraft.Wing.ZERO_LIFT_ANGLE, zero_lift_angle, units='deg')
         prob.model.set_input_defaults(Aircraft.Wing.HEIGHT, 12.5, units='ft')
         prob.model.set_input_defaults('airport_alt', 0.0, units='ft')
-        prob.model.set_input_defaults('flap_defl', 10.0, units='deg')
+        prob.model.set_input_defaults('flap_defl', flap_defl, units='deg')
         prob.model.set_input_defaults(Aircraft.Wing.FLAP_CHORD_RATIO, 0.3, units='unitless')
         # GroundEffect/from flaps
-        prob.model.set_input_defaults('dCL_flaps_model', 0.4182, units='unitless')
+        prob.model.set_input_defaults('dCL_flaps_model', dCL_flaps_model, units='unitless')
+        prob.model.set_input_defaults('dCD_flaps_model', dCD_flaps_model, units='unitless')
 
         # BWBBodyLiftCurveSlope
         prob.model.set_input_defaults(
@@ -1612,30 +1625,43 @@ class BWBLowSpeedAeroTest1(unittest.TestCase):
         )
 
         # BWBLiftCoeff
-        prob.model.set_input_defaults('CL_max_flaps', 2.188, units='unitless')
-        prob.model.set_input_defaults('flap_factor', [0.9, 0.9], units='unitless')
+        prob.model.set_input_defaults('CL_max_flaps', CL_max_flaps, units='unitless')
         prob.model.set_input_defaults(Aircraft.Wing.EXPOSED_AREA, 1352.11353, units='ft**2')
         prob.model.set_input_defaults(Aircraft.Fuselage.PLANFORM_AREA, 1943.76587, units='ft**2')
 
         # AeroForces
         prob.model.set_input_defaults(Dynamic.Atmosphere.DYNAMIC_PRESSURE, [1.0, 1.0], units='psf')
-
-    def test_case1(self):
-        """BWB data with lift_required = False."""
-        prob = self.prob
-        options = self.options
-        options.set_val('output_alpha', False)
-
-        prob.model.add_subsystem(
-            'aero',
-            LowSpeedAero(num_nodes=2, input_atmos=True),
-            promotes=['*'],
-        )
-
         # BWBFormFactor
         prob.model.set_input_defaults(Aircraft.Fuselage.FORM_FACTOR, 1.35024721, units='unitless')
 
+        prob.model.add_subsystem(
+            'aero',
+            LowSpeedAero(
+                num_nodes=2,
+                input_atmos=True,
+                retract_gear=retract_gear,
+                retract_flaps=retract_flaps,
+            ),
+            promotes=['*'],
+        )
+
         setup_model_options(prob, options)
+
+        return prob
+
+    def test_cruise_config(self):
+        """BWB data with lift_required = False, gear/flaps fixed extended."""
+        prob = self._make_prob(
+            altitude=0.0,
+            zero_lift_angle=-1.2,
+            flap_defl=10.0,
+            CL_max_flaps=2.188,
+            dCL_flaps_model=0.4182,
+            dCD_flaps_model=0.0,
+            retract_gear=True,
+            retract_flaps=True,
+        )
+        prob.model.set_input_defaults(Dynamic.Vehicle.ANGLE_OF_ATTACK, [-2.0, -2.0], units='deg')
 
         prob.setup(check=False, force_alloc_complex=True)
         prob.run_model()
@@ -1657,124 +1683,7 @@ class BWBLowSpeedAeroTest1(unittest.TestCase):
         assert_near_equal(prob[Dynamic.Vehicle.LIFT], [345.98630135, 345.98630135], tol)
         assert_near_equal(prob[Dynamic.Vehicle.DRAG], [37.73329763, 37.73329763], tol)
 
-
-@use_tempdirs
-class BWBLowSpeedAeroTest2(unittest.TestCase):
-    def setUp(self):
-        self.options = options = get_option_defaults()
-        options.set_val(Aircraft.Design.TYPE, val='BWB', units='unitless')
-        options.set_val(Aircraft.Engine.NUM_ENGINES, np.array([2]))
-        options.set_val(Aircraft.Wing.HAS_STRUT, False)
-        options.set_val('output_alpha', False)
-
-        self.prob = prob = om.Problem()
-
-        # BWBAeroSetup/WingTailRatios
-        prob.model.set_input_defaults(Aircraft.Wing.AREA, 2142.85718, units='ft**2')
-        prob.model.set_input_defaults(Aircraft.Wing.SPAN, 146.38501, units='ft')
-        prob.model.set_input_defaults(Aircraft.Wing.AVERAGE_CHORD, 16.2200522, units='ft')
-        prob.model.set_input_defaults(Aircraft.Wing.TAPER_RATIO, 0.27444, units='unitless')
-        prob.model.set_input_defaults(
-            Aircraft.Wing.THICKNESS_TO_CHORD_ROOT, 0.165, units='unitless'
-        )
-        prob.model.set_input_defaults(Aircraft.Wing.VERTICAL_MOUNT_LOCATION, 0.5, units='unitless')
-        prob.model.set_input_defaults(
-            Aircraft.HorizontalTail.VERTICAL_TAIL_MOUNT_LOCATION, 0, units='unitless'
-        )
-        prob.model.set_input_defaults(Aircraft.HorizontalTail.SPAN, 0.04467601, units='ft')
-        prob.model.set_input_defaults(Aircraft.VerticalTail.SPAN, 16.98084188, units='ft')
-        prob.model.set_input_defaults(Aircraft.HorizontalTail.AREA, 0.00117064, units='ft**2')
-        prob.model.set_input_defaults(Aircraft.HorizontalTail.AVERAGE_CHORD, 0.0280845, units='ft')
-        prob.model.set_input_defaults(Aircraft.Fuselage.AVG_DIAMETER, 38.0, units='ft')
-
-        # BWBAeroSetup/Xlifts
-        prob.model.set_input_defaults(Dynamic.Atmosphere.MACH, [0.2, 0.2], units='unitless')
-        prob.model.set_input_defaults(Aircraft.Design.STATIC_MARGIN, 0.05, units='unitless')
-        prob.model.set_input_defaults(Aircraft.Design.CG_DELTA, 0.25, units='unitless')
-        prob.model.set_input_defaults(Aircraft.Wing.ASPECT_RATIO, 10.0, units='unitless')
-        prob.model.set_input_defaults(Aircraft.Wing.SWEEP, 30.0, units='deg')
-        prob.model.set_input_defaults(Aircraft.HorizontalTail.SWEEP, 45.0, units='deg')
-        prob.model.set_input_defaults(
-            Aircraft.HorizontalTail.MOMENT_RATIO, 0.5463, units='unitless'
-        )
-
-        # BWBAeroSetup/BWBFormFactor
-        prob.model.set_input_defaults(Aircraft.Fuselage.HYDRAULIC_DIAMETER, 19.3650932, units='ft')
-        prob.model.set_input_defaults(Aircraft.Fuselage.LENGTH, 71.5245514, units='ft')
-
-        # BWBAeroSetup/AeroGeom
-        prob.model.set_input_defaults(
-            Dynamic.Atmosphere.SPEED_OF_SOUND, [993.11760441, 993.11760441], units='ft/s'
-        )
-        prob.model.set_input_defaults(
-            Dynamic.Atmosphere.KINEMATIC_VISCOSITY, [0.00034882, 0.00034882], units='ft**2/s'
-        )
-        prob.model.set_input_defaults(Aircraft.Wing.FORM_FACTOR, 2.563, units='unitless')
-        prob.model.set_input_defaults(Aircraft.Nacelle.FORM_FACTOR, 1.2, units='unitless')
-        prob.model.set_input_defaults(Aircraft.VerticalTail.FORM_FACTOR, 2.361, units='unitless')
-        prob.model.set_input_defaults(Aircraft.HorizontalTail.FORM_FACTOR, 2.413, units='unitless')
-        prob.model.set_input_defaults(
-            Aircraft.Wing.FUSELAGE_INTERFERENCE_FACTOR, 1.0, units='unitless'
-        )
-        prob.model.set_input_defaults(
-            Aircraft.Strut.FUSELAGE_INTERFERENCE_FACTOR, 1.0, units='unitless'
-        )
-        prob.model.set_input_defaults(
-            Aircraft.Design.DRAG_COEFFICIENT_INCREMENT, 0.00025, units='unitless'
-        )
-        prob.model.set_input_defaults(
-            Aircraft.Fuselage.FLAT_PLATE_AREA_INCREMENT, 0.25, units='ft**2'
-        )
-        prob.model.set_input_defaults(Aircraft.Wing.MIN_PRESSURE_LOCATION, 0.275, units='unitless')
-        prob.model.set_input_defaults(Aircraft.Wing.MAX_THICKNESS_LOCATION, 0.325, units='unitless')
-        prob.model.set_input_defaults(Aircraft.Strut.AREA_RATIO, 0.0, units='unitless')
-        prob.model.set_input_defaults(Aircraft.VerticalTail.AVERAGE_CHORD, 10.67, units='ft')
-        prob.model.set_input_defaults(Aircraft.Nacelle.AVG_LENGTH, 18.11, units='ft')
-        prob.model.set_input_defaults(Aircraft.Fuselage.WETTED_AREA, 4573.8833, units='ft**2')
-        prob.model.set_input_defaults(Aircraft.Nacelle.SURFACE_AREA, 411.93, units='ft**2')
-        prob.model.set_input_defaults(Aircraft.VerticalTail.AREA, 169.1, units='ft**2')
-        prob.model.set_input_defaults(
-            Aircraft.Wing.THICKNESS_TO_CHORD_UNWEIGHTED, 0.13596576, units='unitless'
-        )
-        prob.model.set_input_defaults(Aircraft.Strut.CHORD, 0.0, units='ft')
-
-        # GroundEffect/mission inputs
-        prob.model.set_input_defaults(Dynamic.Mission.ALTITUDE, [1500.0, 1500.0], units='ft')
-        # GroundEffect/user inputs
-        prob.model.set_input_defaults(Aircraft.Wing.ZERO_LIFT_ANGLE, 0.0, units='deg')
-        prob.model.set_input_defaults(Aircraft.Wing.HEIGHT, 12.5, units='ft')
-        prob.model.set_input_defaults('airport_alt', 0.0, units='ft')
-        prob.model.set_input_defaults('flap_defl', 15.0, units='deg')
-        prob.model.set_input_defaults(Aircraft.Wing.FLAP_CHORD_RATIO, 0.3, units='unitless')
-        # GroundEffect/from flaps
-        prob.model.set_input_defaults('dCL_flaps_model', 0.38993, units='unitless')
-        prob.model.set_input_defaults('dCD_flaps_model', 0.0062256, units='unitless')
-
-        # BWBBodyLiftCurveSlope
-        prob.model.set_input_defaults(
-            Aircraft.Fuselage.LIFT_CURVE_SLOPE_MACH0, 1.8265, units='1/rad'
-        )
-
-        # BWBLiftCoeff
-        prob.model.set_input_defaults('CL_max_flaps', 1.94939148, units='unitless')
-        prob.model.set_input_defaults(Aircraft.Wing.EXPOSED_AREA, 1352.11353, units='ft**2')
-        prob.model.set_input_defaults(Aircraft.Fuselage.PLANFORM_AREA, 1943.76587, units='ft**2')
-
-        # AeroForces
-        prob.model.set_input_defaults(Dynamic.Atmosphere.DYNAMIC_PRESSURE, [1.0, 1.0], units='psf')
-        # BWBFormFactor
-        prob.model.set_input_defaults(Aircraft.Fuselage.FORM_FACTOR, 1.35024721, units='unitless')
-
-        options = self.options
-        setup_model_options(prob, options)
-
-        prob.model.add_subsystem(
-            'aero',
-            LowSpeedAero(num_nodes=2, input_atmos=True, retract_gear=True, retract_flaps=True),
-            promotes=['*'],
-        )
-
-    def test_case1(self):
+    def test_takeoff(self):
         """
         BWB data with lift_required = False
         Take off
@@ -1787,7 +1696,17 @@ class BWBLowSpeedAeroTest2(unittest.TestCase):
           CD = 0.01853, 0.01866, 0.02070
           CL/CD = 4.05136, 12.84433, 19.53199.
         """
-        prob = self.prob
+        prob = self._make_prob(
+            altitude=1500.0,
+            zero_lift_angle=0.0,
+            flap_defl=15.0,
+            CL_max_flaps=1.94939148,
+            dCL_flaps_model=0.38993,
+            dCD_flaps_model=0.0062256,
+            retract_gear=True,
+            retract_flaps=True,
+        )
+
         tol = 1e-6
         aoas = [-2.0, 0.0, 2.0]
         CLs = [0.0578734, 0.21906393, 0.38025445]
@@ -1811,124 +1730,7 @@ class BWBLowSpeedAeroTest2(unittest.TestCase):
             CL_over_CD = prob['CL_full_flaps'] / cd
             assert_near_equal(CL_over_CD, [CL_Over_CDs[i], CL_Over_CDs[i]], tol)
 
-
-@use_tempdirs
-class BWBLowSpeedAeroTest3(unittest.TestCase):
-    def setUp(self):
-        self.options = options = get_option_defaults()
-        options.set_val(Aircraft.Design.TYPE, val='BWB', units='unitless')
-        options.set_val(Aircraft.Engine.NUM_ENGINES, np.array([2]))
-        options.set_val(Aircraft.Wing.HAS_STRUT, False)
-        options.set_val('output_alpha', False)
-
-        self.prob = prob = om.Problem()
-
-        # BWBAeroSetup/WingTailRatios
-        prob.model.set_input_defaults(Aircraft.Wing.AREA, 2142.85718, units='ft**2')
-        prob.model.set_input_defaults(Aircraft.Wing.SPAN, 146.38501, units='ft')
-        prob.model.set_input_defaults(Aircraft.Wing.AVERAGE_CHORD, 16.2200522, units='ft')
-        prob.model.set_input_defaults(Aircraft.Wing.TAPER_RATIO, 0.27444, units='unitless')
-        prob.model.set_input_defaults(
-            Aircraft.Wing.THICKNESS_TO_CHORD_ROOT, 0.165, units='unitless'
-        )
-        prob.model.set_input_defaults(Aircraft.Wing.VERTICAL_MOUNT_LOCATION, 0.5, units='unitless')
-        prob.model.set_input_defaults(
-            Aircraft.HorizontalTail.VERTICAL_TAIL_MOUNT_LOCATION, 0, units='unitless'
-        )
-        prob.model.set_input_defaults(Aircraft.HorizontalTail.SPAN, 0.04467601, units='ft')
-        prob.model.set_input_defaults(Aircraft.VerticalTail.SPAN, 16.98084188, units='ft')
-        prob.model.set_input_defaults(Aircraft.HorizontalTail.AREA, 0.00117064, units='ft**2')
-        prob.model.set_input_defaults(Aircraft.HorizontalTail.AVERAGE_CHORD, 0.0280845, units='ft')
-        prob.model.set_input_defaults(Aircraft.Fuselage.AVG_DIAMETER, 38.0, units='ft')
-
-        # BWBAeroSetup/Xlifts
-        prob.model.set_input_defaults(Dynamic.Atmosphere.MACH, [0.2, 0.2], units='unitless')
-        prob.model.set_input_defaults(Aircraft.Design.STATIC_MARGIN, 0.05, units='unitless')
-        prob.model.set_input_defaults(Aircraft.Design.CG_DELTA, 0.25, units='unitless')
-        prob.model.set_input_defaults(Aircraft.Wing.ASPECT_RATIO, 10.0, units='unitless')
-        prob.model.set_input_defaults(Aircraft.Wing.SWEEP, 30.0, units='deg')
-        prob.model.set_input_defaults(Aircraft.HorizontalTail.SWEEP, 45.0, units='deg')
-        prob.model.set_input_defaults(
-            Aircraft.HorizontalTail.MOMENT_RATIO, 0.5463, units='unitless'
-        )
-
-        # BWBAeroSetup/BWBFormFactor
-        prob.model.set_input_defaults(Aircraft.Fuselage.HYDRAULIC_DIAMETER, 19.3650932, units='ft')
-        prob.model.set_input_defaults(Aircraft.Fuselage.LENGTH, 71.5245514, units='ft')
-
-        # BWBAeroSetup/AeroGeom
-        prob.model.set_input_defaults(
-            Dynamic.Atmosphere.SPEED_OF_SOUND, [993.11760441, 993.11760441], units='ft/s'
-        )
-        prob.model.set_input_defaults(
-            Dynamic.Atmosphere.KINEMATIC_VISCOSITY, [0.00034882, 0.00034882], units='ft**2/s'
-        )
-        prob.model.set_input_defaults(Aircraft.Wing.FORM_FACTOR, 2.563, units='unitless')
-        prob.model.set_input_defaults(Aircraft.Nacelle.FORM_FACTOR, 1.2, units='unitless')
-        prob.model.set_input_defaults(Aircraft.VerticalTail.FORM_FACTOR, 2.361, units='unitless')
-        prob.model.set_input_defaults(Aircraft.HorizontalTail.FORM_FACTOR, 2.413, units='unitless')
-        prob.model.set_input_defaults(
-            Aircraft.Wing.FUSELAGE_INTERFERENCE_FACTOR, 1.0, units='unitless'
-        )
-        prob.model.set_input_defaults(
-            Aircraft.Strut.FUSELAGE_INTERFERENCE_FACTOR, 1.0, units='unitless'
-        )
-        prob.model.set_input_defaults(
-            Aircraft.Design.DRAG_COEFFICIENT_INCREMENT, 0.00025, units='unitless'
-        )
-        prob.model.set_input_defaults(
-            Aircraft.Fuselage.FLAT_PLATE_AREA_INCREMENT, 0.25, units='ft**2'
-        )
-        prob.model.set_input_defaults(Aircraft.Wing.MIN_PRESSURE_LOCATION, 0.275, units='unitless')
-        prob.model.set_input_defaults(Aircraft.Wing.MAX_THICKNESS_LOCATION, 0.325, units='unitless')
-        prob.model.set_input_defaults(Aircraft.Strut.AREA_RATIO, 0.0, units='unitless')
-        prob.model.set_input_defaults(Aircraft.VerticalTail.AVERAGE_CHORD, 10.67, units='ft')
-        prob.model.set_input_defaults(Aircraft.Nacelle.AVG_LENGTH, 18.11, units='ft')
-        prob.model.set_input_defaults(Aircraft.Fuselage.WETTED_AREA, 4573.8833, units='ft**2')
-        prob.model.set_input_defaults(Aircraft.Nacelle.SURFACE_AREA, 411.93, units='ft**2')
-        prob.model.set_input_defaults(Aircraft.VerticalTail.AREA, 169.1, units='ft**2')
-        prob.model.set_input_defaults(
-            Aircraft.Wing.THICKNESS_TO_CHORD_UNWEIGHTED, 0.13596576, units='unitless'
-        )
-        prob.model.set_input_defaults(Aircraft.Strut.CHORD, 0.0, units='ft')
-
-        # GroundEffect/mission inputs
-        prob.model.set_input_defaults(Dynamic.Mission.ALTITUDE, [1500.0, 1500.0], units='ft')
-        # GroundEffect/user inputs
-        prob.model.set_input_defaults(Aircraft.Wing.ZERO_LIFT_ANGLE, 0.0, units='deg')
-        prob.model.set_input_defaults(Aircraft.Wing.HEIGHT, 12.5, units='ft')
-        prob.model.set_input_defaults('airport_alt', 0.0, units='ft')
-        prob.model.set_input_defaults('flap_defl', 25.0, units='deg')
-        prob.model.set_input_defaults(Aircraft.Wing.FLAP_CHORD_RATIO, 0.3, units='unitless')
-        # GroundEffect/from flaps
-        prob.model.set_input_defaults('dCL_flaps_model', 0.56964, units='unitless')
-        prob.model.set_input_defaults('dCD_flaps_model', 0.0105864, units='unitless')
-
-        # BWBBodyLiftCurveSlope
-        prob.model.set_input_defaults(
-            Aircraft.Fuselage.LIFT_CURVE_SLOPE_MACH0, 1.8265, units='1/rad'
-        )
-
-        # BWBLiftCoeff
-        prob.model.set_input_defaults('CL_max_flaps', 1.94939148, units='unitless')
-        prob.model.set_input_defaults(Aircraft.Wing.EXPOSED_AREA, 1352.11353, units='ft**2')
-        prob.model.set_input_defaults(Aircraft.Fuselage.PLANFORM_AREA, 1943.76587, units='ft**2')
-
-        # AeroForces
-        prob.model.set_input_defaults(Dynamic.Atmosphere.DYNAMIC_PRESSURE, [1.0, 1.0], units='psf')
-        # bwbFormFactor
-        prob.model.set_input_defaults(Aircraft.Fuselage.FORM_FACTOR, 1.35024721, units='unitless')
-
-        options = self.options
-        setup_model_options(prob, options)
-
-        prob.model.add_subsystem(
-            'aero',
-            LowSpeedAero(num_nodes=2, input_atmos=True, retract_gear=True, retract_flaps=True),
-            promotes=['*'],
-        )
-
-    def test_case1(self):
+    def test_landing(self):
         """
         BWB data with lift_required = False
         Landing
@@ -1941,7 +1743,17 @@ class BWBLowSpeedAeroTest3(unittest.TestCase):
           CD = 0.02299, 0.02292, 0.02482
           CL/CD = 8.06918, 15.27225, 20.74018.
         """
-        prob = self.prob
+        prob = self._make_prob(
+            altitude=1500.0,
+            zero_lift_angle=0.0,
+            flap_defl=25.0,
+            CL_max_flaps=1.94939148,
+            dCL_flaps_model=0.56964,
+            dCD_flaps_model=0.0105864,
+            retract_gear=True,
+            retract_flaps=True,
+        )
+
         tol = 1e-6
         aoas = [-2.0, 0.0, 2.0]
         CLs = [0.15883506, 0.32002558, 0.4812161]
@@ -1950,7 +1762,6 @@ class BWBLowSpeedAeroTest3(unittest.TestCase):
         CL_Over_CDs = [7.29119323, 13.18284568, 17.5899862]
         n = len(aoas)
         for i in range(n):
-            print(f'i = {i}')
             prob.model.set_input_defaults(
                 Dynamic.Vehicle.ANGLE_OF_ATTACK, [aoas[i], aoas[i]], units='deg'
             )

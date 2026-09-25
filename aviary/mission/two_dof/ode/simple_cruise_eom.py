@@ -23,14 +23,14 @@ class DistanceComp(om.ExplicitComponent):
         self.add_input(
             'cruise_distance_initial',
             val=0.0,
-            units='NM',
+            units='m',
             desc='Total distance at the start of the cruise phase.',
         )
 
         self.add_input(
             'TAS_cruise',
             val=0.0001 * np.ones(nn),
-            units='NM/s',
+            units='m/s',
             desc='Constant true airspeed at each point in cruise.',
         )
 
@@ -38,7 +38,7 @@ class DistanceComp(om.ExplicitComponent):
             self,
             Dynamic.Mission.DISTANCE,
             shape=(nn,),
-            units='NM',
+            units='m',
             desc='Computed distance at each point in the cruise phase.',
         )
 
