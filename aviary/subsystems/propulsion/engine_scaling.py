@@ -257,7 +257,7 @@ class EngineScaling(om.ExplicitComponent):
                     ] = fuel_flow_scale_deriv
                 else:
                     J[variable.value, variable.value + '_unscaled'] = engine_scale_factor
-                    J[variable.value, Aircraft.Engine.SCALE_FACTOR] = inputs[
+                    J[variable.value, Aircraft.Engine.SCALE_FACTOR][:] = inputs[
                         variable.value + '_unscaled'
                     ]
 
@@ -265,6 +265,6 @@ class EngineScaling(om.ExplicitComponent):
                         J[variable.value + '_max', variable.value + '_max_unscaled'] = (
                             engine_scale_factor
                         )
-                        J[variable.value + '_max', Aircraft.Engine.SCALE_FACTOR] = inputs[
+                        J[variable.value + '_max', Aircraft.Engine.SCALE_FACTOR][:] = inputs[
                             variable.value + '_max_unscaled'
                         ]

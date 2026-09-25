@@ -45,7 +45,7 @@ inputs.set_val(Aircraft.Nacelle.LAMINAR_FLOW_LOWER, np.zeros(2))
 inputs.set_val(Aircraft.Nacelle.LAMINAR_FLOW_UPPER, np.zeros(2))
 
 
-@use_tempdirs
+#@use_tempdirs
 class ThrottleAllocationEnergyTestcase(unittest.TestCase):
     """Test the different throttle allocation methods for models with multiple, unique EngineModels."""
 
@@ -289,6 +289,7 @@ class ThrottleAllocation2DOFTestcase(unittest.TestCase):
         method = ThrottleAllocation.DYNAMIC
 
         test_phase_info['cruise']['user_options']['throttle_allocation'] = method
+        test_phase_info['cruise']['user_options']['throttle_enforcement'] = 'path_constraint'
 
         prob = AviaryProblem(verbosity=0)
 
@@ -317,7 +318,7 @@ class ThrottleAllocation2DOFTestcase(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
-    # test = ThrottleAllocation2DOFTestcase()
-    # test.setUp()
-    # test.test_multiengine_dynamic()
+    # unittest.main()
+    test = ThrottleAllocationEnergyTestcase()
+    test.setUp()
+    test.test_multiengine_static()
