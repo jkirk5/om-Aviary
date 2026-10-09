@@ -15,9 +15,7 @@ class SimpleCruisePhaseOptions(AviaryOptionsDictionary):
             name='num_segments',
             types=int,
             default=5,
-            desc='The number of segments in transcription creation in Dymos. '
-            'While this phase is usually an analytic phase, this option is '
-            'needed if an external subsystem requires a dynamic transcription.',
+            desc='The number of segments in transcription creation in Dymos. ',
         )
 
         self.declare(
@@ -25,8 +23,7 @@ class SimpleCruisePhaseOptions(AviaryOptionsDictionary):
             types=int,
             default=3,
             desc='The order of polynomials for interpolation in the transcription '
-            'created in Dymos. While this phase is usually an analytic phase, this option is '
-            'needed if an external subsystem requires a dynamic transcription.',
+            'created in Dymos.',
         )
 
         defaults = {
@@ -171,7 +168,7 @@ class SimpleCruisePhase(PhaseBuilder):
         -------
         dymos.Phase
         """
-        phase = self.phase = super().build_phase(aviary_options)
+        phase = super().build_phase(aviary_options)
 
         # Custom configurations for the climb phase
         user_options = self.user_options
@@ -249,8 +246,35 @@ class SimpleCruisePhase(PhaseBuilder):
         phase.add_timeseries_output(Dynamic.Vehicle.Propulsion.THRUST_TOTAL, units='lbf')
         phase.add_timeseries_output(Dynamic.Mission.VELOCITY, units='kn')
 
-        if user_options['throttle_enforcement'] != 'control':
+        throttle_enforcement = user_options['throttle_enforcement']
+
+        if throttle_enforcement != 'control':
             phase.add_timeseries_output(Dynamic.Vehicle.Propulsion.THROTTLE, units='unitless')
+
+        # Keep each engine's throttle in [0, 1], required for multi-engine cases to prevent
+        # the allocator from running engines above 1
+        if throttle_enforcement == 'boundary_constraint':
+            phase.add_boundary_constraint(
+                Dynamic.Vehicle.Propulsion.THROTTLE,
+                loc='initial',
+                lower=0.0,
+                upper=1.0,
+                units='unitless',
+            )
+            phase.add_boundary_constraint(
+                Dynamic.Vehicle.Propulsion.THROTTLE,
+                loc='final',
+                lower=0.0,
+                upper=1.0,
+                units='unitless',
+            )
+        elif throttle_enforcement == 'path_constraint':
+            phase.add_path_constraint(
+                Dynamic.Vehicle.Propulsion.THROTTLE,
+                lower=0.0,
+                upper=1.0,
+                units='unitless',
+            )
 
         return phase
 

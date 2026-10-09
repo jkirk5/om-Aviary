@@ -148,7 +148,7 @@ class FlightPhase(PhaseBuilder):
     _initial_guesses_meta_data_ = {}
 
     def build_phase(self, aviary_options: AviaryValues = None):
-        phase = self.phase = super().build_phase(aviary_options)
+        phase = super().build_phase(aviary_options)
 
         # Retrieve user options values
         user_options = self.user_options
@@ -220,6 +220,14 @@ class FlightPhase(PhaseBuilder):
         #             opt=opt,
         #             **kwargs,
         #         )
+        #
+        #     # Constrain throttle for each engine within bounds
+        #     phase.add_path_constraint(
+        #         Dynamic.Vehicle.Propulsion.THROTTLE,
+        #         lower=0.0,
+        #         upper=1.0,
+        #         units='unitless',
+        #     )
 
         # Add timeseries outputs
         phase.add_timeseries_output(Dynamic.Vehicle.ANGLE_OF_ATTACK, units='deg')

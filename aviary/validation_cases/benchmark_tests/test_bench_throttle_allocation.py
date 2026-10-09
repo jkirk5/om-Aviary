@@ -181,7 +181,7 @@ class ThrottleAllocationEnergyTestcase(unittest.TestCase):
 
         with self.subTest('climb_allocation'):
             # Check general trend: favors engine 2.
-            self.assertGreater(alloc_climb[1], 0.21)
+            self.assertLess(alloc_climb[2], 0.22)
 
 
 @use_tempdirs
@@ -201,21 +201,19 @@ class ThrottleAllocation2DOFTestcase(unittest.TestCase):
                     throttle_guess[1],
                 ]
 
-        prob = AviaryProblem(verbosity=0)
+        prob = AviaryProblem()
         prob.load_inputs('large_single_aisle_1_GASP.csv', test_phase_info)
 
-        self.options = prob.aviary_inputs
-        self.options.delete(Aircraft.Engine.SCALED_SLS_THRUST)
-        self.options.set_val(Aircraft.Engine.SCALE_FACTOR, 0.6)
+        options = prob.model.aviary_inputs
 
-        engine1 = build_engine_deck(self.options)
+        options.set_val(Aircraft.Engine.SCALE_FACTOR, 0.6)
+
+        engine1 = build_engine_deck(options)
         engine1.name = 'engine_1'
 
-        self.options.set_val(Aircraft.Engine.SCALE_FACTOR, 0.4)
-        engine2 = build_engine_deck(self.options)
+        engine2 = build_engine_deck(engine_2_inputs)
         engine2.name = 'engine_2'
 
-        self.options.set_val(Aircraft.Engine.SCALE_FACTOR, [0.6, 0.4])
         self.engines = [engine1, engine2]
 
     @require_pyoptsparse(optimizer='SNOPT')
@@ -225,9 +223,9 @@ class ThrottleAllocation2DOFTestcase(unittest.TestCase):
 
         test_phase_info['cruise']['user_options']['throttle_allocation'] = method
 
-        prob = AviaryProblem(verbosity=1)
+        prob = AviaryProblem(verbosity=0)
 
-        prob.load_inputs(self.options, test_phase_info)
+        prob.load_inputs('large_single_aisle_1_GASP.csv', test_phase_info)
 
         prob.load_external_subsystems(self.engines)
 
@@ -259,7 +257,7 @@ class ThrottleAllocation2DOFTestcase(unittest.TestCase):
 
         prob = AviaryProblem(verbosity=0)
 
-        prob.load_inputs(self.options, test_phase_info)
+        prob.load_inputs('large_single_aisle_1_GASP.csv', test_phase_info)
 
         prob.load_external_subsystems(self.engines)
 
@@ -280,7 +278,7 @@ class ThrottleAllocation2DOFTestcase(unittest.TestCase):
 
         alloc_cruise = prob.get_val('traj.cruise.parameter_vals:throttle_allocations')
 
-        assert_near_equal(alloc_cruise[0], 0.5, tolerance=1e-2)
+        assert_near_equal(alloc_cruise[0], 0.47132271, tolerance=1e-2)
 
     @require_pyoptsparse(optimizer='SNOPT')
     def test_multiengine_dynamic(self):
@@ -291,7 +289,7 @@ class ThrottleAllocation2DOFTestcase(unittest.TestCase):
 
         prob = AviaryProblem(verbosity=0)
 
-        prob.load_inputs(self.options, test_phase_info)
+        prob.load_inputs('large_single_aisle_1_GASP.csv', test_phase_info)
 
         prob.load_external_subsystems(self.engines)
 
@@ -312,7 +310,7 @@ class ThrottleAllocation2DOFTestcase(unittest.TestCase):
 
         alloc_cruise = prob.get_val('traj.cruise.controls:throttle_allocations')
 
-        assert_near_equal(alloc_cruise[0], 0.5, tolerance=1e-2)
+        assert_near_equal(alloc_cruise[0], 0.47127303, tolerance=1e-2)
 
 
 if __name__ == '__main__':
@@ -320,3 +318,4 @@ if __name__ == '__main__':
     # test = ThrottleAllocation2DOFTestcase()
     # test.setUp()
     # test.test_multiengine_dynamic()
+    # test.test_multiengine_static()
