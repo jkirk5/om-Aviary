@@ -1921,8 +1921,8 @@ add_meta_data(
     meta_data=_MetaData,
     historical_name={'GASP': 'INGASP.CW(15)', 'FLOPS': None},
     units='lbm',
-    desc='electrical system weight per passenger. In GASP, default 16.0',
-    default_value=0.0,
+    desc='electrical system weight per passenger.',
+    default_value=16.0,
 )
 
 #  ______                   _
