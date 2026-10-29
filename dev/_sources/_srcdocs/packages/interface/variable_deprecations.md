@@ -2,10 +2,10 @@
 orphan: true
 ---
 
-# conflict_checks.py
+# variable_deprecations.py
 
 ```{eval-rst}
-    .. automodule:: aviary.utils.conflict_checks
+    .. automodule:: aviary.interface.variable_deprecations
         :members:
         :undoc-members:
         :special-members: __init__, __contains__, __iter__, __setitem__, __getitem__

@@ -37,8 +37,8 @@
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../_static/version_switcher.css?v=516df71e" />
     <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=3683e473" />
+    <link rel="stylesheet" type="text/css" href="../_static/version_switcher.css?v=516df71e" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
@@ -721,6 +721,9 @@
 </div>
 </div>
 <div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Warning: Design range 3500.0 differs from target_range 1906.0 (NM).
+</pre></div>
+</div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>The following variables have been overridden by the aircraft definition:
   &#39;aircraft:design:landing_to_takeoff_mass_ratio  0.84  unitless
   &#39;aircraft:design:touchdown_mass_max  108976.4  lbm
@@ -742,36 +745,36 @@
   &#39;aircraft:wing:wetted_area  2210.280228  ft**2
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Total number of variables............................:      219
-                     variables with only lower bounds:      213
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Total number of variables............................:      324
+                     variables with only lower bounds:      318
                 variables with lower and upper bounds:        6
                      variables with only upper bounds:        0
-Total number of equality constraints.................:      215
+Total number of equality constraints.................:      320
 Total number of inequality constraints...............:      105
         inequality constraints with only lower bounds:        1
    inequality constraints with lower and upper bounds:      104
         inequality constraints with only upper bounds:        0
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Number of Iterations....: 22
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Number of Iterations....: 30
 
                                    (scaled)                 (unscaled)
-Objective...............:   1.9306323772517442e+00    1.9306323772517442e+00
-Dual infeasibility......:   3.9475958550372557e-08    3.9475958550372557e-08
-Constraint violation....:   1.9237242858288078e-11    1.9237242858288078e-11
+Objective...............:   1.9306323772840290e+00    1.9306323772840290e+00
+Dual infeasibility......:   4.0185535958096867e-08    4.0185535958096867e-08
+Constraint violation....:   2.3172678576976434e-11    2.3172678576976434e-11
 Variable bound violation:   0.0000000000000000e+00    0.0000000000000000e+00
-Complementarity.........:   9.0961731257806569e-08    9.0961731257806569e-08
-Overall NLP error.......:   9.0961731257806569e-08    9.0961731257806569e-08
+Complementarity.........:   9.0920529875010720e-08    9.0920529875010720e-08
+Overall NLP error.......:   9.0920529875010720e-08    9.0920529875010720e-08
 
 
-Number of objective function evaluations             = 27
-Number of objective gradient evaluations             = 19
-Number of equality constraint evaluations            = 27
-Number of inequality constraint evaluations          = 27
-Number of equality constraint Jacobian evaluations   = 24
-Number of inequality constraint Jacobian evaluations = 24
+Number of objective function evaluations             = 42
+Number of objective gradient evaluations             = 29
+Number of equality constraint evaluations            = 42
+Number of inequality constraint evaluations          = 42
+Number of equality constraint Jacobian evaluations   = 32
+Number of inequality constraint Jacobian evaluations = 32
 Number of Lagrangian Hessian evaluations             = 0
-Total seconds in IPOPT                               = 13.245
+Total seconds in IPOPT                               = 17.964
 
 EXIT: Optimal Solution Found.
 </pre></div>

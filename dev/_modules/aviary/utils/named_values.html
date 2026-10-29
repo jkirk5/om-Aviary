@@ -36,8 +36,8 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/version_switcher.css?v=516df71e" />
     <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=3683e473" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/version_switcher.css?v=516df71e" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
@@ -521,14 +521,14 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Collection</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">openmdao.core.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">_UNDEFINED</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">aviary.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">wrapped_convert_units</span>
 
 <span class="n">Units</span> <span class="o">=</span> <span class="nb">str</span>
-<span class="n">ValueAndUnits</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Units</span><span class="p">]</span>
+<span class="n">ValueAndUnits</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Units</span><span class="p">]</span>
 <span class="n">OptionalValueAndUnits</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">ValueAndUnits</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 
 

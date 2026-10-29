@@ -37,8 +37,8 @@
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../_static/version_switcher.css?v=516df71e" />
     <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=3683e473" />
+    <link rel="stylesheet" type="text/css" href="../_static/version_switcher.css?v=516df71e" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
@@ -739,16 +739,25 @@
   &#39;aircraft:wing:slat_span_ratio  0.9  unitless
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>req_fuel_mass &gt; max_wingfuel_mass, adding a body tank
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/home/runner/work/om-Aviary/om-Aviary/.openmdao-pixi/.pixi/envs/py313/lib/python3.13/site-packages/openmdao/core/component.py:1200: DerivativesWarning:&#39;landing.aero_td.drag_coef&#39; &lt;class DragCoef&gt;: d(CD_base)/d((&#39;altitude&#39;, &#39;lift_coefficient&#39;, &#39;cf&#39;, &#39;SA5&#39;, &#39;SA6&#39;, &#39;SA7&#39;)): rows and cols do not reduce the number of evaluations when method=&#39;cs&#39;. Use declare_coloring to compute the sparsity of approximated partials.
+/home/runner/work/om-Aviary/om-Aviary/.openmdao-pixi/.pixi/envs/py313/lib/python3.13/site-packages/openmdao/core/component.py:1200: DerivativesWarning:&#39;landing.aero_td.kclge&#39; &lt;class GroundEffect&gt;: d(kclge)/d((&#39;angle_of_attack&#39;, &#39;altitude&#39;, &#39;lift_curve_slope&#39;)): rows and cols do not reduce the number of evaluations when method=&#39;cs&#39;. Use declare_coloring to compute the sparsity of approximated partials.
+/home/runner/work/om-Aviary/om-Aviary/.openmdao-pixi/.pixi/envs/py313/lib/python3.13/site-packages/openmdao/core/component.py:1200: DerivativesWarning:&#39;landing.aerodynamics.drag_coef&#39; &lt;class DragCoef&gt;: d(CD_base)/d((&#39;altitude&#39;, &#39;lift_coefficient&#39;, &#39;cf&#39;, &#39;SA5&#39;, &#39;SA6&#39;, &#39;SA7&#39;)): rows and cols do not reduce the number of evaluations when method=&#39;cs&#39;. Use declare_coloring to compute the sparsity of approximated partials.
+/home/runner/work/om-Aviary/om-Aviary/.openmdao-pixi/.pixi/envs/py313/lib/python3.13/site-packages/openmdao/core/component.py:1200: DerivativesWarning:&#39;landing.aerodynamics.kclge&#39; &lt;class GroundEffect&gt;: d(kclge)/d((&#39;angle_of_attack&#39;, &#39;altitude&#39;, &#39;lift_curve_slope&#39;)): rows and cols do not reduce the number of evaluations when method=&#39;cs&#39;. Use declare_coloring to compute the sparsity of approximated partials.
+/home/runner/work/om-Aviary/om-Aviary/.openmdao-pixi/.pixi/envs/py313/lib/python3.13/site-packages/openmdao/core/component.py:1200: DerivativesWarning:&#39;traj.phases.ascent.rhs_all.aerodynamics.drag_coef&#39; &lt;class DragCoef&gt;: d(CD_base)/d((&#39;altitude&#39;, &#39;lift_coefficient&#39;, &#39;cf&#39;, &#39;SA5&#39;, &#39;SA6&#39;, &#39;SA7&#39;)): rows and cols do not reduce the number of evaluations when method=&#39;cs&#39;. Use declare_coloring to compute the sparsity of approximated partials.
+/home/runner/work/om-Aviary/om-Aviary/.openmdao-pixi/.pixi/envs/py313/lib/python3.13/site-packages/openmdao/core/component.py:1200: DerivativesWarning:&#39;traj.phases.ascent.rhs_all.aerodynamics.kclge&#39; &lt;class GroundEffect&gt;: d(kclge)/d((&#39;angle_of_attack&#39;, &#39;altitude&#39;, &#39;lift_curve_slope&#39;)): rows and cols do not reduce the number of evaluations when method=&#39;cs&#39;. Use declare_coloring to compute the sparsity of approximated partials.
+/home/runner/work/om-Aviary/om-Aviary/.openmdao-pixi/.pixi/envs/py313/lib/python3.13/site-packages/openmdao/core/component.py:1200: DerivativesWarning:&#39;traj.phases.groundroll.rhs_all.aerodynamics.drag_coef&#39; &lt;class DragCoef&gt;: d(CD_base)/d((&#39;altitude&#39;, &#39;lift_coefficient&#39;, &#39;cf&#39;, &#39;SA5&#39;, &#39;SA6&#39;, &#39;SA7&#39;)): rows and cols do not reduce the number of evaluations when method=&#39;cs&#39;. Use declare_coloring to compute the sparsity of approximated partials.
+/home/runner/work/om-Aviary/om-Aviary/.openmdao-pixi/.pixi/envs/py313/lib/python3.13/site-packages/openmdao/core/component.py:1200: DerivativesWarning:&#39;traj.phases.groundroll.rhs_all.aerodynamics.kclge&#39; &lt;class GroundEffect&gt;: d(kclge)/d((&#39;angle_of_attack&#39;, &#39;altitude&#39;, &#39;lift_curve_slope&#39;)): rows and cols do not reduce the number of evaluations when method=&#39;cs&#39;. Use declare_coloring to compute the sparsity of approximated partials.
+/home/runner/work/om-Aviary/om-Aviary/.openmdao-pixi/.pixi/envs/py313/lib/python3.13/site-packages/openmdao/core/component.py:1200: DerivativesWarning:&#39;traj.phases.rotation.rhs_all.aerodynamics.drag_coef&#39; &lt;class DragCoef&gt;: d(CD_base)/d((&#39;altitude&#39;, &#39;lift_coefficient&#39;, &#39;cf&#39;, &#39;SA5&#39;, &#39;SA6&#39;, &#39;SA7&#39;)): rows and cols do not reduce the number of evaluations when method=&#39;cs&#39;. Use declare_coloring to compute the sparsity of approximated partials.
+/home/runner/work/om-Aviary/om-Aviary/.openmdao-pixi/.pixi/envs/py313/lib/python3.13/site-packages/openmdao/core/component.py:1200: DerivativesWarning:&#39;traj.phases.rotation.rhs_all.aerodynamics.kclge&#39; &lt;class GroundEffect&gt;: d(kclge)/d((&#39;angle_of_attack&#39;, &#39;altitude&#39;, &#39;lift_curve_slope&#39;)): rows and cols do not reduce the number of evaluations when method=&#39;cs&#39;. Use declare_coloring to compute the sparsity of approximated partials.
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Total number of variables............................:      225
-                     variables with only lower bounds:       75
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Total number of variables............................:      289
+                     variables with only lower bounds:      139
                 variables with lower and upper bounds:      149
                      variables with only upper bounds:        0
-Total number of equality constraints.................:      221
-Total number of inequality constraints...............:       54
-        inequality constraints with only lower bounds:        2
+Total number of equality constraints.................:      284
+Total number of inequality constraints...............:       58
+        inequality constraints with only lower bounds:        6
    inequality constraints with lower and upper bounds:       52
         inequality constraints with only upper bounds:        0
 
@@ -758,7 +767,7 @@ Number of Iterations....: 0
                                    (scaled)                 (unscaled)
 Objective...............:   5.1722886909006149e+00    5.1722886909006149e+00
 Dual infeasibility......:   1.6500000000000000e+01    1.6500000000000000e+01
-Constraint violation....:   8.8081681383747128e+00    8.8081681383747128e+00
+Constraint violation....:   1.2513860757844089e+00    1.2513860757844089e+00
 Variable bound violation:   0.0000000000000000e+00    0.0000000000000000e+00
 Complementarity.........:   2.9553974865183619e+01    2.9553974865183619e+01
 Overall NLP error.......:   2.9553974865183619e+01    2.9553974865183619e+01
@@ -771,7 +780,7 @@ Number of inequality constraint evaluations          = 1
 Number of equality constraint Jacobian evaluations   = 1
 Number of inequality constraint Jacobian evaluations = 1
 Number of Lagrangian Hessian evaluations             = 0
-Total seconds in IPOPT                               = 1.519
+Total seconds in IPOPT                               = 2.239
 
 EXIT: Maximum Number of Iterations Exceeded.
 </pre></div>
@@ -1250,7 +1259,16 @@ There is a special objective type: <code class="docutils literal notranslate"><s
 <p class="expanded admonition-title">Hide code cell output</p>
 </summary>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>req_fuel_mass &gt; max_wingfuel_mass, adding a body tank
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/home/runner/work/om-Aviary/om-Aviary/.openmdao-pixi/.pixi/envs/py313/lib/python3.13/site-packages/openmdao/core/component.py:1200: DerivativesWarning:&#39;landing.aero_td.drag_coef&#39; &lt;class DragCoef&gt;: d(CD_base)/d((&#39;altitude&#39;, &#39;lift_coefficient&#39;, &#39;cf&#39;, &#39;SA5&#39;, &#39;SA6&#39;, &#39;SA7&#39;)): rows and cols do not reduce the number of evaluations when method=&#39;cs&#39;. Use declare_coloring to compute the sparsity of approximated partials.
+/home/runner/work/om-Aviary/om-Aviary/.openmdao-pixi/.pixi/envs/py313/lib/python3.13/site-packages/openmdao/core/component.py:1200: DerivativesWarning:&#39;landing.aero_td.kclge&#39; &lt;class GroundEffect&gt;: d(kclge)/d((&#39;angle_of_attack&#39;, &#39;altitude&#39;, &#39;lift_curve_slope&#39;)): rows and cols do not reduce the number of evaluations when method=&#39;cs&#39;. Use declare_coloring to compute the sparsity of approximated partials.
+/home/runner/work/om-Aviary/om-Aviary/.openmdao-pixi/.pixi/envs/py313/lib/python3.13/site-packages/openmdao/core/component.py:1200: DerivativesWarning:&#39;landing.aerodynamics.drag_coef&#39; &lt;class DragCoef&gt;: d(CD_base)/d((&#39;altitude&#39;, &#39;lift_coefficient&#39;, &#39;cf&#39;, &#39;SA5&#39;, &#39;SA6&#39;, &#39;SA7&#39;)): rows and cols do not reduce the number of evaluations when method=&#39;cs&#39;. Use declare_coloring to compute the sparsity of approximated partials.
+/home/runner/work/om-Aviary/om-Aviary/.openmdao-pixi/.pixi/envs/py313/lib/python3.13/site-packages/openmdao/core/component.py:1200: DerivativesWarning:&#39;landing.aerodynamics.kclge&#39; &lt;class GroundEffect&gt;: d(kclge)/d((&#39;angle_of_attack&#39;, &#39;altitude&#39;, &#39;lift_curve_slope&#39;)): rows and cols do not reduce the number of evaluations when method=&#39;cs&#39;. Use declare_coloring to compute the sparsity of approximated partials.
+/home/runner/work/om-Aviary/om-Aviary/.openmdao-pixi/.pixi/envs/py313/lib/python3.13/site-packages/openmdao/core/component.py:1200: DerivativesWarning:&#39;traj.phases.ascent.rhs_all.aerodynamics.drag_coef&#39; &lt;class DragCoef&gt;: d(CD_base)/d((&#39;altitude&#39;, &#39;lift_coefficient&#39;, &#39;cf&#39;, &#39;SA5&#39;, &#39;SA6&#39;, &#39;SA7&#39;)): rows and cols do not reduce the number of evaluations when method=&#39;cs&#39;. Use declare_coloring to compute the sparsity of approximated partials.
+/home/runner/work/om-Aviary/om-Aviary/.openmdao-pixi/.pixi/envs/py313/lib/python3.13/site-packages/openmdao/core/component.py:1200: DerivativesWarning:&#39;traj.phases.ascent.rhs_all.aerodynamics.kclge&#39; &lt;class GroundEffect&gt;: d(kclge)/d((&#39;angle_of_attack&#39;, &#39;altitude&#39;, &#39;lift_curve_slope&#39;)): rows and cols do not reduce the number of evaluations when method=&#39;cs&#39;. Use declare_coloring to compute the sparsity of approximated partials.
+/home/runner/work/om-Aviary/om-Aviary/.openmdao-pixi/.pixi/envs/py313/lib/python3.13/site-packages/openmdao/core/component.py:1200: DerivativesWarning:&#39;traj.phases.groundroll.rhs_all.aerodynamics.drag_coef&#39; &lt;class DragCoef&gt;: d(CD_base)/d((&#39;altitude&#39;, &#39;lift_coefficient&#39;, &#39;cf&#39;, &#39;SA5&#39;, &#39;SA6&#39;, &#39;SA7&#39;)): rows and cols do not reduce the number of evaluations when method=&#39;cs&#39;. Use declare_coloring to compute the sparsity of approximated partials.
+/home/runner/work/om-Aviary/om-Aviary/.openmdao-pixi/.pixi/envs/py313/lib/python3.13/site-packages/openmdao/core/component.py:1200: DerivativesWarning:&#39;traj.phases.groundroll.rhs_all.aerodynamics.kclge&#39; &lt;class GroundEffect&gt;: d(kclge)/d((&#39;angle_of_attack&#39;, &#39;altitude&#39;, &#39;lift_curve_slope&#39;)): rows and cols do not reduce the number of evaluations when method=&#39;cs&#39;. Use declare_coloring to compute the sparsity of approximated partials.
+/home/runner/work/om-Aviary/om-Aviary/.openmdao-pixi/.pixi/envs/py313/lib/python3.13/site-packages/openmdao/core/component.py:1200: DerivativesWarning:&#39;traj.phases.rotation.rhs_all.aerodynamics.drag_coef&#39; &lt;class DragCoef&gt;: d(CD_base)/d((&#39;altitude&#39;, &#39;lift_coefficient&#39;, &#39;cf&#39;, &#39;SA5&#39;, &#39;SA6&#39;, &#39;SA7&#39;)): rows and cols do not reduce the number of evaluations when method=&#39;cs&#39;. Use declare_coloring to compute the sparsity of approximated partials.
+/home/runner/work/om-Aviary/om-Aviary/.openmdao-pixi/.pixi/envs/py313/lib/python3.13/site-packages/openmdao/core/component.py:1200: DerivativesWarning:&#39;traj.phases.rotation.rhs_all.aerodynamics.kclge&#39; &lt;class GroundEffect&gt;: d(kclge)/d((&#39;angle_of_attack&#39;, &#39;altitude&#39;, &#39;lift_curve_slope&#39;)): rows and cols do not reduce the number of evaluations when method=&#39;cs&#39;. Use declare_coloring to compute the sparsity of approximated partials.
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Aviary run successful.
@@ -1339,6 +1357,9 @@ done
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/home/runner/work/om-Aviary/om-Aviary/.openmdao-pixi/.pixi/envs/py313/lib/python3.13/site-packages/openmdao/core/constants.py:16: OMDeprecationWarning:The INF_BOUND sentinel in OpenMDAO is deprecated. Infinite bounds should now be specified using None or +/-np.inf.
 </pre></div>
 </div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Warning: Design range 3500.0 differs from target_range 1906.0 (NM).
+</pre></div>
+</div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>The following variables have been overridden by the aircraft definition:
   &#39;aircraft:design:touchdown_mass_max  152800.0  lbm
   &#39;aircraft:engine:mass  [7400.]  lbm
@@ -1359,11 +1380,11 @@ done
   &#39;mission:takeoff:lift_over_drag  17.354  unitless
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Total number of variables............................:       96
-                     variables with only lower bounds:       93
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Total number of variables............................:      141
+                     variables with only lower bounds:      138
                 variables with lower and upper bounds:        3
                      variables with only upper bounds:        0
-Total number of equality constraints.................:       94
+Total number of equality constraints.................:      139
 Total number of inequality constraints...............:       61
         inequality constraints with only lower bounds:        1
    inequality constraints with lower and upper bounds:       60
@@ -1374,8 +1395,8 @@ Number of Iterations....: 0
 
                                    (scaled)                 (unscaled)
 Objective...............:   3.9800875570924603e+00    3.9800875570924603e+00
-Dual infeasibility......:   7.8792026331682263e-01    7.8792026331682263e-01
-Constraint violation....:   1.9006004373650107e+00    1.9006004373650107e+00
+Dual infeasibility......:   1.2497499453448366e+00    1.2497499453448366e+00
+Constraint violation....:   9.9716707102046731e-01    9.9716707102046731e-01
 Variable bound violation:   0.0000000000000000e+00    0.0000000000000000e+00
 Complementarity.........:   7.9560101797999998e+00    7.9560101797999998e+00
 Overall NLP error.......:   7.9560101797999998e+00    7.9560101797999998e+00
@@ -1388,7 +1409,7 @@ Number of inequality constraint evaluations          = 1
 Number of equality constraint Jacobian evaluations   = 1
 Number of inequality constraint Jacobian evaluations = 1
 Number of Lagrangian Hessian evaluations             = 0
-Total seconds in IPOPT                               = 0.785
+Total seconds in IPOPT                               = 0.789
 
 EXIT: Maximum Number of Iterations Exceeded.
 </pre></div>
@@ -1470,6 +1491,9 @@ Aviary run failed. See the dashboard for more details.
 </div>
 </div>
 <div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Warning: Sizing mission does not include a target range.
+</pre></div>
+</div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>The following variables have been overridden by the aircraft definition:
   &#39;aircraft:design:touchdown_mass_max  152800.0  lbm
   &#39;aircraft:engine:mass  [7400.]  lbm

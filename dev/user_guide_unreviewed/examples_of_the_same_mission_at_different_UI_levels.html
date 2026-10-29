@@ -37,8 +37,8 @@
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../_static/version_switcher.css?v=516df71e" />
     <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=3683e473" />
+    <link rel="stylesheet" type="text/css" href="../_static/version_switcher.css?v=516df71e" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
@@ -626,6 +626,9 @@ If you want to make minor modifications to <code class="docutils literal notrans
 </div>
 </div>
 <div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Warning: Design range 3500.0 differs from target_range 1906.0 (NM).
+</pre></div>
+</div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>The following variables have been overridden by the aircraft definition:
   &#39;aircraft:design:touchdown_mass_max  152800.0  lbm
   &#39;aircraft:engine:mass  [7400.]  lbm
@@ -746,7 +749,6 @@ In the absence of additional arguments to the methods, much of the default behav
     <span class="p">},</span>
     <span class="s1">&#39;post_mission&#39;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s1">&#39;include_landing&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="s1">&#39;constrain_range&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
         <span class="s1">&#39;target_range&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mf">1906.0</span><span class="p">,</span> <span class="s1">&#39;nmi&#39;</span><span class="p">),</span>
     <span class="p">},</span>
 <span class="p">}</span>
@@ -776,6 +778,9 @@ In the absence of additional arguments to the methods, much of the default behav
 </div>
 </div>
 <div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Warning: Design range 3500.0 differs from target_range 1906.0 (NM).
+</pre></div>
+</div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>The following variables have been overridden by the aircraft definition:
   &#39;aircraft:design:touchdown_mass_max  152800.0  lbm
   &#39;aircraft:engine:mass  [7400.]  lbm
@@ -838,7 +843,7 @@ You have supreme control over every part of the model and mission definition, bu
 <span class="kn">import</span><span class="w"> </span><span class="nn">scipy.constants</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_units</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">aviary.api</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">av</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">aviary.utils.test_utils.default_subsystems</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_default_mission_subsystems</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">aviary.utils.test_utils.default_subsystems</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_default_subsystems</span>
 
 <span class="n">prob</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">om</span><span class="o">.</span><span class="n">Group</span><span class="p">())</span>
 <span class="n">driver</span> <span class="o">=</span> <span class="n">prob</span><span class="o">.</span><span class="n">driver</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">ScipyOptimizeDriver</span><span class="p">()</span>
@@ -920,7 +925,8 @@ You have supreme control over every part of the model and mission definition, bu
 <span class="p">)</span>
 
 <span class="c1"># default subsystems</span>
-<span class="n">default_mission_subsystems</span> <span class="o">=</span> <span class="n">get_default_mission_subsystems</span><span class="p">(</span><span class="s1">&#39;FLOPS&#39;</span><span class="p">,</span> <span class="n">engines</span><span class="p">)</span>
+<span class="n">subsystems</span> <span class="o">=</span> <span class="n">get_default_subsystems</span><span class="p">(</span><span class="s1">&#39;FLOPS&#39;</span><span class="p">,</span> <span class="n">engines</span><span class="p">)</span>
+<span class="n">mission_subsystems</span> <span class="o">=</span> <span class="p">[</span><span class="n">subsystems</span><span class="p">[</span><span class="n">system</span><span class="p">]</span> <span class="k">for</span> <span class="n">system</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;propulsion&#39;</span><span class="p">,</span> <span class="s1">&#39;aerodynamics&#39;</span><span class="p">]]</span>
 
 <span class="c1">#################</span>
 <span class="c1"># Define Phases #</span>
@@ -948,7 +954,7 @@ You have supreme control over every part of the model and mission definition, bu
         <span class="s1">&#39;mach_initial&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">mach_i_climb</span><span class="p">,</span> <span class="s1">&#39;unitless&#39;</span><span class="p">),</span>
         <span class="s1">&#39;mach_final&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">mach_f_climb</span><span class="p">,</span> <span class="s1">&#39;unitless&#39;</span><span class="p">),</span>
     <span class="p">},</span>
-    <span class="n">subsystems</span><span class="o">=</span><span class="n">default_mission_subsystems</span><span class="p">,</span>
+    <span class="n">subsystems</span><span class="o">=</span><span class="n">mission_subsystems</span><span class="p">,</span>
     <span class="n">subsystem_options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;aerodynamics&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;computed&#39;</span><span class="p">}},</span>
     <span class="n">transcription</span><span class="o">=</span><span class="n">transcription_climb</span><span class="p">,</span>
 <span class="p">)</span>
@@ -964,7 +970,7 @@ You have supreme control over every part of the model and mission definition, bu
         <span class="s1">&#39;mach_final&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">cruise_mach</span><span class="p">,</span> <span class="s1">&#39;unitless&#39;</span><span class="p">),</span>
         <span class="s1">&#39;required_available_climb_rate&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="s1">&#39;ft/min&#39;</span><span class="p">),</span>
     <span class="p">},</span>
-    <span class="n">subsystems</span><span class="o">=</span><span class="n">default_mission_subsystems</span><span class="p">,</span>
+    <span class="n">subsystems</span><span class="o">=</span><span class="n">mission_subsystems</span><span class="p">,</span>
     <span class="n">subsystem_options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;aerodynamics&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;computed&#39;</span><span class="p">}},</span>
     <span class="n">transcription</span><span class="o">=</span><span class="n">transcription_cruise</span><span class="p">,</span>
 <span class="p">)</span>
@@ -977,7 +983,7 @@ You have supreme control over every part of the model and mission definition, bu
         <span class="s1">&#39;mach_initial&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">mach_i_descent</span><span class="p">,</span> <span class="s1">&#39;unitless&#39;</span><span class="p">),</span>
         <span class="s1">&#39;mach_final&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">mach_f_descent</span><span class="p">,</span> <span class="s1">&#39;unitless&#39;</span><span class="p">),</span>
     <span class="p">},</span>
-    <span class="n">subsystems</span><span class="o">=</span><span class="n">default_mission_subsystems</span><span class="p">,</span>
+    <span class="n">subsystems</span><span class="o">=</span><span class="n">mission_subsystems</span><span class="p">,</span>
     <span class="n">subsystem_options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;aerodynamics&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;computed&#39;</span><span class="p">}},</span>
     <span class="n">transcription</span><span class="o">=</span><span class="n">transcription_descent</span><span class="p">,</span>
 <span class="p">)</span>
@@ -1047,7 +1053,7 @@ You have supreme control over every part of the model and mission definition, bu
 
 <span class="c1"># Need to declare dymos parameters for every input that is promoted out of the missions.</span>
 <span class="n">external_parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;climb&#39;</span><span class="p">:</span> <span class="p">{},</span> <span class="s1">&#39;cruise&#39;</span><span class="p">:</span> <span class="p">{},</span> <span class="s1">&#39;descent&#39;</span><span class="p">:</span> <span class="p">{}}</span>
-<span class="k">for</span> <span class="n">default_subsys</span> <span class="ow">in</span> <span class="n">default_mission_subsystems</span><span class="p">:</span>
+<span class="k">for</span> <span class="n">default_subsys</span> <span class="ow">in</span> <span class="n">mission_subsystems</span><span class="p">:</span>
     <span class="n">params</span> <span class="o">=</span> <span class="n">default_subsys</span><span class="o">.</span><span class="n">get_parameters</span><span class="p">(</span>
         <span class="n">aviary_inputs</span><span class="o">=</span><span class="n">aviary_inputs</span><span class="p">,</span>
         <span class="n">user_options</span><span class="o">=</span><span class="p">{},</span>
@@ -1240,9 +1246,6 @@ You have supreme control over every part of the model and mission definition, bu
   &#39;aircraft:engine:mass  [7400.]  lbm
   &#39;aircraft:engine:scaled_sls_thrust  [28928.1]  lbf
   &#39;aircraft:fins:mass  0.0  lbm
-  &#39;aircraft:fuel:auxiliary_fuel_mass_capacity  0.0  lbm
-  &#39;aircraft:fuel:fuselage_fuel_mass_capacity  0.0  lbm
-  &#39;aircraft:fuel:max_capacity_mass  45694.0  lbm
   &#39;aircraft:fuselage:passenger_compartment_length  85.5  ft
   &#39;aircraft:fuselage:planform_area  1578.24  ft**2
   &#39;aircraft:fuselage:wetted_area  4158.62  ft**2
@@ -1257,7 +1260,7 @@ You have supreme control over every part of the model and mission definition, bu
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Iteration limit reached    (Exit mode 9)
-            Current function value: 2.9247548982260096
+            Current function value: 2.924754891320407
             Iterations: 1
             Function evaluations: 3
             Gradient evaluations: 2
@@ -1270,11 +1273,11 @@ Iteration limit reached
 Driver:  ScipyOptimizeDriver
   success     : False
   iterations  : 4
-  runtime     : 1.4451E+00 s
+  runtime     : 1.4342E+00 s
   model_evals : 5
-  model_time  : 9.0367E-01 s
+  model_time  : 5.6179E-01 s
   deriv_evals : 2
-  deriv_time  : 4.8057E-01 s
+  deriv_time  : 3.9336E-01 s
   exit_status : FAIL
 </pre></div>
 </div>
