@@ -10,18 +10,20 @@ CoreEnergyBuilder : the interface for Aviary's core energy subsystem builder
 
 # import warnings
 
+import numpy as np
 import openmdao.api as om
 from openmdao.core.system import System
 
 from aviary.mission.utils import separate_reserve_phases
 from aviary.subsystems.energy.flops_based.flops_tank import FuelTankFLOPS
 from aviary.subsystems.energy.fuel_summation import FuelSummationGroup
+from aviary.subsystems.energy.fuel_tank_model import FuelTankModel
 from aviary.subsystems.energy.gasp_based.gasp_tank import FuelTankGASP
 from aviary.subsystems.subsystem_builder import SubsystemBuilder
 from aviary.utils.aviary_values import AviaryValues
 from aviary.utils.utils import wrapped_convert_units
 from aviary.variable_info.enums import LegacyCode
-from aviary.variable_info.variables import Dynamic, Settings
+from aviary.variable_info.variables import Dynamic
 
 
 class EnergyBuilder(SubsystemBuilder):
@@ -40,21 +42,63 @@ class EnergyBuilder(SubsystemBuilder):
 class CoreEnergyBuilder(EnergyBuilder):
     """Core energy subsystem builder."""
 
+    def __init__(
+        self,
+        name=None,
+        meta_data=None,
+        code_origin: LegacyCode = None,
+        fuel_tank_models=None,
+        **kwargs,
+    ):
+        super().__init__(name=name, meta_data=meta_data)
+
+        if fuel_tank_models is None:
+            fuel_tank_models = []
+
+        if not isinstance(fuel_tank_models, (list, np.ndarray)):
+            fuel_tank_models = [fuel_tank_models]
+
+        self.fuel_types = fuel_types = []
+
+        if code_origin is LegacyCode.FLOPS:
+            fuel_tank_models.append(FuelTankFLOPS())
+
+        elif code_origin is LegacyCode.GASP:
+            fuel_tank_models.append(FuelTankGASP())
+
+        # validate tank models
+        for tank in fuel_tank_models:
+            if not isinstance(tank, FuelTankModel):
+                raise UserWarning(
+                    'Fuel tank provided to energy builder is not a FuelTankModel object'
+                )
+            if tank.fuel_type in fuel_types:
+                raise UserWarning(
+                    'Aviary can currently only support one fuel tank model per type of fuel, '
+                    f'multiple tanks containing {tank.fuel_type} were provided.'
+                )
+
+            fuel_types.append(tank.fuel_type)
+
+        self.fuel_tank_models = fuel_tank_models
+
     def build_pre_mission(
         self, aviary_inputs: AviaryValues | None = None, subsystem_options: dict | None = None
     ) -> None | System:
-        if aviary_inputs.get_val(Settings.MASS_METHOD) is LegacyCode.FLOPS:
-            tank = FuelTankFLOPS(meta_data=self.meta_data)
-            # TODO subsystem options needs sub-dict like propulsion
-            return tank.build_pre_mission(
+        if len(self.fuel_tank_models) == 1:
+            return self.fuel_tank_models[0].build_pre_mission(
                 aviary_inputs=aviary_inputs, subsystem_options=subsystem_options
             )
-        if aviary_inputs.get_val(Settings.MASS_METHOD) is LegacyCode.GASP:
-            tank = FuelTankGASP(meta_data=self.meta_data)
-            # TODO subsystem options needs sub-dict like propulsion
-            return tank.build_pre_mission(
-                aviary_inputs=aviary_inputs, subsystem_options=subsystem_options
-            )
+        else:
+            group = om.Group()
+            for fuel_tank in self.fuel_tank_models:
+                group.add_subsystem(
+                    fuel_tank.name,
+                    fuel_tank.build_pre_mission(
+                        aviary_inputs=aviary_inputs, subsystem_options=subsystem_options
+                    ),
+                )
+            return group
 
     def build_post_mission(
         self,
@@ -64,23 +108,32 @@ class CoreEnergyBuilder(EnergyBuilder):
         phase_mission_bus_lengths: dict | None = None,
     ) -> None | System:
         energy_group = om.Group()
+
+        for fuel_tank in self.fuel_tank_models:
+            energy_group.add_subsystem(
+                fuel_tank.name,
+                fuel_tank.build_pre_mission(
+                    aviary_inputs=aviary_inputs, subsystem_options=subsystem_options
+                ),
+            )
+
         fuelgroup = FuelSummationGroup(mission_info=mission_info)
 
         energy_group.add_subsystem('fuel_summation', fuelgroup, promotes=['*'])
 
         return energy_group
 
-        # def report(self, prob, reports_folder, **kwargs):
-        #     """
-        #     Generate the report for Aviary core energy.
+    # def report(self, prob, reports_folder, **kwargs):
+    #     """
+    #     Generate the report for Aviary core energy.
 
-        #     Parameters
-        #     ----------
-        #     prob : AviaryProblem
-        #         The AviaryProblem that will be used to generate the report
-        #     reports_folder : Path
-        #         Location of the subsystems_report folder this report will be placed in
-        #     """
+    #     Parameters
+    #     ----------
+    #     prob : AviaryProblem
+    #         The AviaryProblem that will be used to generate the report
+    #     reports_folder : Path
+    #         Location of the subsystems_report folder this report will be placed in
+    #     """
 
     def get_post_mission_bus_variables(
         self, aviary_inputs: AviaryValues | None = None, mission_info: dict | None = None

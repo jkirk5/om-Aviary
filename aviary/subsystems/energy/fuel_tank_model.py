@@ -19,7 +19,7 @@ class FuelTankModel(SubsystemBuilder):
 
     Attributes
     ----------
-    name : str ('tank_model')
+    name : str ('fuel_tank')
         object label.
     options : AviaryValues (<empty>)
         inputs and options related to engine model.
@@ -35,22 +35,20 @@ class FuelTankModel(SubsystemBuilder):
     update
     """
 
-    _default_name = 'tank_model'
+    fuel_type = FuelType.JET_A
 
     def __init__(
         self,
         name: str | None = None,
         meta_data: dict | None = None,
-        fuel_type: FuelType = FuelType.JET_A,
         **kwargs,
     ):
-        # by default, name tank after fuel type
-        if name is None:
-            name = fuel_type.value + '_tank_model'
+        # default name is dynamically set based on its fuel type
+        # need to check inherrited class did not define their own default name
+        if name is None and self._default_name == SubsystemBuilder._default_name:
+            name = f'{self.fuel_type.name.lower()}_fuel_tank'
 
         super().__init__(name, meta_data=meta_data)
-
-        self.fuel_type = fuel_type
 
     # def build_pre_mission(
     #     self, aviary_inputs: AviaryValues | None = None, subsystem_options: dict | None = None

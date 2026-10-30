@@ -6,6 +6,8 @@ from aviary.utils.aviary_values import AviaryValues
 
 
 class FuelTankFLOPS(FuelTankModel):
+    _default_name = 'FLOPS_fuel_tank'
+
     def build_pre_mission(
         self, aviary_inputs: AviaryValues | None = None, subsystem_options: dict | None = None
     ) -> None | System:

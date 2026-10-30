@@ -6,6 +6,8 @@ from aviary.utils.aviary_values import AviaryValues
 
 
 class FuelTankGASP(FuelTankModel):
+    _default_name = 'GASP_fuel_tank'
+
     def build_pre_mission(
         self, aviary_inputs: AviaryValues | None = None, subsystem_options: dict | None = None
     ) -> None | System:

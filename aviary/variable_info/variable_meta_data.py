@@ -2819,7 +2819,7 @@ add_meta_data(
     desc='Fuel density (jet fuel typical density of 6.7 lbm/galUS used in the calculation of wing_capacity'
     '(if wing_capacity is not input) and in the calculation of fuel system weight.',
     default_value=6.7,
-    # multivalue=True,
+    multivalue=True,
 )
 
 add_meta_data(
@@ -2899,7 +2899,7 @@ add_meta_data(
     'Used in generating payload-range diagram (Default = wing_capacity + fuselage_capacity + '
     'aux_capacity)',
     default_value=0.0,
-    # multivalue=True,
+    multivalue=True,
 )
 
 add_meta_data(
@@ -2912,7 +2912,7 @@ add_meta_data(
     units='galUS',  # need to check this
     desc='Maximum fuel volume capacity',
     default_value=0.0,
-    # multivalue=True,
+    multivalue=True,
 )
 
 add_meta_data(
@@ -2940,7 +2940,7 @@ add_meta_data(
     desc='Fuel types used on the aircraft. Fuel variables are assumed to be vectorized in order '
     'corresponding to the order of fuel types specified here.',
     default_value=FuelType.JET_A,
-    # multivalue=True,
+    multivalue=True,
 )
 
 add_meta_data(
@@ -2956,7 +2956,7 @@ add_meta_data(
     units='lbm',
     desc='Unusable fuel mass',
     default_value=0.0,
-    # multivalue=True,
+    multivalue=True,
 )
 
 add_meta_data(
@@ -6605,7 +6605,7 @@ add_meta_data(
     meta_data=_MetaData,
     historical_name={'GASP': None, 'FLOPS': None},
     units='unitless',
-    desc="battery's current state of charge",
+    desc='battery current state of charge',
     multivalue=True,
 )
 
@@ -6643,6 +6643,15 @@ add_meta_data(
     units='unitless',
     desc='Current total drag coefficient experienced by the vehicle',
     default_value=1.0,
+    multivalue=True,
+)
+
+add_meta_data(
+    Dynamic.Vehicle.FUEL_TANK_FILL_FRACTION,
+    meta_data=_MetaData,
+    historical_name={'GASP': None, 'FLOPS': None},
+    units='unitless',
+    desc='current fill state of fuel tanks',
     multivalue=True,
 )
 

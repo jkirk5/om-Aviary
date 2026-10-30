@@ -642,6 +642,7 @@ class Dynamic:
         CUMULATIVE_FUEL_BURNED = 'cumulative_fuel_burn'
         DRAG = 'drag'
         DRAG_COEFFICIENT = 'drag_coefficient'
+        FUEL_TANK_FILL_FRACTION = 'fuel_tank_fill_fraction'
         LIFT = 'lift'
         LIFT_COEFFICIENT = 'lift_coefficient'
         MASS = 'mass'

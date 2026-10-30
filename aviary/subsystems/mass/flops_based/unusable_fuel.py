@@ -6,6 +6,9 @@ from aviary.subsystems.mass.flops_based.distributed_prop import (
 )
 from aviary.variable_info.functions import add_aviary_input, add_aviary_option, add_aviary_output
 from aviary.variable_info.variables import Aircraft
+from aviary.constants import FUEL_DENSITIES
+from aviary.variable_info.enums import FuelType
+from aviary.utils.utils import wrapped_convert_units
 
 
 class TransportUnusableFuelMass(om.ExplicitComponent):
@@ -57,7 +60,9 @@ class TransportUnusableFuelMass(om.ExplicitComponent):
         tank_count = self.options[Aircraft.Fuel.NUM_TANKS]
         scaler = inputs[Aircraft.Fuel.UNUSABLE_FUEL_MASS_SCALER]
         # Calculate fuel density ratio relative to Jet A: 6.7 lbm/galUS = 50.11948 lbm/ft**3
-        density_ratio = inputs[Aircraft.Fuel.DENSITY] / 6.7
+        density_ratio = inputs[Aircraft.Fuel.DENSITY] / wrapped_convert_units(
+            FUEL_DENSITIES[FuelType.JET_A], 'lbm/galUS'
+        )
         total_capacity = inputs[Aircraft.Fuel.MAX_CAPACITY_MASS]
         num_eng = self.options[Aircraft.Propulsion.TOTAL_NUM_ENGINES]
         num_eng_fact = distributed_engine_count_factor(num_eng)
@@ -77,7 +82,9 @@ class TransportUnusableFuelMass(om.ExplicitComponent):
     def compute_partials(self, inputs, J):
         tank_count = self.options[Aircraft.Fuel.NUM_TANKS]
         scaler = inputs[Aircraft.Fuel.UNUSABLE_FUEL_MASS_SCALER]
-        density_ratio = inputs[Aircraft.Fuel.DENSITY] / 6.7
+        density_ratio = inputs[Aircraft.Fuel.DENSITY] / wrapped_convert_units(
+            FUEL_DENSITIES[FuelType.JET_A], 'lbm/galUS'
+        )
         total_capacity = inputs[Aircraft.Fuel.MAX_CAPACITY_MASS]
         num_eng = self.options[Aircraft.Propulsion.TOTAL_NUM_ENGINES]
         num_eng_fact = distributed_engine_count_factor(num_eng)
@@ -103,7 +110,8 @@ class TransportUnusableFuelMass(om.ExplicitComponent):
         )
 
         J[Aircraft.Fuel.UNUSABLE_FUEL_MASS, Aircraft.Fuel.DENSITY] = (
-            (11.5 * num_eng_fact * term1 + 0.07 * wing_area + 1.6 * tank_count * term2) / 6.7
+            (11.5 * num_eng_fact * term1 + 0.07 * wing_area + 1.6 * tank_count * term2)
+            / wrapped_convert_units(FUEL_DENSITIES[FuelType.JET_A], 'lbm/galUS')
         ) * scaler
 
 

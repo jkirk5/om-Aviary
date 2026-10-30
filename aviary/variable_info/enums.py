@@ -164,11 +164,11 @@ class FlapType(Enum):
 
 
 class FuelType(Enum):
-    HYDROGEN_GASEOUS = 'hydrogen_liquid'
-    HYDROGEN_LIQUID = 'hydrogen_gaseous'
-    JET_A = 'jet_a'
-    METHANE_GASEOUS = 'methane_gaseous'
-    METHANE_LIQUID = 'methane_liquid'  # LNG
+    HYDROGEN_GASEOUS = 'gaseous hydrogen'
+    HYDROGEN_LIQUID = 'liquid hydrogen'
+    JET_A = 'Jet-A'
+    METHANE_GASEOUS = 'gaseous methane'
+    METHANE_LIQUID = 'liquid methane'  # LNG
 
 
 class LegacyCode(Enum):

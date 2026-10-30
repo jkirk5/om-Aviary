@@ -22,6 +22,7 @@ from aviary.mission.utils import (
 )
 from aviary.subsystems.aerodynamics.aerodynamics_builder import CoreAerodynamicsBuilder
 from aviary.subsystems.energy.energy_builder import CoreEnergyBuilder
+from aviary.subsystems.energy.fuel_tank_model import FuelTankModel
 from aviary.subsystems.geometry.geometry_builder import CoreGeometryBuilder
 from aviary.subsystems.mass.mass_builder import CoreMassBuilder
 from aviary.subsystems.performance.performance_builder import CorePerformanceBuilder
@@ -73,6 +74,7 @@ class AviaryGroup(om.Group):
         self.verbosity = verbosity
         self.external_subsystems = []
         self.engine_models = []
+        self.fuel_tanks = []
         self.main_phases = []
         self.reserve_phases = []
         self.subsystems = []
@@ -387,6 +389,8 @@ class AviaryGroup(om.Group):
             else:
                 if isinstance(subsystem, EngineModel):
                     self.engine_models.append(subsystem)
+                elif isinstance(subsystem, FuelTankModel):
+                    self.fuel_tanks.append(subsystem)
                 else:
                     self.external_subsystems.append(subsystem)
                 meta_data = subsystem.meta_data.copy()
@@ -481,7 +485,12 @@ class AviaryGroup(om.Group):
             'propulsion', engine_models=self.engine_models, meta_data=self.meta_data
         )
         mass = CoreMassBuilder('mass', code_origin=self.mass_method, meta_data=self.meta_data)
-        energy = CoreEnergyBuilder('energy', meta_data=self.meta_data)
+        energy = CoreEnergyBuilder(
+            'energy',
+            code_origin=self.mass_method,
+            fuel_tank_models=self.fuel_tanks,
+            meta_data=self.meta_data,
+        )
 
         # If all phases ask for tabular aero, we can skip pre-mission. Check phase_info
         all_tabular = True
