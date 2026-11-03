@@ -11,6 +11,7 @@ import warnings
 
 import numpy as np
 
+from aviary.constants import FUEL_DENSITIES
 from aviary.utils.aviary_values import AviaryValues
 from aviary.utils.test_utils.variable_test import get_names_from_hierarchy
 from aviary.utils.utils import isiterable
@@ -40,6 +41,11 @@ def preprocess_options(
     except KeyError:
         engine_models = None
 
+    try:
+        fuel_tank_models = kwargs['fuel_tank_models']
+    except KeyError:
+        fuel_tank_models = None
+
     if verbosity is None:
         if Settings.VERBOSITY in aviary_options:
             verbosity = aviary_options.get_val(Settings.VERBOSITY)
@@ -54,6 +60,8 @@ def preprocess_options(
 
     if engine_models is not None:
         preprocess_propulsion(aviary_options, engine_models, meta_data, verbosity)
+
+    preprocess_fuel(aviary_options, fuel_tank_models, engine_models, meta_data, verbosity)
 
     # TODO move these into their own subfunction (preprocess options is a collector for preprocessor
     #      functions only, and should not change options on its own)
@@ -1137,18 +1145,17 @@ def preprocess_propulsion(
     Parameters
     ----------
     aviary_options : AviaryValues
-        Options to be updated. EngineModels (provided or generated) are added, and
-        Aircraft:Engine:* and Aircraft:Nacelle:* variables are vectorized as numpy arrays
+        Options to be updated. Aircraft:Engine:* and Aircraft:Nacelle:* variables are vectorized as
+        numpy arrays.
 
     engine_models : <list of EngineModels> (optional)
-        EngineModel objects to be added to aviary_options. Replaced existing EngineModels
-        in aviary_options
+        EngineModels whose options are to be added to aviary_options.
     """
     if verbosity is not None:
         # compatibility with being passed int for verbosity
         verbosity = Verbosity(verbosity)
     else:
-        if verbosity in aviary_options:
+        if Settings.VERBOSITY in aviary_options:
             verbosity = aviary_options.get_val(Settings.VERBOSITY)
         else:
             verbosity = Verbosity.BRIEF
@@ -1370,6 +1377,155 @@ def preprocess_propulsion(
     aviary_options.set_val(Aircraft.Propulsion.TOTAL_NUM_WING_ENGINES, total_num_wing_engines)
 
 
+def preprocess_fuel(
+    aviary_options: AviaryValues,
+    fuel_tank_models: list = None,
+    engine_models: list = None,
+    meta_data=CoreMetaData,
+    verbosity=None,
+):
+    """
+    Updates AviaryValues object with values taken from provided FuelTankModels.
+
+    Vectorizes variables in aviary_options in the correct order for vehicles with
+    multiple fuels.
+
+    Performs basic sanity check that all fuels consumed by engines on the aircraft have a matching
+    fuel tank.
+
+    Parameters
+    ----------
+    aviary_options : AviaryValues
+        Options to be updated. Aircraft:Fuel:* variables are vectorized as numpy arrays.
+
+    fuel_tank_models : <list of FuelTankModels> (optional)
+        FuelTankModel objects used to vectorize fuel variables.
+
+    engine_models : <list of EngineModels> (optional)
+        EngineModels whose options are to be added to aviary_options.
+    """
+    # TODO significant code overlap with preprocess_propulsion. Potential for consolidation
+
+    if verbosity is not None:
+        # compatibility with being passed int for verbosity
+        verbosity = Verbosity(verbosity)
+    else:
+        if Settings.VERBOSITY in aviary_options:
+            verbosity = aviary_options.get_val(Settings.VERBOSITY)
+        else:
+            verbosity = Verbosity.BRIEF
+
+    if fuel_tank_models is None:
+        fuel_tank_models = []
+
+    if engine_models is None:
+        engine_models = []
+
+    # fuel type sanity check - does every engine have a tank to fuel it?
+    fuel_types_tanks = {tank.fuel_type for tank in fuel_tank_models}
+    fuel_types_engines = {engine.fuel_type for engine in engine_models}
+
+    # all fuels that are in engines, but not in tanks
+    fuels_without_tanks = fuel_types_engines.difference(fuel_types_tanks)
+    if fuels_without_tanks and verbosity >= Verbosity.BRIEF:
+        warnings.warn(
+            'The following fuel types are used by engines but do not have a tank that stores that '
+            f'fuel: {[fuel.value for fuel in fuels_without_tanks]}'
+        )
+
+    # vectorize fuel variables
+    def _get_fuel_variables():
+        # TODO this should accept the actual metadata (defaults to core metadata currently)
+        for item in get_names_from_hierarchy(Aircraft.Fuel):
+            if meta_data[item]['multivalue']:
+                yield item
+
+    for var in _get_fuel_variables() if fuel_tank_models else ():
+        dtype = meta_data[var]['types']
+        default_value = meta_data[var]['default_value']
+        multivalue = meta_data[var]['multivalue']
+        units = meta_data[var]['units']
+
+        # If dtype has multiple options, prefer type of default value
+        # Otherwise, use the first type in the tuple
+        if isinstance(dtype, tuple):
+            if default_value is not None:
+                if isinstance(default_value, (tuple, list)):
+                    dtype = type(default_value[0])
+                else:
+                    dtype = type(default_value)
+            else:
+                dtype = dtype[0]
+
+        if isiterable(meta_data[var]['types']):
+            typeset = meta_data[var]['types']
+        else:
+            typeset = (meta_data[var]['types'],)
+
+        # Variables are multidimensional if their base types have iterables, and are flagged as
+        # `multivalue`
+        multidimensional = set(typeset) & {list, tuple, np.ndarray} and multivalue
+
+        # vec is where the vectorized engine data is stored - always a list right now, converted
+        # to other types like np array later
+        vec = []
+
+        # Vectorize variable "var" from available sources #
+
+        # If var is supposed to be a unique array per engine model, assemble flat vector
+        # manually to avoid ragged arrays (such as for wing engine locations)
+
+        # Priority order is (checked per fuel tank):
+        # 1. aviary_options
+        # 2. default value from metadata*
+        #
+        # *fuel properties are taken from constants instead of metadata
+        # NOTE enumerating fuel_tank_models relies on "one fuel tank per fuel type" assumption
+        for i, tank in enumerate(fuel_tank_models):
+            fuel_type = tank.fuel_type
+            if var == Aircraft.Fuel.DENSITY:
+                default_value = FUEL_DENSITIES[fuel_type][0]
+                units = FUEL_DENSITIES[fuel_type][1]
+
+            # check if variable is defined in aviary options (for this fuel's index)
+            try:
+                aviary_val = aviary_options.get_val(var, units)
+            # if the variable is not in aviary_options, use default from metadata
+            except (KeyError, IndexError):
+                vec.append(default_value)
+            # if the variable is in aviary_options, use it
+            else:
+                # save value from aviary_options
+                # "multidimensional variables"
+                if isiterable(aviary_val) and len(aviary_val) > 1:
+                    if multidimensional:
+                        vec.extend(aviary_val)
+                    else:
+                        # check variable exists at this index in aviary_values
+                        try:
+                            aviary_val[i]
+                        # if it does not, use default value
+                        except IndexError:
+                            vec.append(default_value)
+                        # if it exists in aviary_values, use it
+                        else:
+                            # if aviary_val is an iterable, just grab val for this engine
+                            vec.append(aviary_val[i])
+                # "normal" variables
+                else:
+                    if isiterable(aviary_val):
+                        vec.extend(aviary_val)
+                    else:
+                        vec.append(aviary_val)
+
+        # Update aviary options with new vectors
+        # If data is numerical, store in a numpy array, else use a list
+        # Some machines default to specific-bit np array types, so we have to check for those too
+        if type(vec[0]) in (int, float, np.int32, np.int64, np.float32, np.float64):
+            vec = np.array(vec, dtype=dtype)
+        aviary_options.set_val(var, vec, units)
+
+
 def _validate_wing_engine_locations(
     engine_models, num_wing_engines_all, shared_wing_locations=None
 ):
@@ -1423,6 +1579,7 @@ def _validate_wing_engine_locations(
 
 def _get_engine_variables():
     """Yields all propulsion-related variables in Aircraft that need to be vectorized."""
+    # TODO this should accept the actual metadata (defaults to core metadata currently)
     for item in get_names_from_hierarchy(Aircraft.Engine):
         yield item
 
