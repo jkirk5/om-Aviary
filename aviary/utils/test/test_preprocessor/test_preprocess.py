@@ -39,24 +39,26 @@ def _make_engine(name: str = 'engine', **options) -> EngineModel:
 
 
 def _make_aviary_options(verbosity: int = 0, **options) -> AviaryValues:
-    """Build an AviaryValues with Settings.VERBOSITY and any extra unitless options set."""
+    """
+    Build an AviaryValues with Settings.VERBOSITY and any extra options set.
+
+    Each kwarg value is either a (val, units) tuple, or a bare value (units default
+    to 'unitless').
+    """
     aviary_options = AviaryValues()
     aviary_options.set_val(Settings.VERBOSITY, verbosity)
     for key, val in options.items():
-        aviary_options.set_val(key, val)
+        if isinstance(val, tuple):
+            val, units = val
+            aviary_options.set_val(key, val, units)
+        else:
+            aviary_options.set_val(key, val)
     return aviary_options
 
 
-def _make_aviary_options_with_units(verbosity: int = 0, **options) -> AviaryValues:
-    """Build an AviaryValues; each kwarg value is a (val, units) tuple."""
-    aviary_options = AviaryValues()
-    aviary_options.set_val(Settings.VERBOSITY, verbosity)
-    for key, (val, units) in options.items():
-        aviary_options.set_val(key, val, units)
-    return aviary_options
+class PreprocessCrewpayloadTestCase(unittest.TestCase):
+    """Tests for aviary.utils.preprocessors.preprocess_crewpayload."""
 
-
-class TestPrePreprocessing(unittest.TestCase):
     @use_tempdirs
     def test_crew_preprocessing(self):
         # Test that flight-crew preprocesses correctly.
@@ -126,6 +128,10 @@ class TestPrePreprocessing(unittest.TestCase):
 
         num_pass = prob.aviary_inputs.get_val(Aircraft.CrewPayload.Design.NUM_PASSENGERS)
         self.assertEqual(num_pass, 138)
+
+
+class PreprocessFuselageLayoutTestCase(unittest.TestCase):
+    """Tests for aviary.utils.preprocessors.preprocess_fuselage_layout."""
 
     @use_tempdirs
     def test_simple_cabin_layout(self):
@@ -399,7 +405,7 @@ class PreprocessFuelTestCase(unittest.TestCase):
         tank1 = FuelTankModel(name='tank1')
         tank2 = FuelTankModel(name='tank2')
         tank3 = MethaneFuelTank(name='tank3')
-        aviary_options = _make_aviary_options_with_units(
+        aviary_options = _make_aviary_options(
             **{Aircraft.Fuel.DENSITY: ([10.0, 20.0], 'lbm/galUS')}
         )
 
@@ -429,7 +435,7 @@ class PreprocessFuelTestCase(unittest.TestCase):
         # provided.
         tank1 = FuelTankModel(name='tank1')
         tank2 = FuelTankModel(name='tank2')
-        aviary_options = _make_aviary_options_with_units(
+        aviary_options = _make_aviary_options(
             **{Aircraft.Fuel.MAX_CAPACITY_MASS: ([1000.0, 2000.0], 'lbm')}
         )
 
