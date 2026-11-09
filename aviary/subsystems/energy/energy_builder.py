@@ -15,15 +15,13 @@ import openmdao.api as om
 from openmdao.core.system import System
 
 from aviary.mission.utils import separate_reserve_phases
-from aviary.subsystems.energy.flops_based.flops_tank import FuelTankFLOPS
 from aviary.subsystems.energy.fuel_summation import FuelSummationGroup
 from aviary.subsystems.energy.fuel_tank_model import FuelTankModel
-from aviary.subsystems.energy.gasp_based.gasp_tank import FuelTankGASP
 from aviary.subsystems.subsystem_builder import SubsystemBuilder
 from aviary.utils.aviary_values import AviaryValues
 from aviary.utils.utils import wrapped_convert_units
 from aviary.variable_info.enums import LegacyCode
-from aviary.variable_info.variables import Dynamic
+from aviary.variable_info.variables import Aircraft, Dynamic
 
 
 class EnergyBuilder(SubsystemBuilder):
@@ -60,12 +58,6 @@ class CoreEnergyBuilder(EnergyBuilder):
 
         self.fuel_types = fuel_types = []
 
-        if code_origin is LegacyCode.FLOPS:
-            fuel_tank_models.append(FuelTankFLOPS())
-
-        elif code_origin is LegacyCode.GASP:
-            fuel_tank_models.append(FuelTankGASP())
-
         # validate tank models
         for tank in fuel_tank_models:
             if not isinstance(tank, FuelTankModel):
@@ -99,6 +91,40 @@ class CoreEnergyBuilder(EnergyBuilder):
                     ),
                 )
             return group
+
+    def build_mission(
+        self, num_nodes, aviary_inputs=None, user_options=None, subsystem_options=None
+    ):
+        num_fuel_types = len(self.fuel_types)
+
+        fuel_group = om.Group()
+        fuel_fill_comp = om.ExecComp(
+            'fuel_fill = (fuel_capacity - cumulative_fuel) / fuel_capacity',
+            fuel_fill={'val': np.zeros((num_nodes, num_fuel_types)), 'units': 'unitless'},
+            fuel_capacity={'val': np.zeros(num_fuel_types), 'units': 'lbm'},
+            cumulative_fuel={'val': np.zeros((num_nodes, num_fuel_types)), 'units': 'lbm'},
+        )
+
+        fuel_group.add_subsystem(
+            'fuel_fill_rate',
+            subsys=fuel_fill_comp,
+            promotes_inputs=[
+                ('fuel_capacity', Aircraft.Fuel.MAX_CAPACITY_MASS),
+                (
+                    'cumulative_fuel',
+                    Dynamic.Vehicle.CUMULATIVE_FUEL_BURNED,
+                ),
+            ],
+            promotes_outputs=[('fuel_Fill', Dynamic.Vehicle.FUEL_TANK_FILL_FRACTION)],
+        )
+
+        return fuel_group
+
+    def mission_inputs(self, aviary_inputs=None, user_options=None, subsystem_options=None):
+        return [Aircraft.Fuel.MAX_CAPACITY_MASS, Dynamic.Vehicle.CUMULATIVE_FUEL_BURNED]
+
+    def mission_outputs(self, aviary_inputs=None, user_options=None, subsystem_options=None):
+        return [Dynamic.Vehicle.FUEL_TANK_FILL_FRACTION]
 
     def build_post_mission(
         self,
@@ -144,7 +170,7 @@ class CoreEnergyBuilder(EnergyBuilder):
         post_mission_bus[main_phases[-1]] = {
             Dynamic.Vehicle.CUMULATIVE_FUEL_BURNED: {
                 'post_mission_name': f'{self.name}.main_mission_fuel.mission_fuel',
-                'src_indices': [-1],
+                'src_indices': om.slicer[-1, :],
             }
         }
 
@@ -152,21 +178,18 @@ class CoreEnergyBuilder(EnergyBuilder):
             post_mission_bus[reserve_phases[0]] = {
                 Dynamic.Vehicle.CUMULATIVE_FUEL_BURNED: {
                     'post_mission_name': f'{self.name}.reserve_mission_fuel.fuel_initial',
-                    'src_indices': [0],
+                    'src_indices': om.slicer[0, :],
                 }
             }
 
             post_mission_bus[reserve_phases[-1]] = {
                 Dynamic.Vehicle.CUMULATIVE_FUEL_BURNED: {
                     'post_mission_name': f'{self.name}.reserve_mission_fuel.fuel_final',
-                    'src_indices': [-1],
+                    'src_indices': om.slicer[-1, :],
                 }
             }
 
         return post_mission_bus
-
-    ### TODO ###
-    # v-- The following should only happen when fuel is actually present on the aircraft!! --v
 
     def get_states(
         self,
@@ -174,6 +197,7 @@ class CoreEnergyBuilder(EnergyBuilder):
         user_options: dict | None = None,
         subsystem_options: dict | None = None,
     ) -> dict:
+        num_fuel_types = len(self.fuel_types)
         mass_ref = wrapped_convert_units(user_options['mass_ref'], 'kg')
         if mass_ref is None:
             mass_ref = 1.0e4
@@ -185,7 +209,8 @@ class CoreEnergyBuilder(EnergyBuilder):
                 'ref': mass_ref,
                 'units': 'kg',
                 'rate_source': Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_TOTAL,
-                'val': 0.0,
+                'shape': (num_fuel_types,),
+                'val': np.zeros(num_fuel_types),
                 # 'targets': Dynamic.Vehicle.CUMULATIVE_FUEL_BURNED,
             }
         }

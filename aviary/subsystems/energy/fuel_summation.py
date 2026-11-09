@@ -1,9 +1,10 @@
 import warnings
 
+import numpy as np
 import openmdao.api as om
 
 from aviary.mission.utils import separate_reserve_phases
-from aviary.variable_info.enums import Verbosity, EquationsOfMotion
+from aviary.variable_info.enums import EquationsOfMotion, Verbosity
 from aviary.variable_info.functions import add_aviary_option
 from aviary.variable_info.variables import Aircraft, Mission, Settings
 
@@ -15,6 +16,7 @@ class FuelSummationGroup(om.Group):
     """
 
     def initialize(self):
+        add_aviary_option(self, Aircraft.Fuel.TYPE)
         # TODO should reserve margin & additional remain options? Or make them full inputs?
         add_aviary_option(self, Mission.RESERVE_FUEL_MARGIN)
         add_aviary_option(self, Mission.RESERVE_FUEL_MASS_ADDITIONAL, units='lbm')
@@ -32,6 +34,7 @@ class FuelSummationGroup(om.Group):
         mission_info = self.options['mission_info']
         eom = self.options[Settings.EQUATIONS_OF_MOTION]
         verbosity = self.options[Settings.VERBOSITY]
+        num_fuel_types = len(self.options[Aircraft.Fuel.TYPE])
 
         main_phases, reserve_phases = separate_reserve_phases(mission_info)
 
@@ -49,11 +52,27 @@ class FuelSummationGroup(om.Group):
                 'main_mission_fuel',
                 om.ExecComp(
                     'fuel_burned = taxi_fuel + mission_fuel + takeoff_fuel',
-                    taxi_fuel={'units': 'lbm', 'val': 0},
-                    mission_fuel={'units': 'lbm', 'val': 0},
-                    takeoff_fuel={'units': 'lbm', 'val': 0},
+                    taxi_fuel={
+                        'units': 'lbm',
+                        'shape': (num_fuel_types,),
+                        'val': np.zeros(num_fuel_types),
+                    },
+                    mission_fuel={
+                        'units': 'lbm',
+                        'shape': (num_fuel_types,),
+                        'val': np.zeros(num_fuel_types),
+                    },
+                    takeoff_fuel={
+                        'units': 'lbm',
+                        'shape': (num_fuel_types,),
+                        'val': np.zeros(num_fuel_types),
+                    },
                     # landing_fuel={'units': 'lbm', 'val': 0},
-                    fuel_burned={'units': 'lbm', 'val': 0},
+                    fuel_burned={
+                        'units': 'lbm',
+                        'shape': (num_fuel_types,),
+                        'val': np.zeros(num_fuel_types),
+                    },
                 ),
                 # NOTE taxi and takeoff fuel vars not used for 2DOF takeoff
                 promotes_inputs=[
@@ -70,10 +89,22 @@ class FuelSummationGroup(om.Group):
                 'main_mission_fuel',
                 om.ExecComp(
                     'fuel_burned = taxi_fuel + mission_fuel',
-                    taxi_fuel={'units': 'lbm', 'val': 0},
-                    mission_fuel={'units': 'lbm', 'val': 0},
+                    taxi_fuel={
+                        'units': 'lbm',
+                        'shape': (num_fuel_types,),
+                        'val': np.zeros(num_fuel_types),
+                    },
+                    mission_fuel={
+                        'units': 'lbm',
+                        'shape': (num_fuel_types,),
+                        'val': np.zeros(num_fuel_types),
+                    },
                     # landing_fuel={'units': 'lbm', 'val': 0},
-                    fuel_burned={'units': 'lbm', 'val': 0},
+                    fuel_burned={
+                        'units': 'lbm',
+                        'shape': (num_fuel_types,),
+                        'val': np.zeros(num_fuel_types),
+                    },
                 ),
                 # NOTE taxi and takeoff fuel vars not used for 2DOF takeoff
                 promotes_inputs=[
@@ -88,9 +119,21 @@ class FuelSummationGroup(om.Group):
             ecomp = om.ExecComp(
                 # fuel flow is currently always negative
                 'reserve_fuel = fuel_final - fuel_initial',
-                fuel_initial={'units': 'lbm', 'val': 0},
-                fuel_final={'units': 'lbm', 'val': 0},
-                reserve_fuel={'units': 'lbm', 'val': 0},
+                fuel_initial={
+                    'units': 'lbm',
+                    'shape': (num_fuel_types,),
+                    'val': np.zeros(num_fuel_types),
+                },
+                fuel_final={
+                    'units': 'lbm',
+                    'shape': (num_fuel_types,),
+                    'val': np.zeros(num_fuel_types),
+                },
+                reserve_fuel={
+                    'units': 'lbm',
+                    'shape': (num_fuel_types,),
+                    'val': np.zeros(num_fuel_types),
+                },
             )
 
             self.add_subsystem(
@@ -100,13 +143,18 @@ class FuelSummationGroup(om.Group):
             )
 
         reserve_fuel_margin = self.options[Mission.RESERVE_FUEL_MARGIN]
-        if reserve_fuel_margin != 0:
+        if any(reserve_fuel_margin != 0):
             # Originally tried to reference Mission.FUEL_MASS for fuel burn but in some tests this led to errors
             reserve_fuel_frac = om.ExecComp(
                 'reserve_fuel_margin_mass = reserve_fuel_margin * mission_fuel',
-                reserve_fuel_margin_mass={'units': 'lbm', 'val': 0},
+                reserve_fuel_margin_mass={
+                    'units': 'lbm',
+                    'shape': (num_fuel_types,),
+                    'val': np.zeros(num_fuel_types),
+                },
                 reserve_fuel_margin={
                     'units': 'unitless',
+                    'shape': (num_fuel_types,),
                     'val': reserve_fuel_margin,
                 },
                 mission_fuel={'units': 'lbm', 'val': 0},
@@ -125,10 +173,26 @@ class FuelSummationGroup(om.Group):
         reserve_fuel_mass_additional, units = self.options[Mission.RESERVE_FUEL_MASS_ADDITIONAL]
         reserve_fuel_mass = om.ExecComp(
             'reserve_fuel_mass = reserve_fuel_margin_mass + reserve_fuel_mass_additional + reserve_fuel_burned',
-            reserve_fuel_mass={'units': 'lbm', 'val': 0},
-            reserve_fuel_margin_mass={'units': 'lbm', 'val': 0},
-            reserve_fuel_mass_additional={'units': 'lbm', 'val': reserve_fuel_mass_additional},
-            reserve_fuel_burned={'units': 'lbm', 'val': 0},
+            reserve_fuel_mass={
+                'units': 'lbm',
+                'shape': (num_fuel_types,),
+                'val': np.zeros(num_fuel_types),
+            },
+            reserve_fuel_margin_mass={
+                'units': 'lbm',
+                'shape': (num_fuel_types,),
+                'val': np.zeros(num_fuel_types),
+            },
+            reserve_fuel_mass_additional={
+                'units': units,
+                'shape': (num_fuel_types,),
+                'val': reserve_fuel_mass_additional,
+            },
+            reserve_fuel_burned={
+                'units': 'lbm',
+                'shape': (num_fuel_types,),
+                'val': np.zeros(num_fuel_types),
+            },
         )
 
         self.add_subsystem(
@@ -148,10 +212,26 @@ class FuelSummationGroup(om.Group):
             'total_fuel_mass_con',
             om.ExecComp(
                 'total_fuel_mass_constraint = total_fuel_mass - mission_fuel_burned - reserve_fuel_mass',
-                total_fuel_mass_constraint={'units': 'lbm', 'val': 0},
-                total_fuel_mass={'units': 'lbm', 'val': 0},
-                mission_fuel_burned={'units': 'lbm', 'val': 0},
-                reserve_fuel_mass={'units': 'lbm', 'val': 0},
+                total_fuel_mass_constraint={
+                    'units': 'lbm',
+                    'shape': (num_fuel_types,),
+                    'val': np.zeros(num_fuel_types),
+                },
+                total_fuel_mass={
+                    'units': 'lbm',
+                    'shape': (num_fuel_types,),
+                    'val': np.zeros(num_fuel_types),
+                },
+                mission_fuel_burned={
+                    'units': 'lbm',
+                    'shape': (num_fuel_types,),
+                    'val': np.zeros(num_fuel_types),
+                },
+                reserve_fuel_mass={
+                    'units': 'lbm',
+                    'shape': (num_fuel_types,),
+                    'val': np.zeros(num_fuel_types),
+                },
             ),
             promotes_inputs=[
                 ('total_fuel_mass', Mission.TOTAL_FUEL_MASS),
@@ -163,10 +243,26 @@ class FuelSummationGroup(om.Group):
 
         ecomp = om.ExecComp(
             'excess_fuel_capacity = total_fuel_capacity - unusable_fuel - overall_fuel',
-            total_fuel_capacity={'units': 'lbm', 'val': 0},
-            unusable_fuel={'units': 'lbm', 'val': 0},
-            overall_fuel={'units': 'lbm', 'val': 0},
-            excess_fuel_capacity={'units': 'lbm', 'val': 0},
+            total_fuel_capacity={
+                'units': 'lbm',
+                'shape': (num_fuel_types,),
+                'val': np.zeros(num_fuel_types),
+            },
+            unusable_fuel={
+                'units': 'lbm',
+                'shape': (num_fuel_types,),
+                'val': np.zeros(num_fuel_types),
+            },
+            overall_fuel={
+                'units': 'lbm',
+                'shape': (num_fuel_types,),
+                'val': np.zeros(num_fuel_types),
+            },
+            excess_fuel_capacity={
+                'units': 'lbm',
+                'shape': (num_fuel_types,),
+                'val': np.zeros(num_fuel_types),
+            },
         )
 
         self.add_subsystem(
@@ -201,8 +297,16 @@ class FuelSummationGroup(om.Group):
             om.ExecComp(
                 'block_fuel = mission_fuel_burned + fuel_burned_taxi_in',
                 block_fuel={'units': 'lbm'},
-                mission_fuel_burned={'units': 'lbm', 'val': 0},
-                fuel_burned_taxi_in={'units': 'lbm', 'val': 0},
+                mission_fuel_burned={
+                    'units': 'lbm',
+                    'shape': (num_fuel_types,),
+                    'val': np.zeros(num_fuel_types),
+                },
+                fuel_burned_taxi_in={
+                    'units': 'lbm',
+                    'shape': (num_fuel_types,),
+                    'val': np.zeros(num_fuel_types),
+                },
             ),
             promotes_inputs=[
                 ('mission_fuel_burned', Mission.FUEL_MASS),

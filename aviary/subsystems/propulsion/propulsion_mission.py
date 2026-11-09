@@ -311,7 +311,7 @@ class PropulsionMission(om.Group):
 
         self.add_subsystem(
             'propulsion_sum',
-            subsys=PropulsionSum(num_nodes=nn),
+            subsys=PropulsionSum(num_nodes=nn, engine_models=engine_models),
             promotes_inputs=['*'],
             promotes_outputs=['*'],
         )
@@ -543,11 +543,19 @@ class PropulsionSum(om.ExplicitComponent):
 
     def initialize(self):
         self.options.declare('num_nodes', types=int, lower=0)
+        self.options.declare('engine_models', types=list, desc='list of EngineModels on aircraft')
+
         add_aviary_option(self, Aircraft.Engine.NUM_ENGINES)
+        add_aviary_option(self, Aircraft.Fuel.TYPE)
 
     def setup(self):
         nn = self.options['num_nodes']
-        num_engine_type = len(self.options[Aircraft.Engine.NUM_ENGINES])
+        engine_models = self.options['engine_models']
+        num_engine_type = len(engine_models)
+        fuel_types = self.options[Aircraft.Fuel.TYPE]
+        num_fuel_type = len(fuel_types)
+        # legend that maps which engines which fuel type each engine uses
+        self._fuel_type_mapping = [fuel_types.index(engine.fuel_type) for engine in engine_models]
 
         self.add_input(
             Dynamic.Vehicle.Propulsion.THRUST,
@@ -583,12 +591,12 @@ class PropulsionSum(om.ExplicitComponent):
         )
         self.add_output(
             Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
-            val=np.zeros(nn),
+            val=np.zeros((nn, num_fuel_type)),
             units='lbm/h',
         )
         self.add_output(
             Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_TOTAL,
-            val=np.zeros(nn),
+            val=np.zeros((nn, num_fuel_type)),
             units='lbm/h',
         )
         self.add_output(
@@ -622,18 +630,25 @@ class PropulsionSum(om.ExplicitComponent):
             rows=r,
             cols=c,
         )
+
+        # fuel flow outputs are summed per fuel type, so each (node, engine) input maps
+        # to the (node, fuel_type) output corresponding to that engine's fuel type
+        num_fuel_type = len(self.options[Aircraft.Fuel.TYPE])
+        fuel_idx_per_engine = np.array(self._fuel_type_mapping, dtype=int)
+        fuel_r = r * num_fuel_type + np.tile(fuel_idx_per_engine, nn)
+
         self.declare_partials(
             Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_TOTAL,
             Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE,
             val=deriv,
-            rows=r,
+            rows=fuel_r,
             cols=c,
         )
         self.declare_partials(
             Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
             Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE,
             val=-deriv,
-            rows=r,
+            rows=fuel_r,
             cols=c,
         )
         self.declare_partials(
@@ -652,7 +667,9 @@ class PropulsionSum(om.ExplicitComponent):
         )
 
     def compute(self, inputs, outputs):
+        nn = self.options['num_nodes']
         num_engines = self.options[Aircraft.Engine.NUM_ENGINES]
+        num_fuel_types = len(self.options[Aircraft.Fuel.TYPE])
 
         thrust = inputs[Dynamic.Vehicle.Propulsion.THRUST]
         thrust_max = inputs[Dynamic.Vehicle.Propulsion.THRUST_MAX]
@@ -663,7 +680,10 @@ class PropulsionSum(om.ExplicitComponent):
         outputs[Dynamic.Vehicle.Propulsion.THRUST_TOTAL] = np.dot(thrust, num_engines)
         outputs[Dynamic.Vehicle.Propulsion.THRUST_MAX_TOTAL] = np.dot(thrust_max, num_engines)
 
-        total_fuel_flow = np.dot(fuel_flow, num_engines)
+        total_fuel_flow = np.zeros((nn, num_fuel_types))
+
+        for engine_idx, fuel_idx in enumerate(self._fuel_type_mapping):
+            total_fuel_flow[:, fuel_idx] += fuel_flow[:, engine_idx] * num_engines[engine_idx]
         outputs[Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_TOTAL] = total_fuel_flow
         outputs[Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL] = -total_fuel_flow
 

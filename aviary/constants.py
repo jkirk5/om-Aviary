@@ -42,7 +42,9 @@ TSLS_DEGR = 518.67
 
 # fuel properties
 FUEL_DENSITIES = {
-    # NOTE GASP and FLOPS average of 6.7 does not quite match average from data sheets but is in range
+    # NOTE GASP and FLOPS average of 6.7 does not match average from data sheets but is in range
+    # TODO update Aviary default to average from data sheet, update legacy code defaults & existing
+    #      models to use FLOPS/GASP 6.7 value?
     FuelType.JET_A: (
         6.7,
         'lbm/galUS',

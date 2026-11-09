@@ -2815,10 +2815,10 @@ add_meta_data(
     Aircraft.Fuel.DENSITY,
     meta_data=_MetaData,
     historical_name={'GASP': 'INGASP.FUELD', 'FLOPS': 'WTIN.FULDEN'},
-    units='lbm/galUS',
     desc='Fuel density (jet fuel typical density of 6.7 lbm/galUS used in the calculation of wing_capacity'
     '(if wing_capacity is not input) and in the calculation of fuel system weight.',
-    default_value=6.7,
+    default_value=Constants.FUEL_DENSITIES[FuelType.JET_A][0],
+    units=Constants.FUEL_DENSITIES[FuelType.JET_A][1],
     multivalue=True,
 )
 
@@ -2941,6 +2941,7 @@ add_meta_data(
     'corresponding to the order of fuel types specified here.',
     default_value=FuelType.JET_A,
     multivalue=True,
+    option=True,
 )
 
 add_meta_data(
@@ -2979,6 +2980,7 @@ add_meta_data(
     units='unitless',
     desc='Scaler for unusable Jet-A fuel mass',
     default_value=1.0,
+    multivalue=True,
 )
 
 add_meta_data(
@@ -6936,8 +6938,10 @@ add_meta_data(
     meta_data=_MetaData,
     historical_name={'GASP': None, 'FLOPS': None},
     units='lbm',
-    desc='Fuel burned from taxi out of the gate through the regular missions to taxi into the gate.'
-    'This does not include fuel burned in reserve phases. This works for energy-state EOM. Not used in 2DOF EOM',
+    desc='Fuel burned from taxi out of the gate through the regular missions to taxi into the gate, '
+    'per fule type. This does not include fuel burned in reserve phases. This works for energy-state '
+    'EOM. Not used in 2DOF EOM',
+    multivalue=True,
 )
 
 add_meta_data(
@@ -6963,9 +6967,10 @@ add_meta_data(
     historical_name={'GASP': None, 'FLOPS': None},
     units='lbm',
     desc='Fuel burned from taxi-out through all phases of the main mission (e.g. takeoff, climb, '
-    'cruse, descent, landing). This does not include fuel burned in reserve phases or taxi-in. The '
-    'only time taxi-in would be included in this is if the user specifies a taxi phase as part of '
-    'the main mission phases.',
+    'cruse, descent, landing) per fuel type. This does not include fuel burned in reserve phases or '
+    'taxi-in. The only time taxi-in would be included in this is if the user specifies a taxi phase '
+    'as part of the main mission phases.',
+    multivalue=True,
 )
 
 add_meta_data(
@@ -7037,9 +7042,10 @@ add_meta_data(
     historical_name={'GASP': None, 'FLOPS': None},
     option=True,
     units='unitless',
-    desc='Required fuel reserves, given as a fraction of mission fuel. Mission fuel only includes '
-    'main phases and excludes reserve phases.',
+    desc='Required fuel reserves, given as a fraction of mission fuel per fuel type. Mission fuel '
+    'only includes main phases and excludes reserve phases.',
     default_value=0.0,
+    multivalue=True,
 )
 
 add_meta_data(
@@ -7047,8 +7053,10 @@ add_meta_data(
     meta_data=_MetaData,
     historical_name={'GASP': None, 'FLOPS': None},
     units='lbm',
-    desc='fuel burned during reserve phases, this does not include fuel burned in regular phases',
+    desc='fuel burned during reserve phases per fuel type, this does not include fuel burned in '
+    'regular phases',
     default_value=0.0,
+    multivalue=True,
 )
 
 add_meta_data(
@@ -7057,8 +7065,9 @@ add_meta_data(
     historical_name={'GASP': 'INGASP.FRESF', 'FLOPS': None},
     option=True,
     units='lbm',
-    desc='required fuel reserves: directly in lbm',
+    desc='required fuel reserves (in mass) per fuel type',
     default_value=0.0,
+    multivalue=True,
 )
 
 add_meta_data(
@@ -7079,8 +7088,9 @@ add_meta_data(
     historical_name={'GASP': 'INGASP.WFA', 'FLOPS': None},
     units='lbm',
     # Note: In GASP, WFA does not include fuel margin.
-    desc='total fuel carried at the beginnning of a mission includes fuel burned in the mission, '
-    'reserve fuel and fuel margin',
+    desc='total fuel carried at the beginnning of a mission per fuel type. Includes fuel burned in '
+    'the mission, reserve fuel and fuel margin',
+    multivalue=True,
 )
 
 add_meta_data(
@@ -7088,9 +7098,10 @@ add_meta_data(
     meta_data=_MetaData,
     historical_name={'GASP': None, 'FLOPS': None},
     units='lbm',
-    desc='the total fuel reserves which is the sum of: '
-    'Mission.RESERVE_FUEL_MASS, Mission.RESERVE_FUEL_MASS_ADDITIONAL, Mission.RESERVE_FUEL_MARGIN',
+    desc='the total fuel reserves per fuel type which is the sum of: Mission.RESERVE_FUEL_MASS, '
+    'Mission.RESERVE_FUEL_MASS_ADDITIONAL, and Mission.RESERVE_FUEL_MARGIN',
     default_value=0.0,
+    multivalue=True,
 )
 
 add_meta_data(

@@ -15,6 +15,7 @@ from aviary.validation_cases.validation_data.test_data.FLOPS_Test_Data import (
 )
 from aviary.variable_info.functions import extract_options
 from aviary.variable_info.variables import Aircraft
+from aviary.subsystems.energy.flops_based.flops_tank import FuelTankFLOPS
 
 Version = Enum('Version', ['ALL', 'TRANSPORT', 'ALTERNATE', 'BWB', 'TRANSPORT_and_BWB'])
 
@@ -304,6 +305,7 @@ def get_flops_inputs(case_name: str, keys: str = None, preprocess: bool = False)
         preprocess_options(
             flops_inputs_copy,
             engine_models=[build_engine_deck(flops_inputs_copy)],
+            fuel_tank_models=[FuelTankFLOPS()],
             verbosity=0,
         )
     if keys is None:

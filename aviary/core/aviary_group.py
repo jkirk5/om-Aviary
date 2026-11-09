@@ -22,7 +22,9 @@ from aviary.mission.utils import (
 )
 from aviary.subsystems.aerodynamics.aerodynamics_builder import CoreAerodynamicsBuilder
 from aviary.subsystems.energy.energy_builder import CoreEnergyBuilder
+from aviary.subsystems.energy.flops_based.flops_tank import FuelTankFLOPS
 from aviary.subsystems.energy.fuel_tank_model import FuelTankModel
+from aviary.subsystems.energy.gasp_based.gasp_tank import FuelTankGASP
 from aviary.subsystems.geometry.geometry_builder import CoreGeometryBuilder
 from aviary.subsystems.mass.mass_builder import CoreMassBuilder
 from aviary.subsystems.performance.performance_builder import CorePerformanceBuilder
@@ -457,6 +459,12 @@ class AviaryGroup(om.Group):
         if self.engine_models == []:
             self.engine_models = [build_engine_deck(aviary_inputs)]
 
+        # Add FLOPS or GASP tanks if that mass method is being used
+        if self.mass_method is LegacyCode.FLOPS:
+            self.fuel_tanks.append(FuelTankFLOPS())
+        elif self.mass_method is LegacyCode.GASP:
+            self.fuel_tanks.append(FuelTankGASP())
+
         for external_subsystem in self.external_subsystems:
             aviary_inputs = external_subsystem.preprocess_inputs(aviary_inputs)
 
@@ -464,6 +472,7 @@ class AviaryGroup(om.Group):
         preprocess_options(
             aviary_inputs,
             engine_models=self.engine_models,
+            fuel_tank_models=self.fuel_tanks,
             verbosity=verbosity,
             metadata=self.meta_data,
         )

@@ -12,7 +12,7 @@ import numpy as np
 
 from aviary.subsystems.subsystem_builder import SubsystemBuilder
 from aviary.utils.aviary_values import AviaryValues
-from aviary.variable_info.enums import Verbosity
+from aviary.variable_info.enums import FuelType, Verbosity
 from aviary.variable_info.variables import Settings
 
 
@@ -44,6 +44,9 @@ class EngineModel(SubsystemBuilder):
     # given flight condition. If False, during mission Aviary will create a duplicate copy of the
     # engine that is given max throttle and hybrid throttle (1.0) to compute max values.
     compute_max_values = False
+
+    # which type of fuel the engine burns - currently restricted to one fuel type per EngineModel
+    fuel_type = FuelType.JET_A
 
     def __init__(
         self, name: str = None, meta_data: dict = None, options: AviaryValues = None, **kwargs

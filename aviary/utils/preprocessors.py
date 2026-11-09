@@ -1440,6 +1440,18 @@ def preprocess_fuel(
             if meta_data[item]['multivalue']:
                 yield item
 
+        additional_variables = [
+            Mission.BLOCK_FUEL_MASS,
+            Mission.FUEL_MASS,
+            Mission.RESERVE_FUEL_MARGIN,
+            Mission.RESERVE_FUEL_MASS,
+            Mission.RESERVE_FUEL_MASS_ADDITIONAL,
+            Mission.TOTAL_FUEL_MASS,
+            Mission.TOTAL_RESERVE_FUEL_MASS,
+        ]
+
+        yield from additional_variables
+
     for var in _get_fuel_variables() if fuel_tank_models else ():
         dtype = meta_data[var]['types']
         default_value = meta_data[var]['default_value']

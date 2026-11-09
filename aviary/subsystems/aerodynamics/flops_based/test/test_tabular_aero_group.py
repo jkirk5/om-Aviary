@@ -731,7 +731,7 @@ _design_altitudes = AviaryValues(
 
 
 if __name__ == '__main__':
-    unittest.main()
-    # test = TabularAeroGroupDataTest()
-    # test.setUp()
-    # test.test_parameters()
+    # unittest.main()
+    test = TabularAeroGroupDataTest()
+    test.setUp()
+    test.test_parameters()
