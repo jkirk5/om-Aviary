@@ -186,7 +186,7 @@ class SimpleCruisePhase(PhaseBuilder):
         self.add_state(
             'mass',
             Dynamic.Vehicle.MASS,
-            Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
+            'fuel_flow_rate_negative_total_combined',
         )
 
         # These are constant.

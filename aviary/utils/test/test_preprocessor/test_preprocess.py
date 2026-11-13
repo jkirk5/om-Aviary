@@ -423,12 +423,12 @@ class PreprocessFuelTestCase(unittest.TestCase):
         # Variables other than DENSITY use the plain metadata default (not
         # FUEL_DENSITIES) when not supplied by aviary_options.
         tank = FuelTankModel()
-        aviary_options = _make_aviary_options()
+        aviary_options = _make_aviary_options(**{Aircraft.Fuel.MAX_CAPACITY_MASS: (10, 'lbm')})
 
         preprocess_fuel(aviary_options, fuel_tank_models=[tank])
 
-        unusable_mass = aviary_options.get_val(Aircraft.Fuel.UNUSABLE_FUEL_MASS, 'lbm')
-        self.assertEqual(unusable_mass[0], 0.0)
+        unusable_mass = aviary_options.get_val(Aircraft.Fuel.MAX_CAPACITY_MASS, 'lbm')
+        self.assertEqual(unusable_mass[0], 10.0)
 
     def test_non_density_variable_from_aviary_options(self):
         # Non-density multivalue variables are also vectorized from aviary_options when

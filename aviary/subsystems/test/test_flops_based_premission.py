@@ -24,6 +24,7 @@ from aviary.validation_cases.validation_tests import (
 )
 from aviary.variable_info.functions import setup_model_options
 from aviary.variable_info.variables import Aircraft, Mission, Settings
+from aviary.subsystems.energy.flops_based.flops_tank import FuelTankFLOPS
 
 bwb_cases = ['BWBsimpleFLOPS', 'BWBdetailedFLOPS', 'BWB300FLOPS']
 
@@ -44,7 +45,7 @@ class PreMissionGroupTest(unittest.TestCase):
         flops_inputs.set_val(Settings.VERBOSITY, 0)
 
         engines = [build_engine_deck(flops_inputs)]
-        preprocess_options(flops_inputs, engine_models=engines)
+        preprocess_options(flops_inputs, engine_models=engines, fuel_tank_models=[FuelTankFLOPS()])
         default_premission_subsystems = get_default_subsystems('FLOPS', engines).values()
 
         prob = self.prob
@@ -61,9 +62,9 @@ class PreMissionGroupTest(unittest.TestCase):
         )
 
         setup_model_options(prob, flops_inputs)
-        prob.model.set_input_defaults(Aircraft.Fuel.DENSITY, units='lbm/galUS')
         prob.model.set_input_defaults(Aircraft.Design.GROSS_MASS, units='lbm')
         prob.model.set_input_defaults(Aircraft.Wing.AREA, units='ft**2')
+        prob.model.set_input_defaults(Aircraft.Fuel.DENSITY, units='lbm/galUS')
 
         # prob.model.set_input_defaults(
         #     Aircraft.Engine.SCALE_FACTOR,
@@ -128,7 +129,7 @@ class PreMissionGroupTest(unittest.TestCase):
         flops_inputs.set_val(Settings.VERBOSITY, 0)
 
         engines = [build_engine_deck(flops_inputs)]
-        preprocess_options(flops_inputs, engine_models=engines)
+        preprocess_options(flops_inputs, engine_models=engines, fuel_tank_models=[FuelTankFLOPS()])
         default_premission_subsystems = get_default_subsystems('FLOPS', engines).values()
 
         prob.model.add_subsystem(
@@ -178,11 +179,11 @@ class PreMissionGroupTest(unittest.TestCase):
 
         engines = [build_engine_deck(flops_inputs)]
 
-        preprocess_options(flops_inputs, engine_models=engines)
+        preprocess_options(flops_inputs, engine_models=engines, fuel_tank_models=[FuelTankFLOPS()])
 
         default_premission_subsystems = get_default_subsystems('FLOPS', engines=engines)
         premission_subsystems = [
-            default_premission_subsystems[k] for k in ['geometry', 'mass', 'aerodynamics']
+            default_premission_subsystems[k] for k in ['geometry', 'energy', 'mass', 'aerodynamics']
         ]
 
         prob.model.add_subsystem(
@@ -266,7 +267,7 @@ class BWBPreMissionGroupTest(unittest.TestCase):
         flops_inputs.set_val(Settings.VERBOSITY, 0)
 
         engines = [build_engine_deck(flops_inputs)]
-        preprocess_options(flops_inputs, engine_models=engines)
+        preprocess_options(flops_inputs, engine_models=engines, fuel_tank_models=[FuelTankFLOPS()])
 
         default_premission_subsystems = get_default_subsystems('FLOPS', engines).values()
 
@@ -477,7 +478,7 @@ class BWBPreMissionGroupTest(unittest.TestCase):
         flops_inputs.set_val(Settings.VERBOSITY, 0)
 
         engines = [build_engine_deck(flops_inputs)]
-        preprocess_options(flops_inputs, engine_models=engines)
+        preprocess_options(flops_inputs, engine_models=engines, fuel_tank_models=[FuelTankFLOPS()])
 
         geom_subsystem = [get_default_subsystems('FLOPS')['geometry']]
 
@@ -944,7 +945,7 @@ class BWBPreMissionGroupCSVTest2(unittest.TestCase):
         """premission: geometry + mass."""
         prob = self.prob
 
-        preprocess_options(self.flops_inputs)
+        preprocess_options(self.flops_inputs, fuel_tank_models=[FuelTankFLOPS()])
         geom_mass_subsystems = [get_default_subsystems('FLOPS')[k] for k in ['geometry', 'mass']]
 
         prob.model.add_subsystem(
@@ -1345,11 +1346,11 @@ class BWB300PreMissionGroupCSVTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    # unittest.main()
+    unittest.main()
     # test = BWB300PreMissionGroupCSVTest()
     # test.setUp()
     # test.test_case_all_subsystems()
     # test.test_case_AdvancedSingleAisle()
-    test = PreMissionGroupTest()
-    test.setUp()
-    test.test_mass_aero_only()
+    # test = PreMissionGroupTest()
+    # test.setUp()
+    # test.test_mass_aero_only()

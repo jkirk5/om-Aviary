@@ -15,7 +15,7 @@ from aviary.constants import FUEL_DENSITIES
 from aviary.utils.aviary_values import AviaryValues
 from aviary.utils.test_utils.variable_test import get_names_from_hierarchy
 from aviary.utils.utils import isiterable
-from aviary.variable_info.enums import AircraftTypes, LegacyCode, ProblemType, Verbosity
+from aviary.variable_info.enums import AircraftTypes, FuelType, LegacyCode, ProblemType, Verbosity
 from aviary.variable_info.variable_meta_data import CoreMetaData
 from aviary.variable_info.variables import Aircraft, Mission, Settings
 
@@ -23,7 +23,11 @@ from aviary.variable_info.variables import Aircraft, Mission, Settings
 # TODO document what kwargs are used, and by which preprocessors in docstring?
 # TODO preprocess needed to check design range equals phase_info range in sizing missions?
 def preprocess_options(
-    aviary_options: AviaryValues, meta_data=CoreMetaData, verbosity=None, **kwargs
+    aviary_options: AviaryValues,
+    meta_data=CoreMetaData,
+    verbosity=None,
+    engine_models: list | None = None,
+    fuel_tank_models: list | None = None,
 ):
     """
     Run all preprocessors on provided AviaryValues object.
@@ -36,16 +40,6 @@ def preprocess_options(
     meta_data : dict
         Variable metadata being used with this set of aviary_options
     """
-    try:
-        engine_models = kwargs['engine_models']
-    except KeyError:
-        engine_models = None
-
-    try:
-        fuel_tank_models = kwargs['fuel_tank_models']
-    except KeyError:
-        fuel_tank_models = None
-
     if verbosity is None:
         if Settings.VERBOSITY in aviary_options:
             verbosity = aviary_options.get_val(Settings.VERBOSITY)
@@ -56,12 +50,14 @@ def preprocess_options(
     deprecations(aviary_options, verbosity)
 
     preprocess_crewpayload(aviary_options, meta_data, verbosity)
-    preprocess_fuel_capacities(aviary_options, verbosity)
 
+    # TODO cleanup if preprocessors expect/handle no engines and/or fuel tanks, or if they should
+    #      only be called if those models exist
     if engine_models is not None:
         preprocess_propulsion(aviary_options, engine_models, meta_data, verbosity)
 
     preprocess_fuel(aviary_options, fuel_tank_models, engine_models, meta_data, verbosity)
+    preprocess_fuel_capacities(aviary_options, verbosity)
 
     # TODO move these into their own subfunction (preprocess options is a collector for preprocessor
     #      functions only, and should not change options on its own)
@@ -162,7 +158,7 @@ def deprecations(aviary_options: AviaryValues, verbosity=Verbosity.BRIEF):
 
     if Mission.RESERVE_FUEL_MARGIN in aviary_options:
         margin = aviary_options.get_val(Mission.RESERVE_FUEL_MARGIN)
-        if margin > 1:
+        if np.any(np.array(margin) > 1):
             raise DeprecationWarning(
                 'For consistency with all other Aviary variables that define percentages/fractions, '
                 'Mission.RESERVE_FUEL_MARGIN was changed to directly define the multiplicative '
@@ -1122,16 +1118,25 @@ def preprocess_fuel_capacities(aviary_options: AviaryValues, verbosity=None):
                 aviary_options.set_val(Aircraft.Fuel.AUXILIARY_FUEL_MASS_CAPACITY, 0.0, 'lbm')
         else:
             total_capacity = aviary_options.get_val(Aircraft.Fuel.MAX_CAPACITY_MASS, 'lbm')
+            # typically total_capacity should be a vector, if so we only care about the Jet-A value
+            if isinstance(total_capacity, (list, np.ndarray)):
+                try:
+                    jet_a_idx = aviary_options.get_val(Aircraft.Fuel.TYPE).index(FuelType.JET_A)
+                except KeyError:
+                    jet_a_idx = 0
+                total_capacity = total_capacity[jet_a_idx]
             try:
                 wing_capacity = aviary_options.get_val(Aircraft.Fuel.WING_FUEL_MASS_CAPACITY, 'lbm')
             except KeyError:
                 wing_capacity = None
+
             try:
                 fuselage_capacity = aviary_options.get_val(
                     Aircraft.Fuel.FUSELAGE_FUEL_MASS_CAPACITY, 'lbm'
                 )
             except KeyError:
                 fuselage_capacity = None
+
             try:
                 auxiliary_capacity = aviary_options.get_val(
                     Aircraft.Fuel.AUXILIARY_FUEL_MASS_CAPACITY, 'lbm'
@@ -1227,103 +1232,104 @@ def preprocess_propulsion(
     for engine in engine_models:
         complete_options_list.update(engine.options)
 
-    # update_list has keys of all variables that are already defined, and must
-    # be vectorized
+    # update_list has keys of all variables that are already defined, and must be vectorized
     update_list = list(complete_options_list.keys())
 
     # Vectorize engine variables. Only update variables in update_list that are relevant
     # to engines (defined by _get_engine_variables())
     for var in _get_engine_variables():
-        if var in update_list:
-            dtype = meta_data[var]['types']
-            default_value = meta_data[var]['default_value']
-            multivalue = meta_data[var]['multivalue']
-            units = meta_data[var]['units']
+        if var not in update_list:
+            continue
 
-            # If dtype has multiple options, prefer type of default value
-            # Otherwise, use the first type in the tuple
-            if isinstance(dtype, tuple):
-                if default_value is not None:
-                    if isinstance(default_value, (tuple, list)):
-                        dtype = type(default_value[0])
-                    else:
-                        dtype = type(default_value)
+        dtype = meta_data[var]['types']
+        default_value = meta_data[var]['default_value']
+        multivalue = meta_data[var]['multivalue']
+        units = meta_data[var]['units']
+
+        # If dtype has multiple options, prefer type of default value
+        # Otherwise, use the first type in the tuple
+        if isinstance(dtype, tuple):
+            if default_value is not None:
+                if isinstance(default_value, (tuple, list)):
+                    dtype = type(default_value[0])
                 else:
-                    dtype = dtype[0]
-
-            if isiterable(meta_data[var]['types']):
-                typeset = meta_data[var]['types']
+                    dtype = type(default_value)
             else:
-                typeset = (meta_data[var]['types'],)
+                dtype = dtype[0]
 
-            # Variables are multidimensional if their base types have iterables, and are
-            # flagged as `multivalue`
-            multidimensional = set(typeset) & set((list, tuple, np.ndarray)) and multivalue
+        if isiterable(meta_data[var]['types']):
+            typeset = meta_data[var]['types']
+        else:
+            typeset = (meta_data[var]['types'],)
 
-            # vec is where the vectorized engine data is stored - always a list right
-            # now, converted to other types like np array later
-            vec = []
+        # Variables are multidimensional if their base types have iterables, and are
+        # flagged as `multivalue`
+        multidimensional = set(typeset) & set((list, tuple, np.ndarray)) and multivalue
 
-            # Vectorize variable "var" from available sources #
+        # vec is where the vectorized engine data is stored - always a list right
+        # now, converted to other types like np array later
+        vec = []
 
-            # If var is supposed to be a unique array per engine model, assemble flat
-            # vector manually to avoid ragged arrays (such as for wing engine locations)
+        # Vectorize variable "var" from available sources #
 
-            # Priority order is (checked per engine):
-            # 1. EngineModel.options
-            # 2. aviary_options
-            # 3. default value from metadata
-            for i, engine in enumerate(engine_models):
-                # test to see if engine has this variable - if so, use it
+        # If var is supposed to be a unique array per engine model, assemble flat
+        # vector manually to avoid ragged arrays (such as for wing engine locations)
+
+        # Priority order is (checked per engine):
+        # 1. EngineModel.options
+        # 2. aviary_options
+        # 3. default value from metadata
+        for i, engine in enumerate(engine_models):
+            # test to see if engine has this variable - if so, use it
+            try:
+                # variables in engine models are trusted to be "safe", and only
+                # contain data for that engine
+                engine_val = engine.get_val(var, units)
+            # if the variable is not in the engine model, pull from aviary options
+            except KeyError:
+                # check if variable is defined in aviary options (for this engine's
+                # index) - if so, use it
                 try:
-                    # variables in engine models are trusted to be "safe", and only
-                    # contain data for that engine
-                    engine_val = engine.get_val(var, units)
-                # if the variable is not in the engine model, pull from aviary options
-                except KeyError:
-                    # check if variable is defined in aviary options (for this engine's
-                    # index) - if so, use it
-                    try:
-                        aviary_val = aviary_options.get_val(var, units)
-                    # if the variable is not in aviary_options, use default from metadata
-                    except (KeyError, IndexError):
-                        vec.append(default_value)
-                    else:
-                        # save value from aviary_options
-                        if isiterable(aviary_val) and len(aviary_val) > 1:
-                            if multidimensional:
-                                vec.extend(aviary_val)
-                            else:
-                                try:
-                                    # check variable exists at this index - if not, use default
-                                    aviary_val[i]
-                                except IndexError:
-                                    vec.append(default_value)
-                                else:
-                                    # if aviary_val is an iterable, just grab val for this engine
-                                    vec.append(aviary_val[i])
-                        else:
-                            if isiterable(aviary_val):
-                                vec.extend(aviary_val)
-                            else:
-                                vec.append(aviary_val)
+                    aviary_val = aviary_options.get_val(var, units)
+                # if the variable is not in aviary_options, use default from metadata
+                except (KeyError, IndexError):
+                    vec.append(default_value)
                 else:
-                    # save value from EngineModel
-                    if isiterable(engine_val) and multidimensional:
-                        vec.extend(engine_val)
+                    # save value from aviary_options
+                    if isiterable(aviary_val) and len(aviary_val) > 1:
+                        if multidimensional:
+                            vec.extend(aviary_val)
+                        else:
+                            try:
+                                # check variable exists at this index - if not, use default
+                                aviary_val[i]
+                            except IndexError:
+                                vec.append(default_value)
+                            else:
+                                # if aviary_val is an iterable, just grab val for this engine
+                                vec.append(aviary_val[i])
                     else:
-                        vec.append(engine_val)
-                # TODO update each engine's options with "new" values? Allows each engine
-                #      to have a copy of all options/inputs, beyond what it was
-                #      originally initialized with
+                        if isiterable(aviary_val):
+                            vec.extend(aviary_val)
+                        else:
+                            vec.append(aviary_val)
+            else:
+                # save value from EngineModel
+                if isiterable(engine_val) and multidimensional:
+                    vec.extend(engine_val)
+                else:
+                    vec.append(engine_val)
+            # TODO update each engine's options with "new" values? Allows each engine
+            #      to have a copy of all options/inputs, beyond what it was
+            #      originally initialized with
 
-            # Update aviary options with new vectors
-            # If data is numerical, store in a numpy array, else use a list
-            # Some machines default to specific-bit np array types, so we have to
-            # check for those too
-            if type(vec[0]) in (int, float, np.int32, np.int64, np.float32, np.float64):
-                vec = np.array(vec, dtype=dtype)
-            aviary_options.set_val(var, vec, units)
+        # Update aviary options with new vectors
+        # If data is numerical, store in a numpy array, else use a list
+        # Some machines default to specific-bit np array types, so we have to
+        # check for those too
+        if type(vec[0]) in (int, float, np.int32, np.int64, np.float32, np.float64):
+            vec = np.array(vec, dtype=dtype)
+        aviary_options.set_val(var, vec, units)
 
     ###################################
     # Input/Option Consistency Checks #
@@ -1499,7 +1505,15 @@ def preprocess_fuel(
 
         yield from additional_variables
 
+    # update_list has keys of all variables that are already defined, and must be vectorized.
+    # Aircraft.Fuel.TYPE and Aircraft.Fuel.DENSITY can get values from the fuel tank models rather
+    # than from aviary_options, so they are always included
+    update_list = set(aviary_options.keys()) | {Aircraft.Fuel.TYPE, Aircraft.Fuel.DENSITY}
+
     for var in _get_fuel_variables() if fuel_tank_models else ():
+        if var not in update_list:
+            continue
+
         dtype = meta_data[var]['types']
         default_value = meta_data[var]['default_value']
         multivalue = meta_data[var]['multivalue']
@@ -1545,7 +1559,6 @@ def preprocess_fuel(
             if var == Aircraft.Fuel.DENSITY:
                 default_value = FUEL_DENSITIES[fuel_type][0]
                 units = FUEL_DENSITIES[fuel_type][1]
-
             # check if variable is defined in aviary options (for this fuel's index)
             try:
                 aviary_val = aviary_options.get_val(var, units)

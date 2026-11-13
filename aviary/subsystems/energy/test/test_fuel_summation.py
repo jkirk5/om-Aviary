@@ -8,6 +8,7 @@ from openmdao.utils.testing_utils import use_tempdirs
 from aviary.models.missions.energy_state_default import phase_info
 from aviary.subsystems.energy.fuel_summation import FuelSummationGroup
 from aviary.utils.aviary_values import AviaryValues
+from aviary.variable_info.enums import FuelType
 from aviary.variable_info.functions import setup_model_options
 from aviary.variable_info.variables import Aircraft, Mission
 
@@ -27,9 +28,10 @@ class TestFuelSummation(unittest.TestCase):
             prob,
             AviaryValues(
                 {
-                    Mission.RESERVE_FUEL_MARGIN: (0.02, 'unitless'),
-                    Mission.RESERVE_FUEL_MASS_ADDITIONAL: (300, 'lbm'),
+                    Mission.RESERVE_FUEL_MARGIN: ([0.02], 'unitless'),
+                    Mission.RESERVE_FUEL_MASS_ADDITIONAL: ([300], 'lbm'),
                     Aircraft.Fuel.IGNORE_FUEL_CAPACITY_CONSTRAINT: (False, 'unitless'),
+                    Aircraft.Fuel.TYPE: ([FuelType.JET_A], 'unitless'),
                 }
             ),
         )
@@ -79,6 +81,7 @@ class TestFuelSummation(unittest.TestCase):
             AviaryValues(
                 {
                     Aircraft.Fuel.IGNORE_FUEL_CAPACITY_CONSTRAINT: (True, 'unitless'),
+                    Aircraft.Fuel.TYPE: ([FuelType.JET_A], 'unitless'),
                 }
             ),
         )

@@ -7,6 +7,7 @@ from openmdao.utils.testing_utils import use_tempdirs
 
 from aviary.subsystems.atmosphere.atmosphere import Atmosphere
 from aviary.subsystems.propulsion.engine_deck import EngineDeck
+from aviary.subsystems.propulsion.engine_model import EngineModel
 from aviary.subsystems.propulsion.propulsion_mission import PropulsionMission, PropulsionSum
 from aviary.subsystems.propulsion.test.test_custom_engine_model import SimpleTestEngine
 from aviary.subsystems.propulsion.turboprop_model import TurbopropModel
@@ -15,7 +16,7 @@ from aviary.utils.aviary_values import AviaryValues
 from aviary.utils.functions import get_path
 from aviary.utils.preprocessors import preprocess_propulsion
 from aviary.validation_cases.validation_tests import get_flops_inputs
-from aviary.variable_info.enums import SpeedType
+from aviary.variable_info.enums import FuelType, SpeedType
 from aviary.variable_info.functions import setup_model_options
 from aviary.variable_info.variables import Aircraft, Dynamic, Mission, Settings
 
@@ -44,6 +45,7 @@ class PropulsionMissionTest(unittest.TestCase):
         options.set_val(Aircraft.Engine.CONSTANT_FUEL_MASS_CONSUMPTION, 0.0, units='lbm/h')
         options.set_val(Aircraft.Engine.SCALE_FACTOR, 0.5)
         options.set_val(Aircraft.Engine.IGNORE_NEGATIVE_THRUST, False)
+        options.set_val(Aircraft.Fuel.TYPE, [FuelType.JET_A])
 
         engine = EngineDeck(options=options)
         preprocess_propulsion(options, [engine])
@@ -135,7 +137,7 @@ class PropulsionMissionTest(unittest.TestCase):
 
         for var_name, (expected, units) in expected_values.items():
             with self.subTest(var=var_name):
-                actual = self.prob.get_val(var_name, units=units)
+                actual = self.prob.get_val(var_name, units=units).ravel()
                 assert_near_equal(actual, expected, tolerance=1e-10)
 
         partial_data = self.prob.check_partials(out_stream=None, method='cs')
@@ -143,8 +145,11 @@ class PropulsionMissionTest(unittest.TestCase):
 
     def test_propulsion_sum(self):
         nn = 2
+        engine_models = [EngineModel(name='engine1'), EngineModel(name='engine2')]
         options = {
             Aircraft.Engine.NUM_ENGINES: np.array([3, 2]),
+            Aircraft.Fuel.TYPE: [FuelType.JET_A],
+            'engine_models': engine_models,
         }
         self.prob.model = om.Group()
         self.prob.model.add_subsystem(
@@ -189,7 +194,7 @@ class PropulsionMissionTest(unittest.TestCase):
 
         for var_name, (expected, units) in expected_values.items():
             with self.subTest(var=var_name):
-                actual = self.prob.get_val(var_name, units=units)
+                actual = self.prob.get_val(var_name, units=units).ravel()
                 assert_near_equal(actual, expected, tolerance=1e-12)
 
         partial_data = self.prob.check_partials(out_stream=None, method='cs')
@@ -202,6 +207,7 @@ class PropulsionMissionTest(unittest.TestCase):
         options = get_flops_inputs('LargeSingleAisle2FLOPS')
         options.set_val(Settings.VERBOSITY, 0)
         options.set_val(Aircraft.Engine.GLOBAL_THROTTLE, True)
+        options.set_val(Aircraft.Fuel.TYPE, [FuelType.JET_A])
 
         engine = build_engine_deck(options)
         engine2 = build_engine_deck(options)
@@ -287,7 +293,7 @@ class PropulsionMissionTest(unittest.TestCase):
 
         for var_name, (expected, units) in expected_values.items():
             with self.subTest(var=var_name):
-                actual = self.prob.get_val(var_name, units=units)
+                actual = self.prob.get_val(var_name, units=units).ravel()
                 tol = 1e-9 if var_name == Dynamic.Vehicle.Propulsion.NOX_RATE_TOTAL else 1e-10
                 assert_near_equal(actual, expected, tolerance=tol)
 
@@ -300,6 +306,7 @@ class PropulsionMissionTest(unittest.TestCase):
 
         options = get_flops_inputs('LargeSingleAisle2FLOPS')
         options.set_val(Settings.VERBOSITY, 0)
+        options.set_val(Aircraft.Fuel.TYPE, [FuelType.JET_A])
 
         engine = SimpleTestEngine()
         preprocess_propulsion(options, engine_models=[engine])
@@ -366,6 +373,7 @@ class PropulsionMissionTest(unittest.TestCase):
         options = get_flops_inputs('LargeSingleAisle2FLOPS')
         options.set_val(Settings.VERBOSITY, 0)
         options.set_val(Aircraft.Engine.GLOBAL_THROTTLE, True)
+        options.set_val(Aircraft.Fuel.TYPE, [FuelType.JET_A])
 
         engine = build_engine_deck(options)
 
@@ -439,6 +447,7 @@ class PropulsionMissionTest(unittest.TestCase):
 
         options = get_flops_inputs('LargeSingleAisle2FLOPS')
         options.set_val(Settings.VERBOSITY, 0)
+        options.set_val(Aircraft.Fuel.TYPE, [FuelType.JET_A])
 
         options.set_val(Aircraft.Engine.FIXED_RPM, 1455.13090827, units='rpm')
         options.set_val(

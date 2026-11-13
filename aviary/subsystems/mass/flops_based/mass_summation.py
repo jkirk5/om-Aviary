@@ -390,19 +390,42 @@ class AltEmptyMass(om.ExplicitComponent):
 
 
 class OperatingItemsMass(om.ExplicitComponent):
+    def initialize(self):
+        add_aviary_option(self, Aircraft.Fuel.TYPE)
+
     def setup(self):
+        num_fuel_types = len(self.options[Aircraft.Fuel.TYPE])
+
         add_aviary_input(self, Aircraft.CrewPayload.CARGO_CONTAINER_MASS, units='lbm')
         add_aviary_input(self, Aircraft.CrewPayload.CABIN_CREW_MASS, units='lbm')
         add_aviary_input(self, Aircraft.CrewPayload.FLIGHT_CREW_MASS, units='lbm')
         add_aviary_input(self, Aircraft.CrewPayload.PASSENGER_SERVICE_MASS, units='lbm')
-        add_aviary_input(self, Aircraft.Fuel.UNUSABLE_FUEL_MASS, units='lbm')
+        add_aviary_input(self, Aircraft.Fuel.UNUSABLE_FUEL_MASS, units='lbm', shape=num_fuel_types)
         add_aviary_input(self, Aircraft.Propulsion.TOTAL_ENGINE_OIL_MASS, units='lbm')
         add_aviary_input(self, Mission.OPERATING_ITEMS_MASS_ADDITIONAL, units='lbm')
 
         add_aviary_output(self, Mission.OPERATING_ITEMS_MASS, units='lbm')
 
     def setup_partials(self):
-        self.declare_partials(Mission.OPERATING_ITEMS_MASS, '*', val=1)
+        num_fuel_types = len(self.options[Aircraft.Fuel.TYPE])
+
+        self.declare_partials(
+            Mission.OPERATING_ITEMS_MASS,
+            [
+                Aircraft.CrewPayload.CARGO_CONTAINER_MASS,
+                Aircraft.CrewPayload.CABIN_CREW_MASS,
+                Aircraft.CrewPayload.FLIGHT_CREW_MASS,
+                Aircraft.CrewPayload.PASSENGER_SERVICE_MASS,
+                Aircraft.Propulsion.TOTAL_ENGINE_OIL_MASS,
+                Mission.OPERATING_ITEMS_MASS_ADDITIONAL,
+            ],
+            val=1,
+        )
+        self.declare_partials(
+            Mission.OPERATING_ITEMS_MASS,
+            Aircraft.Fuel.UNUSABLE_FUEL_MASS,
+            val=np.ones((1, num_fuel_types)),
+        )
 
     def compute(self, inputs, outputs):
         cargo_container_mass = inputs[Aircraft.CrewPayload.CARGO_CONTAINER_MASS]
@@ -410,7 +433,7 @@ class OperatingItemsMass(om.ExplicitComponent):
         flight_crew_mass = inputs[Aircraft.CrewPayload.FLIGHT_CREW_MASS]
         oil_mass = inputs[Aircraft.Propulsion.TOTAL_ENGINE_OIL_MASS]
         pass_service_mass = inputs[Aircraft.CrewPayload.PASSENGER_SERVICE_MASS]
-        unusable_fuel_mass = inputs[Aircraft.Fuel.UNUSABLE_FUEL_MASS]
+        unusable_fuel_mass = np.sum(inputs[Aircraft.Fuel.UNUSABLE_FUEL_MASS])
         additional_operating_mass = inputs[Mission.OPERATING_ITEMS_MASS_ADDITIONAL]
 
         outputs[Mission.OPERATING_ITEMS_MASS] = (

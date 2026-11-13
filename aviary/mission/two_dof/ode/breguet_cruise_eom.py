@@ -1,8 +1,14 @@
 import numpy as np
 import openmdao.api as om
 
-from aviary.variable_info.functions import add_aviary_input, add_aviary_option
+from aviary.variable_info.functions import add_aviary_option
 from aviary.variable_info.variables import Dynamic, Mission
+
+# Name of the scalar (summed across fuel types) fuel flow output from PropulsionSum.
+# Used instead of Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL, which
+# is shaped (num_nodes, num_fuel_type), since fuel burn of any type reduces vehicle
+# mass equally.
+FUEL_FLOW_RATE_NEGATIVE_TOTAL_COMBINED = 'fuel_flow_rate_negative_total_combined'
 
 
 class RangeComp(om.ExplicitComponent):
@@ -33,10 +39,9 @@ class RangeComp(om.ExplicitComponent):
             desc='mass at each node, monotonically nonincreasing',
         )
 
-        add_aviary_input(
-            self,
-            Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
-            shape=nn,
+        self.add_input(
+            FUEL_FLOW_RATE_NEGATIVE_TOTAL_COMBINED,
+            val=np.zeros(nn),
             units='kg/s',
         )
 
@@ -86,7 +91,7 @@ class RangeComp(om.ExplicitComponent):
         self.declare_partials(
             'cruise_range',
             [
-                Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
+                FUEL_FLOW_RATE_NEGATIVE_TOTAL_COMBINED,
                 'mass',
                 'TAS_cruise',
             ],
@@ -96,7 +101,7 @@ class RangeComp(om.ExplicitComponent):
         self.declare_partials(
             'cruise_time',
             [
-                Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
+                FUEL_FLOW_RATE_NEGATIVE_TOTAL_COMBINED,
                 'mass',
                 'TAS_cruise',
             ],
@@ -119,7 +124,7 @@ class RangeComp(om.ExplicitComponent):
 
         v_x = inputs['TAS_cruise']
         m = inputs['mass']
-        FF = -inputs[Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL]
+        FF = -inputs[FUEL_FLOW_RATE_NEGATIVE_TOTAL_COMBINED]
         r0 = inputs['cruise_distance_initial']
         t0 = inputs['cruise_time_initial']
 
@@ -154,7 +159,7 @@ class RangeComp(om.ExplicitComponent):
 
         v_x = inputs['TAS_cruise']
         m = inputs['mass']
-        FF = -inputs[Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL]
+        FF = -inputs[FUEL_FLOW_RATE_NEGATIVE_TOTAL_COMBINED]
 
         vx_1 = v_x[:-1]  # Initial airspeed across each two-node pair
         vx_2 = v_x[1:]  # Final airspeed across each two-node pair
@@ -203,7 +208,7 @@ class RangeComp(om.ExplicitComponent):
         np.fill_diagonal(self._scratch_nn_x_nn[1:, :-1], dRange_dFF1)
         np.fill_diagonal(self._scratch_nn_x_nn[1:, 1:], dRange_dFF2)
 
-        J['cruise_range', Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL][...] = (
+        J['cruise_range', FUEL_FLOW_RATE_NEGATIVE_TOTAL_COMBINED][...] = (
             self._d_cumsum_dx @ self._scratch_nn_x_nn
         )[self._tril_rs, self._tril_cs]
 
@@ -229,8 +234,8 @@ class RangeComp(om.ExplicitComponent):
         # But the jacobian is in a flat format in row-major order. The rows associated
         # with the nonzero elements are stored in self._tril_rs.
 
-        J['cruise_time', Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL][1:] = (
-            J['cruise_range', Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL][1:]
+        J['cruise_time', FUEL_FLOW_RATE_NEGATIVE_TOTAL_COMBINED][1:] = (
+            J['cruise_range', FUEL_FLOW_RATE_NEGATIVE_TOTAL_COMBINED][1:]
             / vx_m[self._tril_rs[1:] - 1]
         )
         J['cruise_time', 'mass'][1:] = J['cruise_range', 'mass'][1:] / vx_m[self._tril_rs[1:] - 1]

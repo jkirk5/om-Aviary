@@ -75,10 +75,7 @@ add_meta_data(
 add_meta_data(
     Aircraft.AirConditioning.MASS_COEFFICIENT,
     meta_data=_MetaData,
-    historical_name={
-        'GASP': 'INGASP.CW(6)',
-        'FLOPS': None,
-    },
+    historical_name={'GASP': 'INGASP.CW(6)', 'FLOPS': None},
     units='unitless',
     desc='mass trend coefficient of air conditioning',
     default_value=1.0,
@@ -3090,10 +3087,7 @@ add_meta_data(
 add_meta_data(
     Aircraft.Fuel.DENSITY,
     meta_data=_MetaData,
-    historical_name={
-        'GASP': 'FUELD',  # not in GASP, but have to keep
-        'FLOPS': 'WTIN.FULDEN',
-    },
+    historical_name={'GASP': 'INGASP.FUELD', 'FLOPS': 'WTIN.FULDEN'},
     desc='Fuel density (jet fuel typical density of 6.7 lbm/galUS used in the calculation of wing_capacity'
     '(if wing_capacity is not input) and in the calculation of fuel system weight.',
     default_value=Constants.FUEL_DENSITIES[FuelType.JET_A][0],
@@ -3225,6 +3219,7 @@ add_meta_data(
     desc='Fuel types used on the aircraft. Fuel variables are assumed to be vectorized in order '
     'corresponding to the order of fuel types specified here.',
     default_value=FuelType.JET_A,
+    types=FuelType,
     multivalue=True,
     option=True,
 )
@@ -7459,18 +7454,12 @@ add_meta_data(
 )
 
 add_meta_data(
-    Dynamic.Vehicle.FUEL_TANK_FILL_FRACTION,
-    meta_data=_MetaData,
-    historical_name={'GASP': None, 'FLOPS': None},
-    units='unitless',
-    desc='current fill state of fuel tanks',
-    multivalue=True,
-)
-
-add_meta_data(
     Dynamic.Vehicle.LIFT,
     meta_data=_MetaData,
-    historical_name={'GASP': None, 'FLOPS': None},
+    historical_name={
+        'GASP': None,
+        'FLOPS': None,
+    },
     units='lbf',
     desc='Current total lift produced by the vehicle',
     default_value=0.0,

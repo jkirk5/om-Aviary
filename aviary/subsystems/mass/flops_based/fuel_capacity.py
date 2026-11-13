@@ -1,11 +1,18 @@
 import openmdao.api as om
 
-from aviary.variable_info.functions import add_aviary_input, add_aviary_output
+from aviary.variable_info.enums import FuelType
+from aviary.variable_info.functions import add_aviary_input, add_aviary_option, add_aviary_output
 from aviary.variable_info.variables import Aircraft
 
 
 class FuelCapacityGroup(om.Group):
-    """Compute the maximum fuel that can be carried."""
+    """
+    Compute the maximum fuel that can be carried.
+
+    These FLOPS equations model the combined capacity of tanks distributed around the
+    aircraft holding Jet-A fuel; they do not apply to other fuel types, which supply
+    their own capacity via their own fuel tank subsystem.
+    """
 
     def setup(self):
         self.add_subsystem(
@@ -40,14 +47,26 @@ class FuelCapacityGroup(om.Group):
 class FuselageFuelCapacity(om.ExplicitComponent):
     """Compute the maximum fuel that can be carried in the fuselage."""
 
+    def initialize(self):
+        add_aviary_option(self, Aircraft.Fuel.TYPE)
+
     def setup(self):
-        add_aviary_input(self, Aircraft.Fuel.MAX_CAPACITY_MASS, units='lbm')
+        num_fuel_types = len(self.options[Aircraft.Fuel.TYPE])
+
+        add_aviary_input(self, Aircraft.Fuel.MAX_CAPACITY_MASS, units='lbm', shape=num_fuel_types)
         add_aviary_input(self, Aircraft.Fuel.WING_FUEL_MASS_CAPACITY, units='lbm')
         add_aviary_output(self, Aircraft.Fuel.FUSELAGE_FUEL_MASS_CAPACITY, units='lbm')
 
     def setup_partials(self):
+        fuel_types = self.options[Aircraft.Fuel.TYPE]
+        jet_a_idx = fuel_types.index(FuelType.JET_A)
+
         self.declare_partials(
-            Aircraft.Fuel.FUSELAGE_FUEL_MASS_CAPACITY, Aircraft.Fuel.MAX_CAPACITY_MASS, val=1.0
+            Aircraft.Fuel.FUSELAGE_FUEL_MASS_CAPACITY,
+            Aircraft.Fuel.MAX_CAPACITY_MASS,
+            rows=[0],
+            cols=[jet_a_idx],
+            val=1.0,
         )
         self.declare_partials(
             Aircraft.Fuel.FUSELAGE_FUEL_MASS_CAPACITY,
@@ -56,23 +75,39 @@ class FuselageFuelCapacity(om.ExplicitComponent):
         )
 
     def compute(self, inputs, outputs):
+        fuel_types = self.options[Aircraft.Fuel.TYPE]
+        jet_a_idx = fuel_types.index(FuelType.JET_A)
+
         outputs[Aircraft.Fuel.FUSELAGE_FUEL_MASS_CAPACITY] = (
-            inputs[Aircraft.Fuel.MAX_CAPACITY_MASS] - inputs[Aircraft.Fuel.WING_FUEL_MASS_CAPACITY]
+            inputs[Aircraft.Fuel.MAX_CAPACITY_MASS][jet_a_idx]
+            - inputs[Aircraft.Fuel.WING_FUEL_MASS_CAPACITY]
         )
 
 
 class AuxFuelCapacity(om.ExplicitComponent):
     """Compute the maximum fuel that can be carried in the auxiliary tanks."""
 
+    def initialize(self):
+        add_aviary_option(self, Aircraft.Fuel.TYPE)
+
     def setup(self):
-        add_aviary_input(self, Aircraft.Fuel.MAX_CAPACITY_MASS, units='lbm')
+        num_fuel_types = len(self.options[Aircraft.Fuel.TYPE])
+
+        add_aviary_input(self, Aircraft.Fuel.MAX_CAPACITY_MASS, units='lbm', shape=num_fuel_types)
         add_aviary_input(self, Aircraft.Fuel.WING_FUEL_MASS_CAPACITY, units='lbm')
         add_aviary_input(self, Aircraft.Fuel.FUSELAGE_FUEL_MASS_CAPACITY, units='lbm')
         add_aviary_output(self, Aircraft.Fuel.AUXILIARY_FUEL_MASS_CAPACITY, units='lbm')
 
     def setup_partials(self):
+        fuel_types = self.options[Aircraft.Fuel.TYPE]
+        jet_a_idx = fuel_types.index(FuelType.JET_A)
+
         self.declare_partials(
-            Aircraft.Fuel.AUXILIARY_FUEL_MASS_CAPACITY, Aircraft.Fuel.MAX_CAPACITY_MASS, val=1.0
+            Aircraft.Fuel.AUXILIARY_FUEL_MASS_CAPACITY,
+            Aircraft.Fuel.MAX_CAPACITY_MASS,
+            rows=[0],
+            cols=[jet_a_idx],
+            val=1.0,
         )
         self.declare_partials(
             Aircraft.Fuel.AUXILIARY_FUEL_MASS_CAPACITY,
@@ -86,35 +121,61 @@ class AuxFuelCapacity(om.ExplicitComponent):
         )
 
     def compute(self, inputs, outputs):
+        fuel_types = self.options[Aircraft.Fuel.TYPE]
+        jet_a_idx = fuel_types.index(FuelType.JET_A)
+
         outputs[Aircraft.Fuel.AUXILIARY_FUEL_MASS_CAPACITY] = (
-            inputs[Aircraft.Fuel.MAX_CAPACITY_MASS]
+            inputs[Aircraft.Fuel.MAX_CAPACITY_MASS][jet_a_idx]
             - inputs[Aircraft.Fuel.WING_FUEL_MASS_CAPACITY]
             - inputs[Aircraft.Fuel.FUSELAGE_FUEL_MASS_CAPACITY]
         )
 
 
 class TotalFuelCapacity(om.ExplicitComponent):
-    """Compute the total fuel that can be carried in all tanks."""
+    """Compute the total Jet-A fuel that can be carried in all tanks."""
+
+    def initialize(self):
+        add_aviary_option(self, Aircraft.Fuel.TYPE)
 
     def setup(self):
+        num_fuel_types = len(self.options[Aircraft.Fuel.TYPE])
+
         add_aviary_input(self, Aircraft.Fuel.WING_FUEL_MASS_CAPACITY, units='lbm')
         add_aviary_input(self, Aircraft.Fuel.FUSELAGE_FUEL_MASS_CAPACITY, units='lbm')
         add_aviary_input(self, Aircraft.Fuel.AUXILIARY_FUEL_MASS_CAPACITY, units='lbm')
-        add_aviary_output(self, Aircraft.Fuel.MAX_CAPACITY_MASS, units='lbm')
+        add_aviary_output(self, Aircraft.Fuel.MAX_CAPACITY_MASS, units='lbm', shape=num_fuel_types)
 
     def setup_partials(self):
+        fuel_types = self.options[Aircraft.Fuel.TYPE]
+        jet_a_idx = fuel_types.index(FuelType.JET_A)
+
         self.declare_partials(
-            Aircraft.Fuel.MAX_CAPACITY_MASS, Aircraft.Fuel.WING_FUEL_MASS_CAPACITY, val=1.0
+            Aircraft.Fuel.MAX_CAPACITY_MASS,
+            Aircraft.Fuel.WING_FUEL_MASS_CAPACITY,
+            rows=[jet_a_idx],
+            cols=[0],
+            val=1.0,
         )
         self.declare_partials(
-            Aircraft.Fuel.MAX_CAPACITY_MASS, Aircraft.Fuel.FUSELAGE_FUEL_MASS_CAPACITY, val=1.0
+            Aircraft.Fuel.MAX_CAPACITY_MASS,
+            Aircraft.Fuel.FUSELAGE_FUEL_MASS_CAPACITY,
+            rows=[jet_a_idx],
+            cols=[0],
+            val=1.0,
         )
         self.declare_partials(
-            Aircraft.Fuel.MAX_CAPACITY_MASS, Aircraft.Fuel.AUXILIARY_FUEL_MASS_CAPACITY, val=1.0
+            Aircraft.Fuel.MAX_CAPACITY_MASS,
+            Aircraft.Fuel.AUXILIARY_FUEL_MASS_CAPACITY,
+            rows=[jet_a_idx],
+            cols=[0],
+            val=1.0,
         )
 
     def compute(self, inputs, outputs):
-        outputs[Aircraft.Fuel.MAX_CAPACITY_MASS] = (
+        fuel_types = self.options[Aircraft.Fuel.TYPE]
+        jet_a_idx = fuel_types.index(FuelType.JET_A)
+
+        outputs[Aircraft.Fuel.MAX_CAPACITY_MASS][jet_a_idx] = (
             inputs[Aircraft.Fuel.WING_FUEL_MASS_CAPACITY]
             + inputs[Aircraft.Fuel.FUSELAGE_FUEL_MASS_CAPACITY]
             + inputs[Aircraft.Fuel.AUXILIARY_FUEL_MASS_CAPACITY]

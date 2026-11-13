@@ -11,7 +11,7 @@ from aviary.subsystems.propulsion.utils import build_engine_deck
 from aviary.utils.aviary_values import AviaryValues
 from aviary.utils.functions import get_path
 from aviary.utils.test_utils.default_subsystems import get_default_subsystems
-from aviary.variable_info.enums import Verbosity
+from aviary.variable_info.enums import FuelType, Verbosity
 from aviary.variable_info.functions import setup_model_options
 from aviary.variable_info.variables import Aircraft, Dynamic, Settings
 
@@ -28,6 +28,7 @@ class CruiseODETestCase(unittest.TestCase):
         )
         aviary_options.set_val(Aircraft.Engine.REFERENCE_SLS_THRUST, 28690.0, units='lbf')
         aviary_options.set_val(Aircraft.Engine.NUM_ENGINES, np.array([2]))
+        aviary_options.set_val(Aircraft.Fuel.TYPE, [FuelType.JET_A])
         aviary_options.set_val(Aircraft.Engine.GLOBAL_THROTTLE, True)
         aviary_options.set_val(Settings.VERBOSITY, Verbosity.QUIET)
         default_mission_subsystems = [
@@ -108,6 +109,7 @@ class ElectricCruiseODETestCase(unittest.TestCase):
         aviary_options = AviaryValues()
         aviary_options.set_val(Aircraft.Engine.REFERENCE_SLS_THRUST, 28690.0, units='lbf')
         aviary_options.set_val(Aircraft.Engine.NUM_ENGINES, np.array([2]))
+        aviary_options.set_val(Aircraft.Fuel.TYPE, [FuelType.JET_A])
         aviary_options.set_val(Aircraft.Engine.GLOBAL_THROTTLE, True)
         aviary_options.set_val(Settings.VERBOSITY, Verbosity.QUIET)
         aviary_options.set_val(

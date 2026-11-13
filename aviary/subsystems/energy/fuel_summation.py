@@ -143,7 +143,7 @@ class FuelSummationGroup(om.Group):
             )
 
         reserve_fuel_margin = self.options[Mission.RESERVE_FUEL_MARGIN]
-        if any(reserve_fuel_margin != 0):
+        if np.any(reserve_fuel_margin != 0):
             # Originally tried to reference Mission.FUEL_MASS for fuel burn but in some tests this led to errors
             reserve_fuel_frac = om.ExecComp(
                 'reserve_fuel_margin_mass = reserve_fuel_margin * mission_fuel',
@@ -296,7 +296,11 @@ class FuelSummationGroup(om.Group):
             'block_fuel_comp',
             om.ExecComp(
                 'block_fuel = mission_fuel_burned + fuel_burned_taxi_in',
-                block_fuel={'units': 'lbm'},
+                block_fuel={
+                    'units': 'lbm',
+                    'shape': (num_fuel_types,),
+                    'val': np.zeros(num_fuel_types),
+                },
                 mission_fuel_burned={
                     'units': 'lbm',
                     'shape': (num_fuel_types,),

@@ -44,7 +44,6 @@ class CoreEnergyBuilder(EnergyBuilder):
         self,
         name=None,
         meta_data=None,
-        code_origin: LegacyCode = None,
         fuel_tank_models=None,
         **kwargs,
     ):
@@ -101,7 +100,8 @@ class CoreEnergyBuilder(EnergyBuilder):
         fuel_fill_comp = om.ExecComp(
             'fuel_fill = (fuel_capacity - cumulative_fuel) / fuel_capacity',
             fuel_fill={'val': np.zeros((num_nodes, num_fuel_types)), 'units': 'unitless'},
-            fuel_capacity={'val': np.zeros(num_fuel_types), 'units': 'lbm'},
+            # fuel capacity initialized to one to avoid divide by zero in first iteration
+            fuel_capacity={'val': np.ones(num_fuel_types), 'units': 'lbm'},
             cumulative_fuel={'val': np.zeros((num_nodes, num_fuel_types)), 'units': 'lbm'},
         )
 
@@ -115,7 +115,7 @@ class CoreEnergyBuilder(EnergyBuilder):
                     Dynamic.Vehicle.CUMULATIVE_FUEL_BURNED,
                 ),
             ],
-            promotes_outputs=[('fuel_Fill', Dynamic.Vehicle.FUEL_TANK_FILL_FRACTION)],
+            promotes_outputs=[('fuel_fill', Dynamic.Vehicle.FUEL_TANK_FILL_FRACTION)],
         )
 
         return fuel_group

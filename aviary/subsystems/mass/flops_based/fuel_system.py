@@ -1,6 +1,7 @@
 import openmdao.api as om
 
 from aviary.subsystems.mass.flops_based.distributed_prop import distributed_engine_count_factor
+from aviary.variable_info.enums import FuelType
 from aviary.variable_info.functions import add_aviary_input, add_aviary_option, add_aviary_output
 from aviary.variable_info.variables import Aircraft
 
@@ -14,20 +15,36 @@ class TransportFuelSystemMass(om.ExplicitComponent):
 
     def initialize(self):
         add_aviary_option(self, Aircraft.Propulsion.TOTAL_NUM_ENGINES)
+        add_aviary_option(self, Aircraft.Fuel.TYPE)
 
     def setup(self):
+        num_fuel_types = len(self.options[Aircraft.Fuel.TYPE])
+
         add_aviary_input(self, Aircraft.Fuel.FUEL_SYSTEM_MASS_SCALER, units='unitless')
-        add_aviary_input(self, Aircraft.Fuel.MAX_CAPACITY_MASS, units='lbm')
+        add_aviary_input(self, Aircraft.Fuel.MAX_CAPACITY_MASS, units='lbm', shape=num_fuel_types)
         add_aviary_input(self, Aircraft.Design.MAX_MACH, units='unitless')
 
         add_aviary_output(self, Aircraft.Fuel.FUEL_SYSTEM_MASS, units='lbm')
 
     def setup_partials(self):
-        self.declare_partials('*', '*')
+        fuel_types = self.options[Aircraft.Fuel.TYPE]
+        jet_a_idx = fuel_types.index(FuelType.JET_A)
+
+        self.declare_partials('*', Aircraft.Fuel.FUEL_SYSTEM_MASS_SCALER)
+        self.declare_partials('*', Aircraft.Design.MAX_MACH)
+        self.declare_partials(
+            Aircraft.Fuel.FUEL_SYSTEM_MASS,
+            Aircraft.Fuel.MAX_CAPACITY_MASS,
+            rows=[0],
+            cols=[jet_a_idx],
+        )
 
     def compute(self, inputs, outputs):
+        fuel_types = self.options[Aircraft.Fuel.TYPE]
+        jet_a_idx = fuel_types.index(FuelType.JET_A)
+
         scaler = inputs[Aircraft.Fuel.FUEL_SYSTEM_MASS_SCALER]
-        capacity = inputs[Aircraft.Fuel.MAX_CAPACITY_MASS]
+        capacity = inputs[Aircraft.Fuel.MAX_CAPACITY_MASS][jet_a_idx]
         num_eng = self.options[Aircraft.Propulsion.TOTAL_NUM_ENGINES]
         num_eng_fact = distributed_engine_count_factor(num_eng)
         max_mach = inputs[Aircraft.Design.MAX_MACH]
@@ -37,8 +54,11 @@ class TransportFuelSystemMass(om.ExplicitComponent):
         )
 
     def compute_partials(self, inputs, J):
+        fuel_types = self.options[Aircraft.Fuel.TYPE]
+        jet_a_idx = fuel_types.index(FuelType.JET_A)
+
         scaler = inputs[Aircraft.Fuel.FUEL_SYSTEM_MASS_SCALER]
-        capacity = inputs[Aircraft.Fuel.MAX_CAPACITY_MASS]
+        capacity = inputs[Aircraft.Fuel.MAX_CAPACITY_MASS][jet_a_idx]
         num_eng = self.options[Aircraft.Propulsion.TOTAL_NUM_ENGINES]
         num_eng_fact = distributed_engine_count_factor(num_eng)
         max_mach = inputs[Aircraft.Design.MAX_MACH]
@@ -65,19 +85,34 @@ class AltFuelSystemMass(om.ExplicitComponent):
 
     def initialize(self):
         add_aviary_option(self, Aircraft.Fuel.NUM_TANKS)
+        add_aviary_option(self, Aircraft.Fuel.TYPE)
 
     def setup(self):
-        add_aviary_input(self, Aircraft.Fuel.MAX_CAPACITY_MASS, units='lbm')
+        num_fuel_types = len(self.options[Aircraft.Fuel.TYPE])
+
+        add_aviary_input(self, Aircraft.Fuel.MAX_CAPACITY_MASS, units='lbm', shape=num_fuel_types)
         add_aviary_input(self, Aircraft.Fuel.FUEL_SYSTEM_MASS_SCALER, units='unitless')
 
         add_aviary_output(self, Aircraft.Fuel.FUEL_SYSTEM_MASS, units='lbm')
 
     def setup_partials(self):
-        self.declare_partials('*', '*')
+        fuel_types = self.options[Aircraft.Fuel.TYPE]
+        jet_a_idx = fuel_types.index(FuelType.JET_A)
+
+        self.declare_partials('*', Aircraft.Fuel.FUEL_SYSTEM_MASS_SCALER)
+        self.declare_partials(
+            Aircraft.Fuel.FUEL_SYSTEM_MASS,
+            Aircraft.Fuel.MAX_CAPACITY_MASS,
+            rows=[0],
+            cols=[jet_a_idx],
+        )
 
     def compute(self, inputs, outputs):
+        fuel_types = self.options[Aircraft.Fuel.TYPE]
+        jet_a_idx = fuel_types.index(FuelType.JET_A)
+
         number_of_fuel_tanks = self.options[Aircraft.Fuel.NUM_TANKS]
-        total_fuel_capacity = inputs[Aircraft.Fuel.MAX_CAPACITY_MASS]
+        total_fuel_capacity = inputs[Aircraft.Fuel.MAX_CAPACITY_MASS][jet_a_idx]
         scaler = inputs[Aircraft.Fuel.FUEL_SYSTEM_MASS_SCALER]
 
         fuel_sys_mass = (
@@ -90,8 +125,11 @@ class AltFuelSystemMass(om.ExplicitComponent):
         outputs[Aircraft.Fuel.FUEL_SYSTEM_MASS] = fuel_sys_mass
 
     def compute_partials(self, inputs, J):
+        fuel_types = self.options[Aircraft.Fuel.TYPE]
+        jet_a_idx = fuel_types.index(FuelType.JET_A)
+
         number_of_fuel_tanks = self.options[Aircraft.Fuel.NUM_TANKS]
-        total_fuel_capacity = inputs[Aircraft.Fuel.MAX_CAPACITY_MASS]
+        total_fuel_capacity = inputs[Aircraft.Fuel.MAX_CAPACITY_MASS][jet_a_idx]
         scaler = inputs[Aircraft.Fuel.FUEL_SYSTEM_MASS_SCALER]
 
         J[Aircraft.Fuel.FUEL_SYSTEM_MASS, Aircraft.Fuel.MAX_CAPACITY_MASS] = (

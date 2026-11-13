@@ -141,7 +141,7 @@ class AccelPhase(PhaseBuilder):
         self.add_state(
             'mass',
             Dynamic.Vehicle.MASS,
-            Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
+            'fuel_flow_rate_negative_total_combined',
         )
         self.add_state('distance', Dynamic.Mission.DISTANCE, Dynamic.Mission.DISTANCE_RATE)
 

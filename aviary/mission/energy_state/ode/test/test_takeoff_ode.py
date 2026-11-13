@@ -17,6 +17,7 @@ from aviary.validation_cases.validation_data.test_data.advanced_single_aisle_dat
     takeoff_subsystem_options,
 )
 from aviary.validation_cases.validation_tests import do_validation_test
+from aviary.variable_info.enums import FuelType
 from aviary.variable_info.functions import setup_model_options
 from aviary.variable_info.variables import Aircraft, Dynamic, Mission
 
@@ -95,6 +96,7 @@ class TakeoffODETest(unittest.TestCase):
         nn = len(time)
         aviary_options = inputs
         aviary_options.set_val(Aircraft.Engine.NUM_ENGINES, [2])
+        aviary_options.set_val(Aircraft.Fuel.TYPE, [FuelType.JET_A])
         engines = [build_engine_deck(aviary_options)]
 
         preprocess_options(aviary_options, engine_models=engines)

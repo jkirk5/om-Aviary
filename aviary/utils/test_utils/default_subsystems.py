@@ -6,6 +6,8 @@ from aviary.subsystems.performance.performance_builder import CorePerformanceBui
 from aviary.subsystems.propulsion.propulsion_builder import CorePropulsionBuilder
 from aviary.variable_info.enums import LegacyCode
 from aviary.variable_info.variable_meta_data import CoreMetaData
+from aviary.subsystems.energy.flops_based.flops_tank import FuelTankFLOPS
+from aviary.subsystems.energy.gasp_based.gasp_tank import FuelTankGASP
 
 
 def get_default_subsystems(legacy_code, engines=None):
@@ -25,7 +27,13 @@ def get_default_subsystems(legacy_code, engines=None):
     aero = CoreAerodynamicsBuilder('aerodynamics', CoreMetaData, legacy_code)
     geom = CoreGeometryBuilder('geometry', CoreMetaData, legacy_code)
     perf = CorePerformanceBuilder('performance', CoreMetaData)
-    engy = CoreEnergyBuilder('energy', CoreMetaData)
+    if legacy_code is LegacyCode.FLOPS:
+        fuel_tank = [FuelTankFLOPS()]
+    elif legacy_code is LegacyCode.GASP:
+        fuel_tank = [FuelTankGASP()]
+    else:
+        fuel_tank = []
+    engy = CoreEnergyBuilder('energy', CoreMetaData, fuel_tank_models=fuel_tank)
 
     return {
         'propulsion': prop,

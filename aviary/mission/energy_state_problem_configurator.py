@@ -300,14 +300,23 @@ class EnergyStateProblemConfigurator(ProblemConfiguratorBase):
             )
 
             # Calculate how much fuel is burned in taxi and takeoff
+            num_fuel_types = len(aviary_group.aviary_inputs.get_val(Aircraft.Fuel.TYPE))
             aviary_group.add_subsystem(
                 'takeoff_mass_comp',
                 om.ExecComp(
-                    'takeoff_mass = gross_mass - taxi_out_fuel_burn - takeoff_fuel_burn',
+                    'takeoff_mass = gross_mass - sum(taxi_out_fuel_burn) - sum(takeoff_fuel_burn)',
                     takeoff_mass={'units': 'lbm'},
                     gross_mass={'units': 'lbm'},
-                    taxi_out_fuel_burn={'units': 'lbm'},
-                    takeoff_fuel_burn={'units': 'lbm'},
+                    taxi_out_fuel_burn={
+                        'units': 'lbm',
+                        'shape': (num_fuel_types,),
+                        'val': np.zeros(num_fuel_types),
+                    },
+                    takeoff_fuel_burn={
+                        'units': 'lbm',
+                        'shape': (num_fuel_types,),
+                        'val': np.zeros(num_fuel_types),
+                    },
                 ),
                 promotes_inputs=[
                     ('gross_mass', Mission.GROSS_MASS),

@@ -37,15 +37,19 @@
     ],
     [
         "mission:reserve_fuel_mass_additional",
-        3000.0,
+        [
+            3000.0
+        ],
         "lbm",
-        "<class 'float'>"
+        "<class 'numpy.ndarray'>"
     ],
     [
         "mission:reserve_fuel_margin",
-        0.0,
+        [
+            0.0
+        ],
         "unitless",
-        "<class 'float'>"
+        "<class 'numpy.ndarray'>"
     ],
     [
         "aircraft:design:cruise_altitude",
@@ -509,15 +513,19 @@
     ],
     [
         "aircraft:fuel:max_capacity_mass",
-        45694.0,
+        [
+            45694.0
+        ],
         "lbm",
-        "<class 'float'>"
+        "<class 'numpy.ndarray'>"
     ],
     [
         "aircraft:fuel:unusable_fuel_mass_scaler",
-        1.0,
+        [
+            1.0
+        ],
         "unitless",
-        "<class 'float'>"
+        "<class 'numpy.ndarray'>"
     ],
     [
         "aircraft:furnishings:mass_scaler",
@@ -1123,6 +1131,22 @@
         2,
         "unitless",
         "<class 'int'>"
+    ],
+        [
+        "aircraft:fuel:density",
+        [
+            6.7
+        ],
+        "lbm/galUS",
+        "<class 'numpy.ndarray'>"
+    ],
+    [
+        "aircraft:fuel:type",
+        [
+            "JET_A"
+        ],
+        "unitless",
+        "<class 'list'>"
     ],
     [
         "aircraft:design:percent_excrescence_drag",

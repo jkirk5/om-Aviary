@@ -82,7 +82,7 @@ class GroundrollODE(TwoDOFODE):
                 'dfuelburn_dv',
             ],
             promotes_inputs=[
-                ('mass_rate', Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL),
+                ('mass_rate', 'fuel_flow_rate_negative_total_combined'),
                 ('fuelburn_rate', Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_TOTAL),
                 'dt_dv',
             ],

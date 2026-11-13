@@ -474,7 +474,7 @@ class AviaryGroup(om.Group):
             engine_models=self.engine_models,
             fuel_tank_models=self.fuel_tanks,
             verbosity=verbosity,
-            metadata=self.meta_data,
+            meta_data=self.meta_data,
         )
 
         self.initialization_guesses = initialization_guessing(
@@ -496,7 +496,6 @@ class AviaryGroup(om.Group):
         mass = CoreMassBuilder('mass', code_origin=self.mass_method, meta_data=self.meta_data)
         energy = CoreEnergyBuilder(
             'energy',
-            code_origin=self.mass_method,
             fuel_tank_models=self.fuel_tanks,
             meta_data=self.meta_data,
         )

@@ -681,14 +681,20 @@ class AviaryProblem(om.Problem):
         """
         verbosity = self._override_verbosity(verbosity)
 
+        num_fuel_types = len(self.aviary_inputs.get_val(Aircraft.Fuel.TYPE))
+
         # This isn't really a fuel objective, it's a hybrid or compound objective
         self.model.add_subsystem(
             'fuel_obj',
             om.ExecComp(
-                'reg_objective = overall_fuel/10000 + ascent_duration/30.',
+                'reg_objective = sum(overall_fuel)/10000 + ascent_duration/30.',
                 reg_objective={'val': 0.0, 'units': 'unitless'},
                 ascent_duration={'units': 's', 'shape': 1},
-                overall_fuel={'units': 'lbm'},
+                overall_fuel={
+                    'units': 'lbm',
+                    'shape': (num_fuel_types,),
+                    'val': np.zeros(num_fuel_types),
+                },
             ),
             promotes_inputs=[
                 ('ascent_duration', Mission.Takeoff.ASCENT_DURATION),

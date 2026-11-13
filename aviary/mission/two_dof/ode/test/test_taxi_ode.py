@@ -12,7 +12,7 @@ from aviary.utils.aviary_values import AviaryValues
 from aviary.utils.functions import get_path
 from aviary.utils.test_utils.default_subsystems import get_default_subsystems
 from aviary.utils.test_utils.IO_test_util import check_prob_outputs
-from aviary.variable_info.enums import Verbosity
+from aviary.variable_info.enums import FuelType, Verbosity
 from aviary.variable_info.functions import setup_model_options
 from aviary.variable_info.variables import Aircraft, Dynamic, Mission, Settings
 
@@ -30,6 +30,7 @@ class TaxiTestCase(unittest.TestCase):
         options.set_val(Aircraft.Engine.REFERENCE_SLS_THRUST, 28690.0, units='lbf')
         options.set_val(Aircraft.Engine.GLOBAL_THROTTLE, True)
         options.set_val(Aircraft.Engine.NUM_ENGINES, np.array([2]))
+        options.set_val(Aircraft.Fuel.TYPE, [FuelType.JET_A])
         options.set_val(Settings.VERBOSITY, Verbosity.QUIET)
         options.set_val(Mission.Taxi.DURATION, 0.1677, units='h')
         default_mission_subsystems = [

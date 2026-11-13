@@ -11,7 +11,7 @@ from aviary.subsystems.propulsion.utils import build_engine_deck
 from aviary.utils.aviary_values import AviaryValues
 from aviary.utils.functions import get_path
 from aviary.utils.test_utils.default_subsystems import get_default_subsystems
-from aviary.variable_info.enums import SpeedType, Verbosity
+from aviary.variable_info.enums import FuelType, SpeedType, Verbosity
 from aviary.variable_info.functions import setup_model_options
 from aviary.variable_info.variables import Aircraft, Dynamic, Settings
 
@@ -35,6 +35,7 @@ class TestUnsteadySolvedODE(unittest.TestCase):
         aviary_options.set_val(Aircraft.Engine.REFERENCE_SLS_THRUST, 28690.0, units='lbf')
         aviary_options.set_val(Aircraft.Engine.GLOBAL_THROTTLE, True)
         aviary_options.set_val(Aircraft.Engine.NUM_ENGINES, np.array([2]))
+        aviary_options.set_val(Aircraft.Fuel.TYPE, [FuelType.JET_A])
         aviary_options.set_val(Settings.VERBOSITY, Verbosity.QUIET)
 
         default_mission_subsystems = [
@@ -128,7 +129,7 @@ class TestUnsteadySolvedODE(unittest.TestCase):
             assert_near_equal(tas, 1 / dt_dr, tolerance=1.0e-12)
 
             # 5. Test that fuelflow (lbf/s) * dt_dr (s/ft) is equal to dmass_dr
-            assert_near_equal(fuelflow * dt_dr, dmass_dr, tolerance=1.0e-12)
+            assert_near_equal(fuelflow[0] * dt_dr, dmass_dr, tolerance=1.0e-12)
 
         cpd = p.check_partials(out_stream=None, method='cs', excludes=['*params*', '*aero*'])
         assert_check_partials(cpd, atol=1e-6, rtol=1e-6)

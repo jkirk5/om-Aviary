@@ -185,8 +185,6 @@ class PreMissionTestCase(unittest.TestCase):
             Mission.OPERATING_MASS: 96346.08462514,  # modified from GASP value to account for updated crew mass. GASP value is 96556.0
             'volume_wingfuel_mass': 57066.3,  # extra_fuel_mass calculated differently in this version, so test for fuel_mass.fuel_and_oem.payload_mass_max_fuel not included
             'max_wingfuel_mass': 57066.3,
-            'extra_fuel_volume': 0,  # always zero when no body tank
-            'max_extra_fuel_mass': 0,  # always zero when no body tank
         }
 
         for var_name, expected_val in expected_values.items():

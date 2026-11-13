@@ -1,7 +1,8 @@
+import numpy as np
 import openmdao.api as om
 
 from aviary.variable_info.functions import add_aviary_input, add_aviary_option, add_aviary_output
-from aviary.variable_info.variables import Dynamic, Mission
+from aviary.variable_info.variables import Aircraft, Dynamic, Mission
 
 
 class TaxiFuelComponent(om.ExplicitComponent):
@@ -9,11 +10,15 @@ class TaxiFuelComponent(om.ExplicitComponent):
 
     def initialize(self):
         add_aviary_option(self, Mission.Taxi.DURATION, units='s')
+        add_aviary_option(self, Aircraft.Fuel.TYPE)
 
     def setup(self):
+        num_fuel_type = len(self.options[Aircraft.Fuel.TYPE])
+
         add_aviary_input(
             self,
             Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
+            shape=num_fuel_type,
             units='lbm/s',
         )
         add_aviary_input(self, Mission.GROSS_MASS)
@@ -33,31 +38,37 @@ class TaxiFuelComponent(om.ExplicitComponent):
         )
 
     def setup_partials(self):
+        num_fuel_type = len(self.options[Aircraft.Fuel.TYPE])
+
         self.declare_partials(
             Mission.Taxi.FUEL_MASS_TAXI_OUT,
-            [Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL],
+            Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
+            val=np.full((1, num_fuel_type), -1.0),
         )
         self.declare_partials(
             Dynamic.Vehicle.MASS,
             Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
+            val=np.ones((1, num_fuel_type)),
         )
         self.declare_partials(Dynamic.Vehicle.MASS, Mission.GROSS_MASS, val=1)
 
     def compute(self, inputs, outputs):
         fuelflow, takeoff_mass = inputs.values()
         dt_taxi, _ = self.options[Mission.Taxi.DURATION]
-        outputs[Mission.Taxi.FUEL_MASS_TAXI_OUT] = -fuelflow * dt_taxi
+        total_fuelflow = np.sum(fuelflow)
+        outputs[Mission.Taxi.FUEL_MASS_TAXI_OUT] = -total_fuelflow * dt_taxi
         outputs[Dynamic.Vehicle.MASS] = takeoff_mass - outputs[Mission.Taxi.FUEL_MASS_TAXI_OUT]
 
     def compute_partials(self, inputs, J):
         dt_taxi, _ = self.options[Mission.Taxi.DURATION]
+        num_fuel_type = len(self.options[Aircraft.Fuel.TYPE])
 
         J[
             Mission.Taxi.FUEL_MASS_TAXI_OUT,
             Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
-        ] = -dt_taxi
+        ] = np.full((1, num_fuel_type), -dt_taxi)
 
         J[
             Dynamic.Vehicle.MASS,
             Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL,
-        ] = dt_taxi
+        ] = np.full((1, num_fuel_type), dt_taxi)

@@ -10,7 +10,7 @@ from aviary.utils.aviary_values import AviaryValues
 from aviary.utils.functions import get_path
 from aviary.utils.preprocessors import preprocess_propulsion
 from aviary.utils.test_utils.default_subsystems import get_default_subsystems
-from aviary.variable_info.enums import Verbosity
+from aviary.variable_info.enums import FuelType, Verbosity
 from aviary.variable_info.functions import setup_model_options
 from aviary.variable_info.variables import Aircraft, Dynamic, Settings
 
@@ -30,6 +30,7 @@ class GroundrollODETestCase(unittest.TestCase):
         aviary_options.set_val(Aircraft.Design.TYPE, val='transport', units='unitless')
         aviary_options.set_val(Aircraft.Wing.HAS_STRUT, val=False, units='unitless')
         aviary_options.set_val(Aircraft.Engine.NUM_ENGINES, val=[2], units='unitless')
+        aviary_options.set_val(Aircraft.Fuel.TYPE, [FuelType.JET_A])
         # aviary_options.set_val(Mission.GRAVITY, val=32.2, units='ft/s**2')
 
         # Engine deck build inputs (hardcoded, not read from _MetaData).

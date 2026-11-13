@@ -599,6 +599,12 @@ class PropulsionSum(om.ExplicitComponent):
             val=np.zeros((nn, num_fuel_type)),
             units='lbm/h',
         )
+        # scalar mass-rate source for Dymos, summed across fuel types
+        self.add_output(
+            'fuel_flow_rate_negative_total_combined',
+            val=np.zeros(nn),
+            units='lbm/h',
+        )
         self.add_output(
             Dynamic.Vehicle.Propulsion.ELECTRIC_POWER_IN_TOTAL,
             val=np.zeros(nn),
@@ -652,6 +658,13 @@ class PropulsionSum(om.ExplicitComponent):
             cols=c,
         )
         self.declare_partials(
+            'fuel_flow_rate_negative_total_combined',
+            Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE,
+            val=-deriv,
+            rows=r,
+            cols=c,
+        )
+        self.declare_partials(
             Dynamic.Vehicle.Propulsion.ELECTRIC_POWER_IN_TOTAL,
             Dynamic.Vehicle.Propulsion.ELECTRIC_POWER_IN,
             val=deriv,
@@ -680,12 +693,13 @@ class PropulsionSum(om.ExplicitComponent):
         outputs[Dynamic.Vehicle.Propulsion.THRUST_TOTAL] = np.dot(thrust, num_engines)
         outputs[Dynamic.Vehicle.Propulsion.THRUST_MAX_TOTAL] = np.dot(thrust_max, num_engines)
 
-        total_fuel_flow = np.zeros((nn, num_fuel_types))
+        total_fuel_flow = np.zeros((nn, num_fuel_types), dtype=fuel_flow.dtype)
 
         for engine_idx, fuel_idx in enumerate(self._fuel_type_mapping):
             total_fuel_flow[:, fuel_idx] += fuel_flow[:, engine_idx] * num_engines[engine_idx]
         outputs[Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_TOTAL] = total_fuel_flow
         outputs[Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL] = -total_fuel_flow
+        outputs['fuel_flow_rate_negative_total_combined'] = -np.sum(total_fuel_flow, axis=1)
 
         outputs[Dynamic.Vehicle.Propulsion.ELECTRIC_POWER_IN_TOTAL] = np.dot(electric, num_engines)
         outputs[Dynamic.Vehicle.Propulsion.NOX_RATE_TOTAL] = np.dot(nox, num_engines)

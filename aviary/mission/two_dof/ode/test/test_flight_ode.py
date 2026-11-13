@@ -11,7 +11,7 @@ from aviary.subsystems.propulsion.utils import build_engine_deck
 from aviary.utils.aviary_values import AviaryValues
 from aviary.utils.functions import get_path
 from aviary.utils.test_utils.default_subsystems import get_default_subsystems
-from aviary.variable_info.enums import SpeedType, Verbosity
+from aviary.variable_info.enums import FuelType, SpeedType, Verbosity
 from aviary.variable_info.functions import setup_model_options
 from aviary.variable_info.variables import Aircraft, Dynamic, Settings
 
@@ -30,6 +30,7 @@ class FlightODEClimbTestCase(unittest.TestCase):
         )
         aviary_options.set_val(Aircraft.Engine.REFERENCE_SLS_THRUST, 28690.0, units='lbf')
         aviary_options.set_val(Aircraft.Engine.NUM_ENGINES, np.array([2]))
+        aviary_options.set_val(Aircraft.Fuel.TYPE, [FuelType.JET_A])
         aviary_options.set_val(Aircraft.Engine.GLOBAL_THROTTLE, True)
         aviary_options.set_val(Settings.VERBOSITY, Verbosity.QUIET)
 
@@ -80,7 +81,7 @@ class FlightODEClimbTestCase(unittest.TestCase):
             # TAS (kts -> ft/s) * cos(gamma), 253.6827 * 1.68781 * cos(0.13331060446181708)
             Dynamic.Mission.DISTANCE_RATE: (424.19853539, 'ft/s'),
             Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL: (
-                -13447.98081484,
+                [[-13447.98081484]],
                 'lbm/h',
             ),
             'theta': (0.22495528, 'rad'),
@@ -134,7 +135,7 @@ class FlightODEClimbTestCase(unittest.TestCase):
             # TAS (kts -> ft/s) * cos(gamma), [319, 459] kts
             Dynamic.Mission.DISTANCE_RATE: ([536.0936254, 774.32986512], 'ft/s'),
             Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL: (
-                [-11418.00064615, -6042.88107957],
+                [[-11418.00064615], [-6042.88107957]],
                 'lbm/h',
             ),
             'theta': ([0.16776805, 0.08262176], 'rad'),
@@ -162,6 +163,7 @@ class FlightODEDescenTestCase(unittest.TestCase):
         )
         aviary_options.set_val(Aircraft.Engine.REFERENCE_SLS_THRUST, 28690.0, units='lbf')
         aviary_options.set_val(Aircraft.Engine.NUM_ENGINES, np.array([2]))
+        aviary_options.set_val(Aircraft.Fuel.TYPE, [FuelType.JET_A])
         aviary_options.set_val(Aircraft.Engine.GLOBAL_THROTTLE, True)
         aviary_options.set_val(Settings.VERBOSITY, Verbosity.QUIET)
 
@@ -208,7 +210,7 @@ class FlightODEDescenTestCase(unittest.TestCase):
             # TAS (ft/s) * cos(gamma), [458.67774, 437.62297] kts
             Dynamic.Mission.DISTANCE_RATE: ([773.50001989, 737.22285971], 'ft/s'),
             Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL: (
-                [-452.29666667, -997.48350936],
+                [[-452.29666667], [-997.48350936]],
                 'lbm/h',
             ),
             # ft/s ([247.95894, 349.99997] kts)
@@ -258,7 +260,7 @@ class FlightODEDescenTestCase(unittest.TestCase):
             # TAS (ft/s) * cos(gamma) = 255.5613 * 1.68781 * cos(-0.0440083)
             Dynamic.Mission.DISTANCE_RATE: (431.00057153, 'ft/s'),
             Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL: (
-                -1295.1511839,
+                [[-1295.1511839]],
                 'lbm/h',
             ),
             Dynamic.Mission.FLIGHT_PATH_ANGLE: (-0.04103086, 'rad'),

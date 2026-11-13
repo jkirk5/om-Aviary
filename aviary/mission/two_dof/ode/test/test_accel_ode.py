@@ -11,7 +11,7 @@ from aviary.subsystems.propulsion.utils import build_engine_deck
 from aviary.utils.aviary_values import AviaryValues
 from aviary.utils.functions import get_path
 from aviary.utils.test_utils.default_subsystems import get_default_subsystems
-from aviary.variable_info.enums import Verbosity
+from aviary.variable_info.enums import FuelType, Verbosity
 from aviary.variable_info.functions import setup_model_options
 from aviary.variable_info.variables import Aircraft, Dynamic, Settings
 
@@ -30,6 +30,7 @@ class AccelerationODETestCase(unittest.TestCase):
         )
         aviary_options.set_val(Aircraft.Engine.REFERENCE_SLS_THRUST, 28690.0, units='lbf')
         aviary_options.set_val(Aircraft.Engine.NUM_ENGINES, np.array([2]))
+        aviary_options.set_val(Aircraft.Fuel.TYPE, [FuelType.JET_A])
         aviary_options.set_val(Aircraft.Engine.GLOBAL_THROTTLE, True)
         aviary_options.set_val(Settings.VERBOSITY, Verbosity.QUIET)
         default_mission_subsystems = [
@@ -49,7 +50,13 @@ class AccelerationODETestCase(unittest.TestCase):
     def test_accel(self):
         # Test both points in GASP Large Single Aisle 1 acceleration segment
         setup_model_options(
-            self.prob, AviaryValues({Aircraft.Engine.NUM_ENGINES: ([2], 'unitless')})
+            self.prob,
+            AviaryValues(
+                {
+                    Aircraft.Engine.NUM_ENGINES: ([2], 'unitless'),
+                    Aircraft.Fuel.TYPE: ([FuelType.JET_A], 'unitless'),
+                }
+            ),
         )
 
         self.prob.setup(check=False, force_alloc_complex=True)
@@ -71,8 +78,8 @@ class AccelerationODETestCase(unittest.TestCase):
             Dynamic.Vehicle.LIFT: ([174974, 174878], 'lbf'),
             Dynamic.Vehicle.Propulsion.FUEL_MASS_FLOW_RATE_NEGATIVE_TOTAL: (
                 [
-                    -13264.88347472,
-                    -13567.32077887,
+                    [-13264.88347472],
+                    [-13567.32077887],
                 ],
                 'lbm/h',
             ),
