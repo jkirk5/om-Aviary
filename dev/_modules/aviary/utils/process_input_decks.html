@@ -35,9 +35,9 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-thebe.css?v=4fa983c6" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=3683e473" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=6a604523" />
     <link rel="stylesheet" type="text/css" href="../../../_static/version_switcher.css?v=516df71e" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=3683e473" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
@@ -56,15 +56,15 @@
     <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../../../_static/togglebutton.js?v=b8b12719"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../../../_static/design-tabs.js?v=fcb327ea"></script>
     <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
     <script async="async" src="../../../_static/sphinx-thebe.js?v=c100c467"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/aviary/utils/process_input_decks';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
-    <script src="../../../_static/version_switcher.js?v=ec96bb6f"></script>
     <script src="../../../_static/collapsible_headers.js?v=13c9d35c"></script>
+    <script src="../../../_static/version_switcher.js?v=ec96bb6f"></script>
     <link rel="icon" href="../../../_static/aviary_logo.png"/>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -546,7 +546,7 @@
 
 <div class="viewcode-block" id="create_vehicle">
 <a class="viewcode-back" href="../../../_srcdocs/packages/utils/process_input_decks.html#aviary.utils.process_input_decks.create_vehicle">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">create_vehicle</span><span class="p">(</span><span class="n">vehicle_deck</span><span class="o">=</span><span class="s1">''</span><span class="p">,</span> <span class="n">meta_data</span><span class="o">=</span><span class="n">CoreMetaData</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="n">Verbosity</span><span class="o">.</span><span class="n">BRIEF</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_vehicle</span><span class="p">(</span><span class="n">vehicle_deck</span><span class="o">=</span><span class="s1">''</span><span class="p">,</span> <span class="n">meta_data</span><span class="o">=</span><span class="n">CoreMetaData</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Creates and initializes a vehicle with default or specified parameters. It sets up the aircraft values</span>
 <span class="sd">    and initial guesses based on the input from the vehicle deck.</span>
@@ -569,9 +569,6 @@
 <span class="sd">    (aircraft_values, initialization_guesses): (tuple)</span>
 <span class="sd">        Returns a tuple containing aircraft values and initial guesses.</span>
 <span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">verbosity</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">verbosity</span> <span class="o">=</span> <span class="n">Verbosity</span><span class="o">.</span><span class="n">BRIEF</span>
-
     <span class="n">aircraft_values</span> <span class="o">=</span> <span class="n">AviaryValues</span><span class="p">()</span>
 
     <span class="c1"># TODO remove all hardcoded GASP values here, find appropriate place for them</span>
@@ -619,16 +616,17 @@
         <span class="p">)</span>
 
     <span class="c1"># make sure verbosity is always set</span>
-    <span class="c1"># if verbosity set via parameter, use that - override what is in the file</span>
+    <span class="c1"># if verbosity set via parameter, use that - override what is in the file.</span>
     <span class="k">if</span> <span class="n">verbosity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># Enum conversion here, so user can pass either number or actual Enum as parameter</span>
         <span class="n">aircraft_values</span><span class="o">.</span><span class="n">set_val</span><span class="p">(</span><span class="n">Settings</span><span class="o">.</span><span class="n">VERBOSITY</span><span class="p">,</span> <span class="n">Verbosity</span><span class="p">(</span><span class="n">verbosity</span><span class="p">))</span>
+    <span class="c1"># elif Settings.VERBOSITY in aircraft_values:</span>
+    <span class="c1"># Nothing required here - we will use whatever verbosity is in aircraft_values</span>
     <span class="c1"># else, if verbosity not specified anywhere, use default of BRIEF</span>
-    <span class="k">elif</span> <span class="n">verbosity</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">Settings</span><span class="o">.</span><span class="n">VERBOSITY</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">aircraft_values</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">Settings</span><span class="o">.</span><span class="n">VERBOSITY</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">aircraft_values</span><span class="p">:</span>
         <span class="n">aircraft_values</span><span class="o">.</span><span class="n">set_val</span><span class="p">(</span>
             <span class="n">Settings</span><span class="o">.</span><span class="n">VERBOSITY</span><span class="p">,</span> <span class="n">CoreMetaData</span><span class="p">[</span><span class="n">Settings</span><span class="o">.</span><span class="n">VERBOSITY</span><span class="p">][</span><span class="s1">'default_value'</span><span class="p">]</span>
         <span class="p">)</span>
-
     <span class="k">return</span> <span class="n">aircraft_values</span><span class="p">,</span> <span class="n">initialization_guesses</span></div>
 
 
